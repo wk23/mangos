@@ -426,10 +426,8 @@ Player::~Player ()
 {
     CleanupsBeforeDelete();
 
-    if(m_uint32Values)                                      // only for fully created Object
-    {
-        sSocialMgr.RemovePlayerSocial(GetGUIDLow());
-    }
+    // it must be unloaded already in PlayerLogout and accessed only for loggined player
+    //m_social = NULL;
 
     // Note: buy back item already deleted from DB when player was saved
     for(int i = 0; i < PLAYER_SLOTS_COUNT; ++i)
@@ -17857,14 +17855,16 @@ bool Player::RewardPlayerAndGroupAtKill(Unit* pVictim)
         uint32 count = 0;
         uint32 sum_level = 0;
         Player* member_with_max_level = NULL;
+        Player* not_gray_member_with_max_level = NULL;
 
-        pGroup->GetDataForXPAtKill(pVictim,count,sum_level,member_with_max_level);
+        pGroup->GetDataForXPAtKill(pVictim,count,sum_level,member_with_max_level,not_gray_member_with_max_level);
 
         if(member_with_max_level)
         {
-            xp = PvP ? 0 : MaNGOS::XP::Gain(member_with_max_level, pVictim);
+            /// not get Xp in PvP or no not gray players in group
+            xp = (PvP || !not_gray_member_with_max_level) ? 0 : MaNGOS::XP::Gain(not_gray_member_with_max_level, pVictim);
 
-            // skip in check PvP case (for speed, not used)
+            /// skip in check PvP case (for speed, not used)
             bool is_raid = PvP ? false : sMapStore.LookupEntry(GetMapId())->IsRaid() && pGroup->isRaidGroup();
             bool is_dungeon = PvP ? false : sMapStore.LookupEntry(GetMapId())->IsDungeon();
             float group_rate = MaNGOS::XP::xp_in_group_rate(count,is_raid);
@@ -17892,9 +17892,10 @@ bool Player::RewardPlayerAndGroupAtKill(Unit* pVictim)
                     pGroupGuy->RewardReputation(pVictim,is_dungeon ? 1.0f : rate);
 
                     // XP updated only for alive group member
-                    if(pGroupGuy->isAlive())
+                    if(pGroupGuy->isAlive() && not_gray_member_with_max_level &&
+                       pGroupGuy->getLevel() <= not_gray_member_with_max_level->getLevel())
                     {
-                        uint32 itr_xp = uint32(xp*rate);
+                        uint32 itr_xp = (member_with_max_level == not_gray_member_with_max_level) ? uint32(xp*rate) : uint32((xp*rate/2)+1);
 
                         pGroupGuy->GiveXP(itr_xp, pVictim);
                         if(Pet* pet = pGroupGuy->GetPet())

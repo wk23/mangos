@@ -952,6 +952,7 @@ void World::SetInitialWorldSettings()
     objmgr.LoadQuestLocales();
     objmgr.LoadNpcTextLocales();
     objmgr.LoadPageTextLocales();
+    objmgr.LoadNpcOptionLocales();
     objmgr.SetDBCLocaleIndex(GetDefaultDbcLocale());        // Get once for all the locale index of DBC language (console/broadcasts)
 
     sLog.outString( "Loading Page Texts..." );
@@ -1117,6 +1118,9 @@ void World::SetInitialWorldSettings()
 
     sLog.outString( "Loading Npc Text Id..." );
     objmgr.LoadNpcTextId();                                 // must be after load Creature and NpcText
+
+    sLog.outString( "Loading Npc Options..." );
+    objmgr.LoadNpcOptions();
 
     sLog.outString( "Loading vendors..." );
     objmgr.LoadVendors();                                   // must be after load CreatureTemplate and ItemTemplate
@@ -2576,4 +2580,18 @@ void World::UpdateMaxSessionCounters()
 {
     m_maxActiveSessionCount = std::max(m_maxActiveSessionCount,uint32(m_sessions.size()-m_QueuedPlayer.size()));
     m_maxQueuedSessionCount = std::max(m_maxQueuedSessionCount,uint32(m_QueuedPlayer.size()));
+}
+
+void World::LoadDBVersion()
+{
+    QueryResult* result = WorldDatabase.Query("SELECT version FROM db_version LIMIT 1");
+    if(result)
+    {
+        Field* fields = result->Fetch();
+
+        m_DBVersion = fields[0].GetString();
+        delete result;
+    }
+    else
+        m_DBVersion = "unknown world database";
 }

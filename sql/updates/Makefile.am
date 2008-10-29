@@ -99,6 +99,25 @@ pkgdata_DATA = \
 	2008_10_21_01_mangos_mangos_string.sql \
 	2008_10_21_02_mangos_command.sql \
 	2008_10_21_03_mangos_command.sql \
+	2008_10_22_01_mangos_quest_template.sql \
+	2008_10_22_02_mangos_mangos_string.sql \
+	2008_10_23_01_mangos_command.sql \
+	2008_10_23_02_mangos_mangos_string.sql \
+	2008_10_23_03_mangos_mangos_string.sql \
+	2008_10_23_04_mangos_command.sql \
+	2008_10_23_05_mangos_command.sql \
+	2008_10_26_01_mangos_mangos_string.sql \
+	2008_10_27_01_npc_option.sql \
+	2008_10_27_02_locales_npc_option.sql \
+	2008_10_28_01_mangos_mangos_string.sql \
+	2008_10_28_02_mangos_mangos_string.sql \
+	2008_10_28_03_mangos_command.sql \
+	2008_10_28_04_mangos_command.sql \
+	2008_10_29_01_mangos_mangos_string.sql \
+	2008_10_29_02_mangos_command.sql \
+	2008_10_29_03_mangos_db_version.sql \
+	2008_10_29_04_mangos_mangos_string.sql \
+	2008_10_29_05_mangos_command.sql \
 	README
 
 ## Additional files to include when running 'make dist'
@@ -179,4 +198,23 @@ EXTRA_DIST = \
 	2008_10_21_01_mangos_mangos_string.sql \
 	2008_10_21_02_mangos_command.sql \
 	2008_10_21_03_mangos_command.sql \
+	2008_10_22_01_mangos_quest_template.sql \
+	2008_10_22_02_mangos_mangos_string.sql \
+	2008_10_23_01_mangos_command.sql \
+	2008_10_23_02_mangos_mangos_string.sql \
+	2008_10_23_03_mangos_mangos_string.sql \
+	2008_10_23_04_mangos_command.sql \
+	2008_10_23_05_mangos_command.sql \
+	2008_10_26_01_mangos_mangos_string.sql \
+	2008_10_27_01_npc_option.sql \
+	2008_10_27_02_locales_npc_option.sql \
+	2008_10_28_01_mangos_mangos_string.sql \
+	2008_10_28_02_mangos_mangos_string.sql \
+	2008_10_28_03_mangos_command.sql \
+	2008_10_28_04_mangos_command.sql \
+	2008_10_29_01_mangos_mangos_string.sql \
+	2008_10_29_02_mangos_command.sql \
+	2008_10_29_03_mangos_db_version.sql \
+	2008_10_29_04_mangos_mangos_string.sql \
+	2008_10_29_05_mangos_command.sql \
 	README

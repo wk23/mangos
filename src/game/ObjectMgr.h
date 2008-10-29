@@ -139,6 +139,7 @@ typedef HM_NAMESPACE::hash_map<uint32,QuestLocale> QuestLocaleMap;
 typedef HM_NAMESPACE::hash_map<uint32,NpcTextLocale> NpcTextLocaleMap;
 typedef HM_NAMESPACE::hash_map<uint32,PageTextLocale> PageTextLocaleMap;
 typedef HM_NAMESPACE::hash_map<uint32,MangosStringLocale> MangosStringLocaleMap;
+typedef HM_NAMESPACE::hash_map<uint32,NpcOptionLocale> NpcOptionLocaleMap;
 
 typedef std::multimap<uint32,uint32> QuestRelations;
 
@@ -203,9 +204,11 @@ enum ConditionType
     CONDITION_QUESTREWARDED         = 8,                    // quest_id     0
     CONDITION_QUESTTAKEN            = 9,                    // quest_id     0,      for condition true while quest active.
     CONDITION_AD_COMMISSION_AURA    = 10,                   // 0            0,      for condition true while one from AD ñommission aura active
+    CONDITION_NO_AURA               = 11,                   // spell_id     effindex
+    CONDITION_ACTIVE_EVENT          = 12,                   // event_id
 };
 
-#define MAX_CONDITION                 11                    // maximum value in ConditionType enum
+#define MAX_CONDITION                 13                    // maximum value in ConditionType enum
 
 struct PlayerCondition
 {
@@ -227,6 +230,7 @@ struct PlayerCondition
 
 // NPC gossip text id
 typedef HM_NAMESPACE::hash_map<uint32, uint32> CacheNpcTextIdMap;
+typedef std::list<GossipOption> CacheNpcOptionList;
 
 typedef HM_NAMESPACE::hash_map<uint32, VendorItemData> CacheVendorItemMap;
 typedef HM_NAMESPACE::hash_map<uint32, TrainerSpellData> CacheTrainerSpellMap;
@@ -514,6 +518,7 @@ class ObjectMgr
         void LoadQuestLocales();
         void LoadNpcTextLocales();
         void LoadPageTextLocales();
+        void LoadNpcOptionLocales();
         void LoadInstanceTemplate();
 
         void LoadGossipText();
@@ -544,6 +549,7 @@ class ObjectMgr
         void LoadWeatherZoneChances();
         void LoadGameTele();
 
+        void LoadNpcOptions();
         void LoadNpcTextId();
         void LoadVendors();
         void LoadTrainerSpell();
@@ -637,6 +643,12 @@ class ObjectMgr
             if(itr==mPageTextLocaleMap.end()) return NULL;
             return &itr->second;
         }
+        NpcOptionLocale const* GetNpcOptionLocale(uint32 entry) const
+        {
+            NpcOptionLocaleMap::const_iterator itr = mNpcOptionLocaleMap.find(entry);
+            if(itr==mNpcOptionLocaleMap.end()) return NULL;
+            return &itr->second;
+        }
 
         GameObjectData const* GetGOData(uint32 guid) const
         {
@@ -655,6 +667,7 @@ class ObjectMgr
         }
         const char *GetMangosString(int32 entry, int locale_idx) const;
         const char *GetMangosStringForDBCLocale(int32 entry) const { return GetMangosString(entry,DBCLocaleIndex); }
+        int32 GetDBCLocaleIndex() const { return DBCLocaleIndex; }
         void SetDBCLocaleIndex(uint32 lang) { DBCLocaleIndex = GetIndexForLocale(LocaleConstant(lang)); }
 
         void AddCorpseCellData(uint32 mapid, uint32 cellid, uint32 player_guid, uint32 instance);
@@ -711,6 +724,8 @@ class ObjectMgr
         bool AddGameTele(GameTele& data);
         bool DeleteGameTele(std::string name);
 
+        CacheNpcOptionList const& GetNpcOptions() const { return m_mCacheNpcOptionList; }
+
         uint32 GetNpcGossip(uint32 entry) const
         {
             CacheNpcTextIdMap::const_iterator iter = m_mCacheNpcTextIdMap.find(entry);
@@ -740,6 +755,7 @@ class ObjectMgr
         void AddVendorItem(uint32 entry,uint32 item, uint32 maxcount, uint32 incrtime, uint32 ExtendedCost);
         bool RemoveVendorItem(uint32 entry,uint32 item);
         bool IsVendorItemValid( uint32 vendor_entry, uint32 item, uint32 maxcount, uint32 ptime, uint32 ExtendedCost, Player* pl = NULL, std::set<uint32>* skip_vendors = NULL ) const;
+
     protected:
         uint32 m_auctionid;
         uint32 m_mailid;
@@ -838,6 +854,7 @@ class ObjectMgr
         NpcTextLocaleMap mNpcTextLocaleMap;
         PageTextLocaleMap mPageTextLocaleMap;
         MangosStringLocaleMap mMangosStringLocaleMap;
+        NpcOptionLocaleMap mNpcOptionLocaleMap;
         RespawnTimes mCreatureRespawnTimes;
         RespawnTimes mGORespawnTimes;
 
@@ -848,6 +865,7 @@ class ObjectMgr
         typedef std::vector<PlayerCondition> ConditionStore;
         ConditionStore mConditions;
 
+        CacheNpcOptionList m_mCacheNpcOptionList;
         CacheNpcTextIdMap m_mCacheNpcTextIdMap;
         CacheVendorItemMap m_mCacheVendorItemMap;
         CacheTrainerSpellMap m_mCacheTrainerSpellMap;

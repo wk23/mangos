@@ -69,12 +69,14 @@ class ChatHandler
 
         int ParseCommands(const char* text);
 
+        virtual char const* GetName() const;
     protected:
         explicit ChatHandler() : m_session(NULL) {}      // for CLI subclass
 
         bool hasStringAbbr(const char* name, const char* part);
 
         virtual bool isAvailable(ChatCommand const& cmd) const;
+        virtual bool needReportToTarget(Player* chr) const;
 
         void SendGlobalSysMessage(const char *str);
 
@@ -95,7 +97,6 @@ class ChatHandler
         bool HandleHelpCommand(const char* args);
         bool HandleCommandsCommand(const char* args);
         bool HandleStartCommand(const char* args);
-        bool HandleInfoCommand(const char* args);
         bool HandleDismountCommand(const char* args);
         bool HandleSaveCommand(const char* args);
         bool HandleGMListIngameCommand(const char* args);
@@ -148,6 +149,9 @@ class ChatHandler
         bool HandleModifyRepCommand(const char* args);
         bool HandleModifyArenaCommand(const char* args);
 
+        bool HandleNpcFollowCommand(const char* args);
+        bool HandleNpcUnFollowCommand(const char* args);
+
         bool HandleReloadCommand(const char* args);
         bool HandleReloadAllCommand(const char* args);
         bool HandleReloadAllAreaCommand(const char* args);
@@ -184,6 +188,7 @@ class ChatHandler
         bool HandleReloadLootTemplatesSkinningCommand(const char* args);
         bool HandleReloadMangosStringCommand(const char* args);
         bool HandleReloadNpcGossipCommand(const char* args);
+        bool HandleReloadNpcOptionCommand(const char* args);
         bool HandleReloadNpcTrainerCommand(const char* args);
         bool HandleReloadNpcVendorCommand(const char* args);
         bool HandleReloadQuestAreaTriggersCommand(const char* args);
@@ -220,6 +225,7 @@ class ChatHandler
 
         bool HandleServerCorpsesCommand(const char* args);
         bool HandleServerExitCommand(const char* args);
+        bool HandleServerInfoCommand(const char* args);
         bool HandleServerMotdCommand(const char* args);
         bool HandleServerSetMotdCommand(const char* args);
         bool HandleServerSetLogLevelCommand(const char* args);
@@ -335,7 +341,6 @@ class ChatHandler
         bool HandleUnAuraCommand(const char* args);
         bool HandleLinkGraveCommand(const char* args);
         bool HandleNearGraveCommand(const char* args);
-        bool HandleSpawnTransportCommand(const char* args);
         bool HandleExploreCheatCommand(const char* args);
         bool HandleTextEmoteCommand(const char* args);
         bool HandleNpcInfoCommand(const char* args);
@@ -405,6 +410,8 @@ class ChatHandler
         bool HandleCombatStopCommand(const char *args);
         bool HandleSendMessageCommand(const char * args);
         bool HandleFlushArenaPointsCommand(const char *args);
+        bool HandleRepairitemsCommand(const char* args);
+        bool HandleWaterwalkCommand(const char* args);
 
         //! Development Commands
         bool HandleSetValue(const char* args);
@@ -457,6 +464,8 @@ class CliHandler : public ChatHandler
         const char *GetMangosString(int32 entry) const;
         bool isAvailable(ChatCommand const& cmd) const;
         void SendSysMessage(const char *str);
+        char const* GetName() const;
+        bool needReportToTarget(Player* chr) const;
 
     private:
         Print* m_print;
