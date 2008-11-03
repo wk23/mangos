@@ -6160,6 +6160,7 @@ bool ChatHandler::HandleSendMessageCommand(const char* args)
 bool ChatHandler::HandleFlushArenaPointsCommand(const char * /*args*/)
 {
     sBattleGroundMgr.DistributeArenaPoints();
+    return true;
 }
 
 bool ChatHandler::HandleModifyGenderCommand(const char *args)
