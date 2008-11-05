@@ -562,7 +562,7 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
     }
 
     //if no players in queue ... do nothing
-    if (this->m_QueuedGroups[queue_id].size() == 0)
+    if (m_QueuedGroups[queue_id].size() == 0)
         return;
 
     uint32 bgQueueTypeId = sBattleGroundMgr.BGQueueTypeId(bgTypeId, arenatype);
@@ -1305,7 +1305,7 @@ void BattleGroundMgr::BuildPlayerJoinedBattleGroundPacket(WorldPacket *data, Pla
 void BattleGroundMgr::InvitePlayer(Player* plr, uint32 bgInstanceGUID, uint32 team)
 {
     // set invited player counters:
-    BattleGround* bg = this->GetBattleGround(bgInstanceGUID);
+    BattleGround* bg = GetBattleGround(bgInstanceGUID);
     if(!bg)
         return;
     bg->IncreaseInvitedCount(team);

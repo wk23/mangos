@@ -56,6 +56,7 @@
 #include "CellImpl.h"
 #include "InstanceSaveMgr.h"
 #include "WaypointManager.h"
+#include "GMTicketMgr.h"
 #include "Util.h"
 
 INSTANTIATE_SINGLETON_1( World );
@@ -208,7 +209,6 @@ World::AddSession_ (WorldSession* s)
     uint32 Sessions = GetActiveAndQueuedSessionCount ();
     uint32 pLimit = GetPlayerAmountLimit ();
     uint32 QueueSize = GetQueueSize (); //number of players in the queue
-    bool inQueue = false;
     //so we don't count the user trying to
     //login as a session and queue the socket that we are using
     --Sessions;
@@ -1131,6 +1131,9 @@ void World::SetInitialWorldSettings()
 
     sLog.outString( "Loading Waypoints..." );
     WaypointMgr.Load();
+
+    sLog.outString( "Loading GM tickets...");
+    ticketmgr.LoadGMTickets();
 
     ///- Handle outdated emails (delete/return)
     sLog.outString( "Returning old mails..." );

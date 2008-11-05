@@ -494,7 +494,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
                 // resurrect the player
                 if(!_player->isAlive())
                 {
-                    _player->ResurrectPlayer(1.0f,false);
+                    _player->ResurrectPlayer(1.0f);
                     _player->SpawnCorpseBones();
                 }
                 // stop taxi flight at port

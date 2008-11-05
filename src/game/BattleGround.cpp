@@ -678,7 +678,7 @@ void BattleGround::SendRewardMarkByMail(Player *plr,uint32 mark, uint32 count)
         int loc_idx = plr->GetSession()->GetSessionDbLocaleIndex();
         if ( loc_idx >= 0 )
             if(ItemLocale const *il = objmgr.GetItemLocale(markProto->ItemId))
-                if (il->Name.size() > loc_idx && !il->Name[loc_idx].empty())
+                if (il->Name.size() > size_t(loc_idx) && !il->Name[loc_idx].empty())
                     subject = il->Name[loc_idx];
 
         // text
@@ -891,8 +891,8 @@ void BattleGround::Reset()
     m_Players.clear();
     m_PlayerScores.clear();
 
-    // reset BGSubclass (this cleans up creatures and gos as well)
-    this->ResetBGSubclass();
+    // reset BGSubclass
+    ResetBGSubclass();
 }
 
 void BattleGround::StartBattleGround()
@@ -1353,7 +1353,7 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
     if(!pCreature)
     {
         sLog.outError("Can't create Spirit guide. BattleGround not created!");
-        this->EndNow();
+        EndNow();
         return false;
     }
 
