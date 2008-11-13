@@ -1085,9 +1085,9 @@ Ra.Secure = 1
 # Rated arena matches config
 #
 # MaxRatingDifference: the maximum rating difference between two groups in rated matches
-#             Default: 0 (disable, rating difference is discarded)  
+#             Default: 0 (disable, rating difference is discarded)
 #
-# RatingDiscardTimer: after the specified milliseconds has passed, 
+# RatingDiscardTimer: after the specified milliseconds has passed,
 #                     rating information will be discarded when selecting teams for matches
 #                     also initiates an update by this timer
 #             Default: 60000
@@ -1096,7 +1096,7 @@ Ra.Secure = 1
 #             Default: 0 (disable) (recommended): use gm command or sql query to distribute the points
 #                      1 (enable): arena points are distributed automatically
 #
-# AutoDistributeInterval: how often should the distribution take place 
+# AutoDistributeInterval: how often should the distribution take place
 #                         if automatic distribution is enabled
 #                         in days
 #             Default: 7 (weekly)

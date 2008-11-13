@@ -1,5 +1,5 @@
 DELETE FROM `instance_template` WHERE `map` IN ('489', '30', '529', '566', '559', '562', '572');
-INSERT INTO `instance_template` (`map`, `parent`, `levelMin`, `levelMax`, `maxPlayers`, `reset_delay`) VALUES 
+INSERT INTO `instance_template` (`map`, `parent`, `levelMin`, `levelMax`, `maxPlayers`, `reset_delay`) VALUES
 ('489', '0', '10', '0', '50', '7200'),
 ('30', '0', '10', '0', '50', '7200'),
 ('529', '0', '10', '0', '50', '7200'),

@@ -1,4 +1,4 @@
-CREATE TABLE `saved_variables` (                                                                             
+CREATE TABLE `saved_variables` (
     `NextArenaPointDistributionTime` timestamp NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Variable Saves';
 

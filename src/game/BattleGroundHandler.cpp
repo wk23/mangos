@@ -206,7 +206,7 @@ void WorldSession::HandleBattleGroundJoinOpcode( WorldPacket & recv_data )
             // all ok, can join
         case BG_JOIN_ERR_OK:
             break;
-            // these aren't possible outcomes in bgs 
+            // these aren't possible outcomes in bgs
         case BG_JOIN_ERR_GROUP_NOT_ENOUGH:
         case BG_JOIN_ERR_MIXED_ARENATEAM:
             return;
@@ -360,7 +360,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
 
     uint8 type;                                             // arenatype if arena
     uint8 unk2;                                             // unk, can be 0x0 (may be if was invited?) and 0x1
-    uint32 instanceId;                                      
+    uint32 instanceId;
     uint32 bgTypeId;                                        // type id from dbc
     uint16 unk;                                             // 0x1F90 constant?
     uint8 action;                                           // enter battle 0x1, leave queue 0x0
@@ -398,7 +398,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
                 uint8 israted = itrPlayerStatus->second.GroupInfo->IsRated;
                 uint8 status = 0;
 
-                
+
                 if(!itrPlayerStatus->second.GroupInfo->IsInvitedToBGInstanceGUID)
                 {
                     // not invited to bg, get template
@@ -430,7 +430,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
     }
 
     uint32 bgQueueTypeId = 0;
-    // get the bg what we were invited to 
+    // get the bg what we were invited to
     BattleGroundQueue::QueuedPlayersMap::iterator itrPlayerStatus;
     bgQueueTypeId = sBattleGroundMgr.BGQueueTypeId(bgTypeId,type);
     itrPlayerStatus = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].m_QueuedPlayers[_player->GetBattleGroundQueueIdFromLevel()].find(_player->GetGUID());
@@ -743,7 +743,7 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
     BattleGround* bg = NULL;
     if( !(bg = sBattleGroundMgr.GetBattleGroundTemplate(BATTLEGROUND_AA)) )
     {
-        sLog.outError("Battleground: template bg (all arenas) not found");     
+        sLog.outError("Battleground: template bg (all arenas) not found");
         return;
     }
 
@@ -855,7 +855,7 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
 
     uint32 ateamId = 0;
 
-    if(isRated)           
+    if(isRated)
     {
         ateamId = _player->GetArenaTeamId(type);
         // check real arenateam existence only here (if it was moved to group->CanJoin .. () then we would ahve to get it twice)
@@ -881,7 +881,7 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
         if( arenatype )
             avg_pers_rating /= arenatype;
 
-        // if avg personal rating is more than 150 points below the teams rating, the team will be queued against an opponent matching or similar to the average personal rating 
+        // if avg personal rating is more than 150 points below the teams rating, the team will be queued against an opponent matching or similar to the average personal rating
         if(avg_pers_rating + 150 < arenaRating)
             arenaRating = avg_pers_rating;
     }

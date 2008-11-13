@@ -90,7 +90,7 @@ void BattleGroundQueue::EligibleGroups::Init(BattleGroundQueue::QueuedGroupsList
             (  (*itr)->JoinTime <= DisregardTime              // pass if disregard time is greater than join time
                || (*itr)->ArenaTeamRating == 0                 // pass if no rating info
                || ( (*itr)->ArenaTeamRating >= MinRating       // pass if matches the rating range
-                     && (*itr)->ArenaTeamRating <= MaxRating ) ) )   
+                     && (*itr)->ArenaTeamRating <= MaxRating ) ) )
         {
             // the group matches the conditions
             // insert it in order of groupsize, and join time
@@ -297,7 +297,7 @@ void BattleGroundQueue::RemovePlayer(uint64 guid, bool decreaseInvitedCount)
     }
 
     if(!IsSet)
-    {                                                       
+    {
         // either player is offline, or he levelled up to another queue category
         // sLog.outError("Battleground: removing offline player from BG queue - this might not happen, but it should not cause crash");
         for (uint32 i = 0; i < MAX_BATTLEGROUND_QUEUES; i++)
@@ -648,7 +648,7 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
     uint32 arenaMaxRating = (arenaRating == 0)? 0 : arenaRating + sBattleGroundMgr.GetMaxRatingDifference();
     uint32 discardTime = 0;
     // if max rating difference is set and the time past since server startup is greater than the rating discard time
-    // (after what time the ratings aren't taken into account when making teams) then 
+    // (after what time the ratings aren't taken into account when making teams) then
     // the discard time is current_time - time_to_discard, teams that joined after that, will have their ratings taken into account
     // else leave the discard time on 0, this way all ratings will be discarded
     if(sBattleGroundMgr.GetMaxRatingDifference() && getMSTime() >= sBattleGroundMgr.GetRatingDiscardTimer())
@@ -1046,8 +1046,8 @@ void BattleGroundMgr::Update(time_t diff)
             m_BattleGroundQueues[BATTLEGROUND_QUEUE_3v3].Update(BATTLEGROUND_AA,6,ARENA_TYPE_3v3,true,0);
             m_BattleGroundQueues[BATTLEGROUND_QUEUE_5v5].Update(BATTLEGROUND_AA,6,ARENA_TYPE_5v5,true,0);
             m_NextRatingDiscardUpdate = m_RatingDiscardTimer;
-        } 
-        else 
+        }
+        else
             m_NextRatingDiscardUpdate -= diff;
     }
     if(m_AutoDistributePoints)
@@ -1309,7 +1309,7 @@ void BattleGroundMgr::InvitePlayer(Player* plr, uint32 bgInstanceGUID, uint32 te
     if(!bg)
         return;
     bg->IncreaseInvitedCount(team);
-    
+
     plr->SetInviteForBattleGroundQueueType(BGQueueTypeId(bg->GetTypeID(),bg->GetArenaType()), bgInstanceGUID);
 
     // set the arena teams for rated matches
@@ -1357,36 +1357,36 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(uint32 bgTypeId)
         sLog.outError("BattleGround: CreateNewBattleGround - bg template not found for %u", bgTypeId);
         return 0;
     }
-    
+
     // create a copy of the BG template
     switch(bgTypeId)
     {
-        case BATTLEGROUND_AV: 
-            bg = new BattleGroundAV(*(BattleGroundAV*)bg_template); 
+        case BATTLEGROUND_AV:
+            bg = new BattleGroundAV(*(BattleGroundAV*)bg_template);
             break;
-        case BATTLEGROUND_WS: 
-            bg = new BattleGroundWS(*(BattleGroundWS*)bg_template); 
+        case BATTLEGROUND_WS:
+            bg = new BattleGroundWS(*(BattleGroundWS*)bg_template);
             break;
-        case BATTLEGROUND_AB: 
-            bg = new BattleGroundAB(*(BattleGroundAB*)bg_template); 
+        case BATTLEGROUND_AB:
+            bg = new BattleGroundAB(*(BattleGroundAB*)bg_template);
             break;
-        case BATTLEGROUND_NA: 
-            bg = new BattleGroundNA(*(BattleGroundNA*)bg_template); 
+        case BATTLEGROUND_NA:
+            bg = new BattleGroundNA(*(BattleGroundNA*)bg_template);
             break;
-        case BATTLEGROUND_BE: 
-            bg = new BattleGroundBE(*(BattleGroundBE*)bg_template); 
+        case BATTLEGROUND_BE:
+            bg = new BattleGroundBE(*(BattleGroundBE*)bg_template);
             break;
-        case BATTLEGROUND_AA: 
-            bg = new BattleGroundAA(*(BattleGroundAA*)bg_template); 
+        case BATTLEGROUND_AA:
+            bg = new BattleGroundAA(*(BattleGroundAA*)bg_template);
             break;
-        case BATTLEGROUND_EY: 
-            bg = new BattleGroundEY(*(BattleGroundEY*)bg_template); 
+        case BATTLEGROUND_EY:
+            bg = new BattleGroundEY(*(BattleGroundEY*)bg_template);
             break;
-        case BATTLEGROUND_RL: 
-            bg = new BattleGroundRL(*(BattleGroundRL*)bg_template); 
+        case BATTLEGROUND_RL:
+            bg = new BattleGroundRL(*(BattleGroundRL*)bg_template);
             break;
         default:
-            //bg = new BattleGround;   
+            //bg = new BattleGround;
             return 0;
             break;             // placeholder for non implemented BG
     }
@@ -1462,7 +1462,7 @@ uint32 BattleGroundMgr::CreateBattleGround(uint32 bgTypeId, uint32 MinPlayersPer
     // do NOT add to update list, since this is a template battleground!
 
     // return some not-null value, bgTypeId is good enough for me
-    return bgTypeId; 
+    return bgTypeId;
 }
 
 void BattleGroundMgr::CreateInitialBattleGrounds()
@@ -1590,7 +1590,7 @@ void BattleGroundMgr::InitAutomaticArenaPointDistribution()
         QueryResult * result = CharacterDatabase.Query("SELECT UNIX_TIMESTAMP(NextArenaPointDistributionTime) FROM saved_variables");
         if(!result)
         {
-            sLog.outDebug("Battleground: Next arena point distribution time not found in SavedVariables, reseting it now."); 
+            sLog.outDebug("Battleground: Next arena point distribution time not found in SavedVariables, reseting it now.");
             m_NextAutoDistributionTime = time(NULL) + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS);
             CharacterDatabase.PExecute("INSERT INTO saved_variables (NextArenaPointDistributionTime) VALUES ( FROM_UNIXTIME('"I64FMTD"') )",(uint64)m_NextAutoDistributionTime);
         }

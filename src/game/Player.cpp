@@ -7710,7 +7710,7 @@ void Player::SendInitWorldStates()
                 bg->FillInitialWorldStates(data);
             else
             {
-                data << uint32(0xbb8) << uint32(0x0);           // 7 gold 
+                data << uint32(0xbb8) << uint32(0x0);           // 7 gold
                 data << uint32(0xbb9) << uint32(0x0);           // 8 green
                 data << uint32(0xbba) << uint32(0x0);           // 9 show
             }

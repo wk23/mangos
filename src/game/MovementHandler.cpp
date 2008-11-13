@@ -371,8 +371,8 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 
     if(movementInfo.z < -500.0f)
     {
-        if(GetPlayer()->InBattleGround() 
-            && GetPlayer()->GetBattleGround() 
+        if(GetPlayer()->InBattleGround()
+            && GetPlayer()->GetBattleGround()
             && GetPlayer()->GetBattleGround()->HandlePlayerUnderMap(_player))
         {
             // do nothing, the handle already did if returned true

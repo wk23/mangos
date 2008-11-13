@@ -89,7 +89,7 @@ BattleGround::BattleGround()
 BattleGround::~BattleGround()
 {
     // remove objects and creatures
-    // (this is done automatically in mapmanager update, when the instance is reset after the reset time)    
+    // (this is done automatically in mapmanager update, when the instance is reset after the reset time)
     int size = m_BgCreatures.size();
     for(int i = 0; i < size; ++i)
     {
@@ -238,8 +238,8 @@ void BattleGround::Update(time_t diff)
             // time's up!
             EndBattleGround(0); // noone wins
             m_PrematureCountDown = false;
-        } 
-        else 
+        }
+        else
         {
             uint32 newtime = m_PrematureCountDownTimer - diff;
             // announce every minute
@@ -356,7 +356,7 @@ void BattleGround::CastSpellOnTeam(uint32 SpellID, uint32 TeamID)
 
         uint32 team = itr->second.Team;//GetPlayerTeam(plr->GetGUID());
         if(!team) team = plr->GetTeam();
-       
+
         if(team == TeamID)
             plr->CastSpell(plr, SpellID, true);
     }
@@ -1023,7 +1023,7 @@ uint32 BattleGround::GetFreeSlotsForTeam(uint32 Team) const
         // default: allow 0
         uint32 diff = 0;
         // allow join one person if the sides are equal (to fill up bg to minplayersperteam)
-        if (otherTeam == GetInvitedCount(Team)) 
+        if (otherTeam == GetInvitedCount(Team))
             diff = 1;
         // allow join more ppl if the other side has more players
         else if(otherTeam > GetInvitedCount(Team))
