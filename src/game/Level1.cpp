@@ -288,7 +288,7 @@ bool ChatHandler::HandleGPSCommand(const char* args)
 
     Map2ZoneCoordinates(zone_x,zone_y,zone_id);
 
-    Map const *map = MapManager::Instance().GetMap(obj->GetMapId(), obj);
+    Map const *map = obj->GetMap();
     float ground_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), MAX_HEIGHT);
     float floor_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ());
 
@@ -349,7 +349,7 @@ bool ChatHandler::HandleNamegoCommand(const char* args)
             return false;
         }
 
-        Map* pMap = MapManager::Instance().GetMap(m_session->GetPlayer()->GetMapId(),m_session->GetPlayer());
+        Map* pMap = m_session->GetPlayer()->GetMap();
 
         if(pMap->IsBattleGroundOrArena())
         {
@@ -360,7 +360,7 @@ bool ChatHandler::HandleNamegoCommand(const char* args)
         }
         else if(pMap->IsDungeon())
         {
-            Map* cMap = MapManager::Instance().GetMap(chr->GetMapId(),chr);
+            Map* cMap = chr->GetMap();
             if( cMap->Instanceable() && cMap->GetInstanceId() != pMap->GetInstanceId() )
             {
                 // cannot summon from instance to instance
@@ -442,7 +442,7 @@ bool ChatHandler::HandleGonameCommand(const char* args)
     Player *chr = objmgr.GetPlayer(name.c_str());
     if (chr)
     {
-        Map* cMap = MapManager::Instance().GetMap(chr->GetMapId(),chr);
+        Map* cMap = chr->GetMap();
         if(cMap->IsBattleGroundOrArena())
         {
             // only allow if gm mode is on
@@ -464,6 +464,8 @@ bool ChatHandler::HandleGonameCommand(const char* args)
             _player->SetBattleGroundId(chr->GetBattleGroundId());
         }
         else if(cMap->IsDungeon())
+        Map* cMap = chr->GetMap();
+        if(cMap->Instanceable())
         {
             // we have to go to instance, and can go to player only if:
             //   1) we are in his group (either as leader or as member)
@@ -2085,7 +2087,7 @@ bool ChatHandler::HandleGroupgoCommand(const char* args)
         return false;
     }
 
-    Map* gmMap = MapManager::Instance().GetMap(m_session->GetPlayer()->GetMapId(),m_session->GetPlayer());
+    Map* gmMap = m_session->GetPlayer()->GetMap();
     bool to_instance =  gmMap->Instanceable();
 
     // we are in instance, and can summon only player in our group with us as lead
@@ -2115,7 +2117,7 @@ bool ChatHandler::HandleGroupgoCommand(const char* args)
 
         if (to_instance)
         {
-            Map* plMap = MapManager::Instance().GetMap(pl->GetMapId(),pl);
+            Map* plMap = pl->GetMap();
 
             if ( plMap->Instanceable() && plMap->GetInstanceId() != gmMap->GetInstanceId() )
             {
