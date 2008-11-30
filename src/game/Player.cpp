@@ -5956,10 +5956,6 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
     // need call before fields update to have chance move yesterday data to appropriate fields before today data change.
     UpdateHonorFields();
 
-    // do not reward honor in arenas, but return true to enable onkill spellproc
-    if(InBattleGround() && GetBattleGround() && GetBattleGround()->isArena())
-        return true;
-
     if(honor <= 0)
     {
         if(!uVictim || uVictim == this || uVictim->HasAuraType(SPELL_AURA_NO_PVP_CREDIT))
