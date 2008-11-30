@@ -176,8 +176,6 @@ class ArenaTeam
 
         void UpdateArenaPointsHelper();
 
-        void FinishWeek();
-
         void NotifyStatsChanged();
 
         void FinishWeek();
