@@ -138,43 +138,24 @@ bool ArenaTeam::AddMember(uint64 PlayerGuid)
     {
         pl->SetInArenaTeam(Id, GetSlot());
         pl->SetArenaTeamIdInvited(0);
-        // personal rating
-        pl->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6) + 5, 1500);
-    }
 
-    // hide promote/remove buttons
-    if(CaptainGuid != PlayerGuid)
-    {
-        if(pl)
+        // hide promote/remove buttons
+        if(CaptainGuid != PlayerGuid)
             pl->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 1);
     }
-
-    // setuint32valueindb is asynch, can't be used here
-    Tokens tokens;
-    if(!Player::LoadValuesArrayFromDB(tokens,PlayerGuid))
-        return false;
-
-    // arena team id
-    uint16 index = PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6);
-    char buf[11];
-    snprintf(buf,11,"%u",Id);
-    tokens[index] = buf;
-    // pers rating
-    index = PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6) + 5;
-    buf[11];
-    snprintf(buf,11,"%u",1500);
-    tokens[index] = buf;
-    // hide promote/remove buttons
-    if(CaptainGuid != PlayerGuid)
+    else
     {
-        index = PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6);
-        buf[11];
-        snprintf(buf,11,"%u",1);
-        tokens[index] = buf;
+        Tokens tokens;
+        if(Player::LoadValuesArrayFromDB(tokens,PlayerGuid))
+        {
+            Player::SetUInt32ValueInArray(tokens,PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6), Id);
+            // hide promote/remove buttons
+            if(CaptainGuid != PlayerGuid)
+                Player::SetUInt32ValueInArray(tokens,PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 1);
+
+            Player::SaveValuesArrayInDB(tokens,PlayerGuid);
+        }
     }
-
-    Player::SaveValuesArrayInDB(tokens,PlayerGuid);
-
     return true;
 }
 
@@ -664,8 +645,6 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstrating)
             personalrating += mod;
             if(personalrating < 0)
                 personalrating = 0;
-
-            plr->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5, personalrating);
             itr->personal_rating = personalrating;
             // update personal played stats
             itr->games_week +=1;
@@ -692,8 +671,6 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstrating)
             personalrating += mod;
             if(personalrating < 0)
                 personalrating = 0;
-
-            plr->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5, personalrating);
             itr->personal_rating = personalrating;
             // update personal stats
             itr->games_week +=1;
