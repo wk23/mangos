@@ -657,15 +657,16 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstrating)
     {
         if(itr->guid == plr->GetGUID())
         {
-            //TODO: change personalrating to new style
             // update personal rating
-            int32 personalrating = plr->GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5);
+            int32 personalrating = itr->personal_rating;
             float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)personalrating)/400.0f));
             int32 mod = (int32)ceil(32.0f * (0.0f - chance));
             personalrating += mod;
             if(personalrating < 0)
                 personalrating = 0;
+
             plr->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5, personalrating);
+            itr->personal_rating = personalrating;
             // update personal played stats
             itr->games_week +=1;
             itr->games_season +=1;
@@ -684,15 +685,16 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstrating)
     {
         if(itr->guid == plr->GetGUID())
         {
-            //TODO: change personalrating to new style
             // update personal rating
-            int32 personalrating = plr->GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5);
+            int32 personalrating = itr->personal_rating;
             float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)personalrating)/400.0f));
             int32 mod = (int32)floor(32.0f * (1.0f - chance));
             personalrating += mod;
             if(personalrating < 0)
                 personalrating = 0;
+
             plr->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5, personalrating);
+            itr->personal_rating = personalrating;
             // update personal stats
             itr->games_week +=1;
             itr->games_season +=1;
@@ -720,16 +722,8 @@ void ArenaTeam::UpdateArenaPointsHelper()
         // the player participated in enough games, update his points
         if(itr->games_week >= min_plays)
         {
-            // do it separately for online and offline players
-            // online players might have modified personal rating in MemberLost/MemberWon, that's not already saved to DB because of asynch queries
-            // offline player cant have a personal rating not matching the db
-            Player * plr = objmgr.GetPlayer(itr->guid);
             uint32 points_to_add = 0;
-            //TODO update to new personalrating style
-            if(plr)
-                points_to_add = GetPoints(plr->GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5));
-            else
-                points_to_add = GetPoints(Player::GetUInt32ValueFromDB(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5,itr->guid));
+            points_to_add = itr->personal_rating;
             // it's enough to set the points in memory, the saving is done in separate function
             CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", points_to_add, Id, itr->guid);
         }
