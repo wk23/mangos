@@ -742,7 +742,7 @@ void ArenaTeam::SaveToDB()
     CharacterDatabase.PExecute("UPDATE arena_team_stats SET rating = '%u',games = '%u',played = '%u',rank = '%u',wins = '%u',wins2 = '%u' WHERE arenateamid = '%u'", stats.rating, stats.games_week, stats.games_season, stats.rank, stats.wins_week, stats.wins_season, GetId());
     for(MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
     {
-        CharacterDatabase.PExecute("UPDATE arena_team_member SET played_week = '%u', wons_week = '%u', played_season = '%u', wons_season = '%u' WHERE arenateamid = '%u' AND guid = '%u'", itr->games_week, itr->wins_week, itr->games_season, itr->wins_season, Id, itr->guid);
+        CharacterDatabase.PExecute("UPDATE arena_team_member SET games_week = '%u', wins_week = '%u', games_season = '%u', wins_season = '%u' WHERE arenateamid = '%u' AND guid = '%u'", itr->games_week, itr->wins_week, itr->games_season, itr->wins_season, Id, itr->guid);
     }
 }
 
