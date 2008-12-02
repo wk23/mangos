@@ -93,6 +93,15 @@ struct ArenaTeamMember
     uint32 games_season;
     uint32 wins_season;
     uint32 personal_rating;
+
+    void ModifyPersonalRating(Player* plr, int32 mod, uint32 slot)
+    {
+        personal_rating += mod;
+        if(personal_rating < 0)
+            personal_rating = 0;
+        if(plr)
+            plr->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (slot*6) + 5, personal_rating);
+    }
 };
 
 struct ArenaTeamStats

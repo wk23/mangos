@@ -254,12 +254,16 @@ void ArenaTeam::LoadPlayerStats(ArenaTeamMember *member)
 {
     Field *fields;
 
-    QueryResult *result = CharacterDatabase.PQuery("SELECT name,class FROM characters WHERE guid = '%u'", GUID_LOPART(member->guid));
+    QueryResult *result = CharacterDatabase.PQuery("SELECT name,class,data FROM characters WHERE guid = '%u'", GUID_LOPART(member->guid));
     if(!result)
         return;
     fields = result->Fetch();
     member->name  = fields[0].GetCppString();
     member->Class = fields[1].GetUInt8();
+
+    // for now load personal rating from data field
+    Tokens data = StrSplit(fields[2].GetCppString(), " ");
+    member->personal_rating = Player::GetUInt32ValueFromArray(data, PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5);
 
     delete result;
 }
@@ -639,13 +643,9 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstrating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            int32 personalrating = itr->personal_rating;
-            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)personalrating)/400.0f));
+            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)(itr->personal_rating))/400.0f));
             int32 mod = (int32)ceil(32.0f * (0.0f - chance));
-            personalrating += mod;
-            if(personalrating < 0)
-                personalrating = 0;
-            itr->personal_rating = personalrating;
+            itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal played stats
             itr->games_week +=1;
             itr->games_season +=1;
@@ -665,13 +665,9 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstrating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            int32 personalrating = itr->personal_rating;
-            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)personalrating)/400.0f));
+            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)(itr->personal_rating))/400.0f));
             int32 mod = (int32)floor(32.0f * (1.0f - chance));
-            personalrating += mod;
-            if(personalrating < 0)
-                personalrating = 0;
-            itr->personal_rating = personalrating;
+            itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal stats
             itr->games_week +=1;
             itr->games_season +=1;
