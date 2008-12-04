@@ -568,8 +568,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         {
             // remove wrong guild data
             sLog.outError("Player %s (GUID: %u) marked as member not existed guild (id: %u), removing guild membership for player.",pCurrChar->GetName(),pCurrChar->GetGUIDLow(),pCurrChar->GetGuildId());
-            pCurrChar->SetUInt32Value(PLAYER_GUILDID,0);
-            pCurrChar->SetUInt32ValueInDB(PLAYER_GUILDID,0,pCurrChar->GetGUID());
+            pCurrChar->SetInGuild(0);
         }
     }
 
@@ -745,6 +744,9 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     // show time before shutdown if shutdown planned.
     if(sWorld.IsShutdowning())
         sWorld.ShutdownMsg(true,pCurrChar);
+
+    if(sWorld.getConfig(CONFIG_ALL_TAXI_PATHS))
+        pCurrChar->SetTaxiCheater(true);
 
     if(pCurrChar->isGameMaster())
         SendNotification(LANG_GM_ON);
