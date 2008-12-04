@@ -696,7 +696,7 @@ void ArenaTeam::UpdateArenaPointsHelper()
         if(itr->games_week >= min_plays)
         {
             uint32 points_to_add = 0;
-            points_to_add = itr->personal_rating;
+            points_to_add = GetPoints(itr->personal_rating);
             // it's enough to set the points in memory, the saving is done in separate function
             CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", points_to_add, Id, itr->guid);
         }
