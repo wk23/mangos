@@ -2172,7 +2172,7 @@ void World::ScriptsProcess()
 void World::SendGlobalMessage(WorldPacket *packet, WorldSession *self, uint32 team)
 {
     SessionMap::iterator itr;
-    for (itr = m_sessions.begin(); itr != m_sessions.end(); itr++)
+    for (itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
     {
         if (itr->second &&
             itr->second->GetPlayer() &&
@@ -2261,7 +2261,7 @@ void World::SendGlobalText(const char* text, WorldSession *self)
 void World::SendZoneMessage(uint32 zone, WorldPacket *packet, WorldSession *self, uint32 team)
 {
     SessionMap::iterator itr;
-    for (itr = m_sessions.begin(); itr != m_sessions.end(); itr++)
+    for (itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
     {
         if (itr->second &&
             itr->second->GetPlayer() &&

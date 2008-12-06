@@ -1048,6 +1048,9 @@ uint32 BattleGround::GetFreeSlotsForTeam(uint32 Team) const
         // allow join more ppl if the other side has more players
         else if (otherIn > GetPlayersCountByTeam(Team))
             diff3 = otherIn - GetPlayersCountByTeam(Team);
+        // or other side has less than minPlayersPerTeam
+        else if (otherTeam <= GetMinPlayersPerTeam())
+            diff3 = GetMinPlayersPerTeam() - otherTeam + 1;
 
         // return the minimum of the 3 differences
 

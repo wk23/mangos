@@ -282,10 +282,10 @@ class ObjectMgr
 
         typedef std::set< Group * > GroupSet;
         typedef std::set< Guild * > GuildSet;
-        typedef std::set< ArenaTeam * > ArenaTeamSet;
+
+        typedef UNORDERED_MAP<uint32, ArenaTeam* > ArenaTeamMap;
 
         typedef UNORDERED_MAP<uint32, Quest*> QuestMap;
-
 
         typedef UNORDERED_MAP<uint32, AreaTrigger> AreaTriggerMap;
 
@@ -320,11 +320,11 @@ class ObjectMgr
 
         ArenaTeam* GetArenaTeamById(const uint32 ArenaTeamId) const;
         ArenaTeam* GetArenaTeamByName(std::string ArenaTeamName) const;
-        ArenaTeam* GetArenaTeamByCapitan(uint64 const& guid) const;
-        void AddArenaTeam(ArenaTeam* arenateam) { mArenaTeamSet.insert( arenateam ); }
-        void RemoveArenaTeam(ArenaTeam* arenateam) { mArenaTeamSet.erase( arenateam ); }
-        ArenaTeamSet::iterator GetArenaTeamSetBegin() { return mArenaTeamSet.begin(); }
-        ArenaTeamSet::iterator GetArenaTeamSetEnd() { return mArenaTeamSet.end(); }
+        ArenaTeam* GetArenaTeamByCaptain(uint64 const& guid) const;
+        void AddArenaTeam(ArenaTeam* arenaTeam);
+        void RemoveArenaTeam(ArenaTeam* arenaTeam);
+        ArenaTeamMap::iterator GetArenaTeamMapBegin() { return mArenaTeamMap.begin(); }
+        ArenaTeamMap::iterator GetArenaTeamMapEnd()   { return mArenaTeamMap.end(); }
 
         static CreatureInfo const *GetCreatureTemplate( uint32 id );
         CreatureModelInfo const *GetCreatureModelInfo( uint32 modelid );
@@ -803,7 +803,7 @@ class ObjectMgr
 
         GroupSet            mGroupSet;
         GuildSet            mGuildSet;
-        ArenaTeamSet        mArenaTeamSet;
+        ArenaTeamMap        mArenaTeamMap;
 
         ItemMap             mItems;
         ItemMap             mAitems;

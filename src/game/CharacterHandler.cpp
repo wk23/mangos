@@ -411,7 +411,7 @@ void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
     }
 
     // is arena team captain
-    if(objmgr.GetArenaTeamByCapitan(guid))
+    if(objmgr.GetArenaTeamByCaptain(guid))
     {
         WorldPacket data(SMSG_CHAR_DELETE, 1);
         data << (uint8)CHAR_DELETE_FAILED_ARENA_CAPTAIN;

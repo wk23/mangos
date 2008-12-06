@@ -277,7 +277,7 @@ void ArenaTeam::SetCaptain(uint64 guid)
 void ArenaTeam::DelMember(uint64 guid)
 {
     MemberList::iterator itr;
-    for (itr = members.begin(); itr != members.end(); itr++)
+    for (itr = members.begin(); itr != members.end(); ++itr)
     {
         if (itr->guid == guid)
         {
@@ -314,7 +314,7 @@ void ArenaTeam::Disband(WorldSession *session)
 
     MemberList::iterator itr;
     uint32 i=0;
-    for(itr = members.begin(); itr != members.end(); itr++, i++)
+    for(itr = members.begin(); itr != members.end(); ++itr, i++)
         memberGuids[i] = itr->guid;
 
     members.clear();
@@ -485,7 +485,7 @@ uint8 ArenaTeam::GetSlot() const
 
 void ArenaTeam::BroadcastPacket(WorldPacket *packet)
 {
-    for (MemberList::iterator itr = members.begin(); itr != members.end(); itr++)
+    for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
     {
         Player *player = objmgr.GetPlayer(itr->guid);
         if(player)

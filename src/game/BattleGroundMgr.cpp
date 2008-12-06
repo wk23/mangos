@@ -1610,53 +1610,13 @@ void BattleGroundMgr::DistributeArenaPoints()
 
     sWorld.SendGlobalText("Distributing arena points to players...", NULL);
 
-    /*CharacterDatabase.BeginTransaction();
-    // direct execute, because of the later GetUInt32ValueFromDB() calls
-                                                                                                                                        // 1                                                                                               2                                                          3                                                 4                                                                                                                                      5                                                                              6                                                         7                                                 8                                                                                                                                  9                                                                                    10                                                 1                           2                              3                        4                                        5                                      6                        7                              8                       9                                             10
-    CharacterDatabase.DirectPExecute("UPDATE characters b, arena_team_member a SET b.data = CONCAT( SUBSTRING_INDEX(b.data, ' ', '%u'),' ', CAST( IF ( ((CAST( SUBSTRING( b.data FROM (CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) + 2) FOR (CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) - CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) - 1) ) AS UNSIGNED) + (SELECT MAX(c.points_to_add) FROM arena_team_member c WHERE c.guid = b.guid GROUP BY c.guid) ) < '%u'), CAST(SUBSTRING(b.data FROM (CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) + 2) FOR (CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) - CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) - 1) ) AS UNSIGNED) + (SELECT MAX(d.points_to_add) FROM arena_team_member d WHERE d.guid = b.guid GROUP BY d.guid), '%u') AS CHAR),' ',SUBSTRING(b.data FROM (CHAR_LENGTH(SUBSTRING_INDEX(b.data,' ','%u')) + 2))) WHERE b.guid = a.guid",PLAYER_FIELD_ARENA_CURRENCY, PLAYER_FIELD_ARENA_CURRENCY, PLAYER_FIELD_ARENA_CURRENCY+1, PLAYER_FIELD_ARENA_CURRENCY, sWorld.getConfig(CONFIG_MAX_ARENA_POINTS),PLAYER_FIELD_ARENA_CURRENCY, PLAYER_FIELD_ARENA_CURRENCY+1, PLAYER_FIELD_ARENA_CURRENCY, sWorld.getConfig(CONFIG_MAX_ARENA_POINTS), PLAYER_FIELD_ARENA_CURRENCY+1);
-    for(int i=0; i<3; ++i)
-    {
-        // reset weekly played matches
-        uint32 position = PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 6 * i + 2;
-        CharacterDatabase.DirectPExecute("UPDATE characters SET data = CONCAT( SUBSTRING_INDEX(data,' ','%u'),' ','0',' ',SUBSTRING(data FROM (CHAR_LENGTH(SUBSTRING_INDEX(data,' ','%u')) + 2)))",position, position + 1);
-    }
-    CharacterDatabase.DirectExecute("UPDATE arena_team_member SET points_to_add = '0', games_week = '0', wins_week = '0'");
-    CharacterDatabase.DirectExecute("UPDATE arena_team_stats SET games = '0', wins = '0'");
-    CharacterDatabase.CommitTransaction();
-
-    sWorld.SendGlobalText("Finished distributing arena points to players. Now set the new points in online players' data blob, this will send them update packets as well...", NULL);
-
-    QueryResult *result = CharacterDatabase.PQuery("SELECT guid, data FROM characters WHERE online = '1'");
-    if( result )
-    {
-        do
-        {
-            Field *fields = result->Fetch();
-
-            uint32 guid = fields[0].GetUInt32();
-            if(Player * pl = objmgr.GetPlayer(MAKE_NEW_GUID(guid, 0, HIGHGUID_PLAYER)))
-            {
-                Tokens data = StrSplit(fields[1].GetCppString(), " ");
-                // update arena currency
-                pl->SetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY, Player::GetUInt32ValueFromArray(data, PLAYER_FIELD_ARENA_CURRENCY));
-                // reset played this week count for all teams
-                for(int i= 0; i < 3; ++i)
-                    pl->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 6 * i + 2, 0);
-            }
-
-        } while (result->NextRow());
-
-        delete result;
-    }
-*/
-
     //temporary structure for storing maximum points to add values for all players
     std::map<uint32, uint32> PlayerPoints;
 
     //at first update all points for all team members
-    for(ObjectMgr::ArenaTeamSet::iterator team_itr = objmgr.GetArenaTeamSetBegin(); team_itr != objmgr.GetArenaTeamSetEnd(); ++team_itr)
+    for(ObjectMgr::ArenaTeamMap::iterator team_itr = objmgr.GetArenaTeamMapBegin(); team_itr != objmgr.GetArenaTeamMapEnd(); ++team_itr)
     {
-        if(ArenaTeam * at = (*team_itr))
+        if(ArenaTeam * at = team_itr->second)
         {
             at->UpdateArenaPointsHelper(PlayerPoints);
         }
@@ -1678,19 +1638,15 @@ void BattleGroundMgr::DistributeArenaPoints()
     sWorld.SendGlobalText("Finished setting arena points for online players.", NULL);
 
     sWorld.SendGlobalText("Modifying played count, arena points etc. for loaded arena teams, sending updated stats to online players...", NULL);
-    for(ObjectMgr::ArenaTeamSet::iterator titr = objmgr.GetArenaTeamSetBegin(); titr != objmgr.GetArenaTeamSetEnd(); ++titr)
+    for(ObjectMgr::ArenaTeamMap::iterator titr = objmgr.GetArenaTeamMapBegin(); titr != objmgr.GetArenaTeamMapEnd(); ++titr)
     {
-        if(ArenaTeam * at = (*titr))
+        if(ArenaTeam * at = titr->second)
         {
             at->FinishWeek();                              // set played this week etc values to 0 in memory, too
             at->SaveToDB();                                // save changes
             at->NotifyStatsChanged();                      // notify the players of the changes
         }
     }
-
-
-    
-
 
     sWorld.SendGlobalText("Modification done.", NULL);
 

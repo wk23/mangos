@@ -2391,7 +2391,7 @@ void Player::SendInitialSpells()
 
     uint16 spellCooldowns = m_spellCooldowns.size();
     data << uint16(spellCooldowns);
-    for(SpellCooldowns::const_iterator itr=m_spellCooldowns.begin(); itr!=m_spellCooldowns.end(); itr++)
+    for(SpellCooldowns::const_iterator itr=m_spellCooldowns.begin(); itr!=m_spellCooldowns.end(); ++itr)
     {
         SpellEntry const *sEntry = sSpellStore.LookupEntry(itr->first);
         if(!sEntry)
@@ -3213,7 +3213,7 @@ bool Player::_removeSpell(uint16 spell_id)
 
 Mail* Player::GetMail(uint32 id)
 {
-    for(PlayerMails::iterator itr = m_mail.begin(); itr != m_mail.end(); itr++)
+    for(PlayerMails::iterator itr = m_mail.begin(); itr != m_mail.end(); ++itr)
     {
         if ((*itr)->messageID == id)
         {
@@ -5424,7 +5424,7 @@ void Player::SendInitialReputations()
 
     RepListID a = 0;
 
-    for (FactionStateList::const_iterator itr = m_factions.begin(); itr != m_factions.end(); itr++)
+    for (FactionStateList::const_iterator itr = m_factions.begin(); itr != m_factions.end(); ++itr)
     {
         // fill in absent fields
         for (; a != itr->first; a++)
@@ -14739,13 +14739,13 @@ void Player::SendRaidInfo()
 
     uint32 counter = 0, i;
     for(i = 0; i < TOTAL_DIFFICULTIES; i++)
-        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); itr++)
+        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
             if(itr->second.perm) counter++;
 
     data << counter;
     for(i = 0; i < TOTAL_DIFFICULTIES; i++)
     {
-        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); itr++)
+        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             if(itr->second.perm)
             {
@@ -15243,7 +15243,7 @@ void Player::_SaveMail()
     if (!m_mailsLoaded)
         return;
 
-    for (PlayerMails::iterator itr = m_mail.begin(); itr != m_mail.end(); itr++)
+    for (PlayerMails::iterator itr = m_mail.begin(); itr != m_mail.end(); ++itr)
     {
         Mail *m = (*itr);
         if (m->state == MAIL_STATE_CHANGED)
@@ -15910,7 +15910,7 @@ void Player::PetSpellInitialize()
 
         if(pet->isControlled() && (pet->getPetType() == HUNTER_PET || cinfo && cinfo->type == CREATURE_TYPE_DEMON && getClass() == CLASS_WARLOCK))
         {
-            for(PetSpellMap::iterator itr = pet->m_spells.begin();itr != pet->m_spells.end();itr++)
+            for(PetSpellMap::iterator itr = pet->m_spells.begin();itr != pet->m_spells.end();++itr)
             {
                 if(itr->second->state == PETSPELL_REMOVED)
                     continue;

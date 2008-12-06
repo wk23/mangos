@@ -137,7 +137,7 @@ uint32 TimeStringToSecs(std::string timestring)
     uint32 buffer     = 0;
     uint32 multiplier = 0;
 
-    for(std::string::iterator itr = timestring.begin(); itr != timestring.end(); itr++ )
+    for(std::string::iterator itr = timestring.begin(); itr != timestring.end(); ++itr )
     {
         if(isdigit(*itr))
         {
