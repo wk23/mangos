@@ -276,7 +276,6 @@ void WorldSession::HandleArenaTeamDisbandOpcode(WorldPacket & recv_data)
 void WorldSession::HandleArenaTeamRemoveFromTeamOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug("CMSG_ARENA_TEAM_REMOVE_FROM_TEAM");
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4+1);
 
@@ -330,7 +329,6 @@ void WorldSession::HandleArenaTeamRemoveFromTeamOpcode(WorldPacket & recv_data)
 void WorldSession::HandleArenaTeamPromoteToCaptainOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug("CMSG_ARENA_TEAM_PROMOTE_TO_CAPTAIN");
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4+1);
 
@@ -374,13 +372,13 @@ void WorldSession::HandleArenaTeamPromoteToCaptainOpcode(WorldPacket & recv_data
     at->BroadcastPacket(&data);
 }
 
-void WorldSession::SendArenaTeamCommandResult(uint32 unk1, std::string str1, std::string str2, uint32 unk3)
+void WorldSession::SendArenaTeamCommandResult(uint32 team_action, std::string str1, std::string str2, uint32 error_id)
 {
     WorldPacket data(SMSG_ARENA_TEAM_COMMAND_RESULT, 4+str1.length()+1+str2.length()+1+4);
-    data << unk1;
+    data << team_action;
     data << str1;
     data << str2;
-    data << unk3;
+    data << error_id;
     SendPacket(&data);
 }
 
