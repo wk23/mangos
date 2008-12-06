@@ -549,7 +549,7 @@ uint8 ArenaTeam::GetSlotByType( uint32 type )
     return 0xFF;
 }
 
-bool ArenaTeam::HaveMember( uint64 guid ) const
+bool ArenaTeam::HaveMember( const uint64& guid ) const
 {
     for (MemberList::const_iterator itr = members.begin(); itr != members.end(); ++itr)
         if(itr->guid==guid)

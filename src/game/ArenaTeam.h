@@ -152,8 +152,8 @@ class ArenaTeam
         uint32 GetMembersSize() const { return members.size(); }
         MemberList::iterator membersbegin(){ return members.begin(); }
         MemberList::iterator membersEnd(){ return members.end(); }
-        bool HaveMember(uint64 guid) const;
-        ArenaTeamMember* GetMember(uint64 guid)
+        bool HaveMember(const uint64& guid) const;
+        ArenaTeamMember* GetMember(const uint64& guid)
         {
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
                 if(itr->guid==guid)

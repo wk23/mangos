@@ -809,9 +809,10 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOADSPELLCOOLDOWNS       = 15,
     PLAYER_LOGIN_QUERY_LOADDECLINEDNAMES        = 16,
     PLAYER_LOGIN_QUERY_LOADGUILD                = 17,
-};
+    PLAYER_LOGIN_QUERY_LOADARENAINFO            = 18,
 
-#define MAX_PLAYER_LOGIN_QUERY                    18
+    MAX_PLAYER_LOGIN_QUERY
+};
 
 // Player summoning auto-decline time (in secs)
 #define MAX_PLAYER_SUMMON_DELAY                   (2*MINUTE)
@@ -2105,6 +2106,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void _LoadFriendList(QueryResult *result);
         bool _LoadHomeBind(QueryResult *result);
         void _LoadDeclinedNames(QueryResult *result);
+        void _LoadArenaTeamInfo(QueryResult *result);
 
         /*********************************************************/
         /***                   SAVE SYSTEM                     ***/
