@@ -211,7 +211,6 @@ void WorldSession::HandleArenaTeamInviteDeclineOpcode(WorldPacket & /*recv_data*
 void WorldSession::HandleArenaTeamLeaveOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug("CMSG_ARENA_TEAM_LEAVE");
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4);
 
@@ -251,7 +250,6 @@ void WorldSession::HandleArenaTeamLeaveOpcode(WorldPacket & recv_data)
 void WorldSession::HandleArenaTeamDisbandOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug("CMSG_ARENA_TEAM_DISBAND");
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4);
 

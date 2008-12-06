@@ -67,9 +67,9 @@ bool ArenaTeam::create(uint64 captainGuid, uint32 type, std::string ArenaTeamNam
     CharacterDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid='%u'", Id);
     CharacterDatabase.PExecute("INSERT INTO arena_team (arenateamid,name,captainguid,type,BackgroundColor,EmblemStyle,EmblemColor,BorderStyle,BorderColor) "
         "VALUES('%u','%s','%u','%u','%u','%u','%u','%u','%u')",
-        Id, ArenaTeamName.c_str(), GUID_LOPART(CaptainGuid), Type, BackgroundColor,EmblemStyle,EmblemColor,BorderStyle,BorderColor);
+        Id, ArenaTeamName.c_str(), GUID_LOPART(CaptainGuid), Type, BackgroundColor, EmblemStyle, EmblemColor, BorderStyle, BorderColor);
     CharacterDatabase.PExecute("INSERT INTO arena_team_stats (arenateamid, rating, games, wins, played, wins2, rank) VALUES "
-        "('%u', '%u', '%u', '%u', '%u', '%u', '%u')", Id,stats.rating,stats.games_week,stats.wins_week,stats.games_season,stats.wins_season,stats.rank);
+        "('%u', '%u', '%u', '%u', '%u', '%u', '%u')", Id, stats.rating, stats.games_week, stats.wins_week, stats.games_season, stats.wins_season, stats.rank);
 
     CharacterDatabase.CommitTransaction();
 
@@ -142,19 +142,6 @@ bool ArenaTeam::AddMember(uint64 PlayerGuid)
         // hide promote/remove buttons
         if(CaptainGuid != PlayerGuid)
             pl->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 1);
-    }
-    else
-    {
-        Tokens tokens;
-        if(Player::LoadValuesArrayFromDB(tokens,PlayerGuid))
-        {
-            Player::SetUInt32ValueInArray(tokens,PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6), Id);
-            // hide promote/remove buttons
-            if(CaptainGuid != PlayerGuid)
-                Player::SetUInt32ValueInArray(tokens,PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 1);
-
-            Player::SaveValuesArrayInDB(tokens,PlayerGuid);
-        }
     }
     return true;
 }
@@ -516,14 +503,7 @@ void ArenaTeam::SetStats(uint32 stat_type, uint32 value)
 
 uint8 ArenaTeam::GetSlot() const
 {
-    uint8 slot = GetSlotByType(GetType());
-    if(slot >= MAX_ARENA_SLOT)
-    {
-        sLog.outError("Unknown arena team type %u for arena team %u", uint32(GetType()), GetId());
-        return 0;                                           // better return existed slot to prevent untelated data curruption
-    }
-
-    return slot;
+    return GetSlotByType(GetType());
 }
 
 void ArenaTeam::BroadcastPacket(WorldPacket *packet)
@@ -546,13 +526,14 @@ uint8 ArenaTeam::GetSlotByType( uint32 type )
         default:
             break;
     }
+    sLog.outError("FATAL: Unknown arena team type %u for some arena team", type);
     return 0xFF;
 }
 
 bool ArenaTeam::HaveMember( const uint64& guid ) const
 {
     for (MemberList::const_iterator itr = members.begin(); itr != members.end(); ++itr)
-        if(itr->guid==guid)
+        if(itr->guid == guid)
             return true;
 
     return false;
@@ -566,13 +547,9 @@ uint32 ArenaTeam::GetPoints(uint32 MemberRating)
     uint32 rating = MemberRating + 150 < stats.rating ? MemberRating : stats.rating;
 
     if(rating<=1500)
-    {
         points = (float)rating * 0.22f + 14.0f;
-    }
     else
-    {
         points = 1511.26f / (1.0f + 1639.28f * exp(-0.00412f * (float)rating));
-    }
 
     // type penalties for <5v5 teams
     if(Type == ARENA_TEAM_2v2)
@@ -601,15 +578,13 @@ int32 ArenaTeam::WonAgainstChance(float chance)
     stats.wins_week += 1;
     stats.games_season += 1;
     stats.wins_season += 1;
-/*  this should be done in .flusharenapoints; not a breaker though.
-    uint32 higher_rank = 0;
-    QueryResult *result = CharacterDatabase.PQuery("SELECT DISTINCT COUNT(arenateamid) FROM arena_team_stats WHERE rating > '%u' AND arenateamid <> '%u'",stats.rating, Id);
+    //update team's rank
+    QueryResult *result = CharacterDatabase.PQuery("SELECT COUNT (arenateamid) FROM arena_team_stats s INNER JOIN arena_team a ON a.arenateamid = s.arenateamid WHERE s.rating > '%u' AND a.type = '%u'",stats.rating, this->Type);
     if(result)
     {
-        higher_rank = result->Fetch()->GetUInt32();
+        stats.rank = result->Fetch()->GetUInt32() + 1;
         delete result;
     }
-    stats.rank = higher_rank + 1;*/
     // return the rating change, used to display it on the results screen
     return mod;
 }
@@ -623,19 +598,18 @@ int32 ArenaTeam::LostAgainstChance(float chance)
     stats.rating += mod;
     stats.games_week += 1;
     stats.games_season += 1;
-/*    uint32 higher_rank = 0;
-    QueryResult *result = CharacterDatabase.PQuery("SELECT DISTINCT COUNT (arenateamid) FROM arena_team_stats WHERE rating > '%u' AND arenateamid <> '%u'",stats.rating, Id);
+    //update team's rank
+    QueryResult *result = CharacterDatabase.PQuery("SELECT COUNT (arenateamid) FROM arena_team_stats s INNER JOIN arena_team a ON a.arenateamid = s.arenateamid WHERE s.rating > '%u' AND a.type = '%u'",stats.rating, this->Type);
     if(result)
     {
-        higher_rank = result->Fetch()->GetUInt32();
+        stats.rank = result->Fetch()->GetUInt32() + 1;
         delete result;
     }
-    stats.rank = higher_rank + 1;*/
-    // return the rating adjustment for display
+    // return the rating change, used to display it on the results screen
     return mod;
 }
 
-void ArenaTeam::MemberLost(Player * plr, uint32 againstrating)
+void ArenaTeam::MemberLost(Player * plr, uint32 againstRating)
 {
     // called for each participant of a match after losing
     for(MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
@@ -643,7 +617,7 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstrating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)(itr->personal_rating))/400.0f));
+            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstRating - (float)(itr->personal_rating))/400.0f));
             int32 mod = (int32)ceil(32.0f * (0.0f - chance));
             itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal played stats
@@ -657,7 +631,7 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstrating)
     }
 }
 
-void ArenaTeam::MemberWon(Player * plr, uint32 againstrating)
+void ArenaTeam::MemberWon(Player * plr, uint32 againstRating)
 {
     // called for each participant after winning a match
     for(MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
@@ -665,7 +639,7 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstrating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstrating - (float)(itr->personal_rating))/400.0f));
+            float chance = 1.0f/(1.0f+exp(log(10.0f)*(float)((float)againstRating - (float)(itr->personal_rating))/400.0f));
             int32 mod = (int32)floor(32.0f * (1.0f - chance));
             itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal stats
@@ -693,18 +667,10 @@ void ArenaTeam::UpdateArenaPointsHelper()
     for(MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
     {
         // the player participated in enough games, update his points
+        uint32 points_to_add = 0;
         if(itr->games_week >= min_plays)
-        {
-            uint32 points_to_add = 0;
             points_to_add = GetPoints(itr->personal_rating);
-            // it's enough to set the points in memory, the saving is done in separate function
-            CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", points_to_add, Id, itr->guid);
-        }
-        // the player failed to participate in enough games, so no points for him
-        else
-        {
-            CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", 0, Id, itr->guid);
-        }
+        CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", points_to_add, Id, itr->guid);
     }
 }
 
