@@ -1518,7 +1518,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SetInArenaTeam(uint32 ArenaTeamId, uint8 slot)
         {
             SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (slot * 6), ArenaTeamId);
-            SetUInt32ValueInDB(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (slot * 6), ArenaTeamId, GetGUID());
         }
         uint32 GetArenaTeamId(uint8 slot) { return GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (slot * 6)); }
         static uint32 GetArenaTeamIdFromDB(uint64 guid, uint8 slot);
