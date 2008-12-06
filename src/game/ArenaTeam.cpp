@@ -261,8 +261,6 @@ void ArenaTeam::SetCaptain(uint64 guid)
     Player *oldcaptain = objmgr.GetPlayer(GetCaptain());
     if(oldcaptain)
         oldcaptain->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 1);
-    else
-        Player::SetUInt32ValueInDB(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 1, GetCaptain());
 
     // set new captain
     CaptainGuid = guid;
@@ -274,8 +272,6 @@ void ArenaTeam::SetCaptain(uint64 guid)
     Player *newcaptain = objmgr.GetPlayer(guid);
     if(newcaptain)
         newcaptain->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 0);
-    else
-        Player::SetUInt32ValueInDB(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 0, guid);
 }
 
 void ArenaTeam::DelMember(uint64 guid)
@@ -291,8 +287,7 @@ void ArenaTeam::DelMember(uint64 guid)
     }
 
     Player *player = objmgr.GetPlayer(guid);
-    // this will be ugly. because of the asynchronous sql handling, we have to set all the fields of the player at once, and save them at once, or else the save will only modify the last field.
-    // rip off of setuint32valueindb
+
     if(player)
     {
         player->SetInArenaTeam(0, GetSlot());
@@ -304,22 +299,6 @@ void ArenaTeam::DelMember(uint64 guid)
         }
     }
 
-    // we have to do it this way, setuint32valueindb is asynch, unsafe to use multiple times in a row on the same player
-    Tokens tokens;
-    if(!Player::LoadValuesArrayFromDB(tokens,guid))
-        return;
-
-    for(int i = 0; i < 6; ++i)
-    {
-        uint16 index = PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6) + i;
-        char buf[11];
-        snprintf(buf,11,"%u",0);
-        tokens[index] = buf;
-    }
-
-    Player::SaveValuesArrayInDB(tokens,guid);
-
-    // only delete from this arena team!
     CharacterDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid = '%u' AND guid = '%u'", GetId(), GUID_LOPART(guid));
 }
 
@@ -335,12 +314,10 @@ void ArenaTeam::Disband(WorldSession *session)
 
     MemberList::iterator itr;
     uint32 i=0;
-    for(itr = members.begin(); itr != members.end(); itr++)
-    {
+    for(itr = members.begin(); itr != members.end(); itr++, i++)
         memberGuids[i] = itr->guid;
-        ++i;
-    }
 
+    members.clear();
     for(uint32 j = 0; j < count; j++)
         DelMember(memberGuids[j]);
     delete[] memberGuids;
@@ -432,7 +409,7 @@ void ArenaTeam::NotifyStatsChanged()
     // updates arena team stats for every member of the team (not only the ones who participated!)
     for(MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
     {
-        Player * plr=objmgr.GetPlayer(itr->guid);
+        Player * plr = objmgr.GetPlayer(itr->guid);
         if(plr)
             Stats(plr->GetSession());
     }
