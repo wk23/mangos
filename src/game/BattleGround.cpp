@@ -562,8 +562,8 @@ void BattleGround::EndBattleGround(uint32 winner)
     if(isArena() && isRated() && winner_arena_team && loser_arena_team)
     {
         // update arena points only after increasing the player's match count!
-        winner_arena_team->UpdateArenaPointsHelper();
-        loser_arena_team->UpdateArenaPointsHelper();
+        //obsolete: winner_arena_team->UpdateArenaPointsHelper();
+        //obsolete: loser_arena_team->UpdateArenaPointsHelper();
         // save the stat changes
         winner_arena_team->SaveToDB();
         loser_arena_team->SaveToDB();

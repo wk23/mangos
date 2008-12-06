@@ -1805,12 +1805,12 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 GetBattleGroundQueueIdFromLevel() const;
 
         bool InBattleGroundQueue() const
-	    {
-	        for (int i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; i++)
+        {
+            for (int i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; i++)
                 if (m_bgBattleGroundQueueID[i].bgQueueType != 0)
-	                return true;
-	        return false;
-	    }
+                    return true;
+            return false;
+        }
 
         uint32 GetBattleGroundQueueId(uint32 index) const { return m_bgBattleGroundQueueID[index].bgQueueType; }
         uint32 GetBattleGroundQueueIndex(uint32 bgQueueType) const

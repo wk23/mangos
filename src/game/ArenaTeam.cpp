@@ -632,12 +632,12 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstRating)
     }
 }
 
-void ArenaTeam::UpdateArenaPointsHelper()
+void ArenaTeam::UpdateArenaPointsHelper(std::map<uint32, uint32>& PlayerPoints)
 {
     // called after a match has ended and the stats are already modified
     // helper function for arena point distribution (this way, when distributing, no actual calculation is required, just a few comparisons)
     // 10 played games per week is a minimum
-    if(stats.games_week < 10)
+    if (stats.games_week < 10)
         return;
     // to get points, a player has to participate in at least 30% of the matches
     uint32 min_plays = (uint32) ceil(stats.games_week * 0.3);
@@ -645,9 +645,19 @@ void ArenaTeam::UpdateArenaPointsHelper()
     {
         // the player participated in enough games, update his points
         uint32 points_to_add = 0;
-        if(itr->games_week >= min_plays)
+        if (itr->games_week >= min_plays)
             points_to_add = GetPoints(itr->personal_rating);
-        CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", points_to_add, Id, itr->guid);
+        // OBSOLETE : CharacterDatabase.PExecute("UPDATE arena_team_member SET points_to_add = '%u' WHERE arenateamid = '%u' AND guid = '%u'", points_to_add, Id, itr->guid);
+
+        std::map<uint32, uint32>::iterator plr_itr = PlayerPoints.find(GUID_LOPART(itr->guid));
+        if (plr_itr != PlayerPoints.end())
+        {
+            //check if there is already more points
+            if (plr_itr->second < points_to_add)
+                PlayerPoints[GUID_LOPART(itr->guid)] = points_to_add;
+        }
+        else
+            PlayerPoints[GUID_LOPART(itr->guid)] = points_to_add;
     }
 }
 
