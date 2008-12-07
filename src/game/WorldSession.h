@@ -182,6 +182,7 @@ class MANGOS_DLL_SPEC WorldSession
         void SendNotInArenaTeamPacket(uint8 type);
         void SendPetitionShowList( uint64 guid );
         void SendSaveGuildEmblem( uint32 msg );
+        void SendBattleGroundOrArenaJoinError(uint8 err);
 
         // Looking For Group
         // TRUE values set by client sending CMSG_LFG_SET_AUTOJOIN and CMSG_LFM_CLEAR_AUTOFILL before player login

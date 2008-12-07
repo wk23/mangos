@@ -208,7 +208,7 @@ void ArenaTeam::LoadStatsFromDB(uint32 ArenaTeamId)
 
 void ArenaTeam::LoadMembersFromDB(uint32 ArenaTeamId)
 {
-    //                                                      0                     1           2         3             4           5               6    7
+    //                                                           0                1           2         3             4        5        6    7
     QueryResult *result = CharacterDatabase.PQuery("SELECT member.guid,played_week,wons_week,played_season,wons_season,personal_rating,name,class "
                                                    "FROM arena_team_member member "
                                                    "INNER JOIN characters chars on member.guid = chars.guid "

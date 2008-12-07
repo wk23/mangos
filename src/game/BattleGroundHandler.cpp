@@ -146,39 +146,7 @@ void WorldSession::HandleBattleGroundJoinOpcode( WorldPacket & recv_data )
         uint32 err = grp->CanJoinBattleGroundQueue(bgTypeId, bgQueueTypeId, 0, bg->GetMaxPlayersPerTeam(), false, 0);
         if (err != BG_JOIN_ERR_OK)
         {
-            WorldPacket data;
-            int32 msg;
-            switch (err)
-            {
-                case BG_JOIN_ERR_OFFLINE_MEMBER:
-                    msg = LANG_BG_GROUP_OFFLINE_MEMBER;
-                    break;
-                case BG_JOIN_ERR_GROUP_TOO_MANY:
-                    msg = LANG_BG_GROUP_TOO_LARGE;
-                    break;
-                case BG_JOIN_ERR_MIXED_FACTION:
-                    msg = LANG_BG_GROUP_MIXED_FACTION;
-                    break;
-                case BG_JOIN_ERR_MIXED_LEVELS:
-                    msg = LANG_BG_GROUP_MIXED_LEVELS;
-                    break;
-                case BG_JOIN_ERR_GROUP_MEMBER_ALREADY_IN_QUEUE:
-                    msg = LANG_BG_GROUP_MEMBER_ALREADY_IN_QUEUE;
-                    break;
-                case BG_JOIN_ERR_GROUP_DESERTER:
-                    msg = LANG_BG_GROUP_MEMBER_DESERTER;
-                    break;
-                case BG_JOIN_ERR_ALL_QUEUES_USED:
-                    msg = LANG_BG_GROUP_MEMBER_NO_FREE_QUEUE_SLOTS;
-                    break;
-                case BG_JOIN_ERR_GROUP_NOT_ENOUGH:
-                case BG_JOIN_ERR_MIXED_ARENATEAM:
-                default:
-                    return;
-                    break;
-            }
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(msg), NULL);
-            SendPacket(&data);
+            SendBattleGroundOrArenaJoinError(err);
             return;
         }
     }
@@ -743,89 +711,11 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
         if(!grp)
             return;
         uint32 err = grp->CanJoinBattleGroundQueue(bgTypeId, bgQueueTypeId, arenatype, arenatype, (bool)isRated, type);
-        switch(err)
+        if (err != BG_JOIN_ERR_OK)
         {
-            // TODO: add error-based feedback to players in all cases
-        case BG_JOIN_ERR_GROUP_TOO_MANY:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_ARENA_GROUP_TOO_LARGE), NULL);
-            SendPacket(&data);
-            }
+            SendBattleGroundOrArenaJoinError(err);
             return;
-            break;
-        case BG_JOIN_ERR_GROUP_NOT_ENOUGH:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_ARENA_NOT_ENOUGH_PLAYERS), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_MIXED_ARENATEAM:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_ARENA_YOUR_TEAM_ONLY), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_OFFLINE_MEMBER:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_BG_GROUP_OFFLINE_MEMBER), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_MIXED_FACTION:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_BG_GROUP_MIXED_FACTION), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_MIXED_LEVELS:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_BG_GROUP_MIXED_LEVELS), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_GROUP_MEMBER_ALREADY_IN_QUEUE:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_BG_GROUP_MEMBER_ALREADY_IN_QUEUE), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_GROUP_DESERTER:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_BG_GROUP_MEMBER_DESERTER), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-        case BG_JOIN_ERR_ALL_QUEUES_USED:
-            {
-            WorldPacket data;
-            ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(LANG_BG_GROUP_MEMBER_NO_FREE_QUEUE_SLOTS), NULL);
-            SendPacket(&data);
-            }
-            return;
-            break;
-            // all ok, can join
-        case BG_JOIN_ERR_OK:
-            break;
-            // not the above? shouldn't happen, don't let join
-        default:
-            return;
-            break;
-        };
+        }
     }
 
     uint32 ateamId = 0;
@@ -924,4 +814,42 @@ void WorldSession::HandleBattleGroundReportAFK( WorldPacket & recv_data )
     sLog.outDebug("WorldSession::HandleBattleGroundReportAFK: %s reported %s", _player->GetName(), reportedPlayer->GetName());
 
     reportedPlayer->ReportedAfkBy(_player);
+}
+
+void WorldSession::SendBattleGroundOrArenaJoinError(uint8 err)
+{
+    WorldPacket data;
+    int32 msg;
+    switch (err)
+    {
+        case BG_JOIN_ERR_OFFLINE_MEMBER:
+            msg = LANG_BG_GROUP_OFFLINE_MEMBER;
+            break;
+        case BG_JOIN_ERR_GROUP_TOO_MANY:
+            msg = LANG_BG_GROUP_TOO_LARGE;
+            break;
+        case BG_JOIN_ERR_MIXED_FACTION:
+            msg = LANG_BG_GROUP_MIXED_FACTION;
+            break;
+        case BG_JOIN_ERR_MIXED_LEVELS:
+            msg = LANG_BG_GROUP_MIXED_LEVELS;
+            break;
+        case BG_JOIN_ERR_GROUP_MEMBER_ALREADY_IN_QUEUE:
+            msg = LANG_BG_GROUP_MEMBER_ALREADY_IN_QUEUE;
+            break;
+        case BG_JOIN_ERR_GROUP_DESERTER:
+            msg = LANG_BG_GROUP_MEMBER_DESERTER;
+            break;
+        case BG_JOIN_ERR_ALL_QUEUES_USED:
+            msg = LANG_BG_GROUP_MEMBER_NO_FREE_QUEUE_SLOTS;
+            break;
+        case BG_JOIN_ERR_GROUP_NOT_ENOUGH:
+        case BG_JOIN_ERR_MIXED_ARENATEAM:
+        default:
+            return;
+            break;
+    }
+    ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, GetMangosString(msg), NULL);
+    SendPacket(&data);
+    return;
 }
