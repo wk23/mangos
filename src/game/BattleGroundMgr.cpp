@@ -217,11 +217,8 @@ GroupQueueInfo * BattleGroundQueue::AddGroup(Player *leader, uint32 BgTypeId, ui
     ginfo->IsInvitedToBGInstanceGUID = 0;                       // maybe this should be modifiable by function arguments to enable selection of running instances?
     ginfo->JoinTime                  = getMSTime();
     ginfo->Team                      = leader->GetTeam();
-
-    if(sBattleGroundMgr.GetMaxRatingDifference())               // if max difference is set, then store rating info for queue
-        ginfo->ArenaTeamRating       = arenaRating;
-    else
-        ginfo->ArenaTeamRating       = 0;                       // don't if it doesn't matter
+    ginfo->ArenaTeamRating           = arenaRating;
+    ginfo->OpponentsTeamRating        = 0;                       //initialize it to 0
 
     ginfo->Players.clear();
 
@@ -680,7 +677,7 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
                 !(bg2 = sBattleGroundMgr.CreateNewBattleGround(arenas[(arena_num+1)%3])) &&
                 !(bg2 = sBattleGroundMgr.CreateNewBattleGround(arenas[(arena_num+2)%3])) )
             {
-                sLog.outError("Battleground: couldn't create arena");
+                sLog.outError("Battleground: couldn't create any arena instance!");
                 return;
             }
 
@@ -887,6 +884,14 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
                 InviteGroupToBG((*itr),bg2,ALLIANCE);
             }
 
+            if (isRated)
+            {
+                std::list<GroupQueueInfo* >::iterator itr_alliance = m_SelectionPools[mode1].SelectedGroups.begin();
+                std::list<GroupQueueInfo* >::iterator itr_horde = m_SelectionPools[mode2].SelectedGroups.begin();
+                (*itr_alliance)->OpponentsTeamRating = (*itr_horde)->ArenaTeamRating;
+                (*itr_horde)->OpponentsTeamRating = (*itr_alliance)->ArenaTeamRating;
+            }
+
             bg2->StartBattleGround();
         }
     }
@@ -947,11 +952,6 @@ bool BGQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
         // player logged off (we should do nothing, he is correctly removed from queue in another procedure)
         return true;
 
-    // Player can be in another BG queue and must be removed in normal way in any case
-    //if (plr->InBattleGround())
-    //    // player is already in battleground ... do nothing (battleground queue status is deleted when player is teleported to BG)
-    //    return true;
-
     BattleGround* bg = sBattleGroundMgr.GetBattleGround(m_BgInstanceGUID);
     if (!bg)
         return true;
@@ -966,6 +966,12 @@ bool BGQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
         BattleGroundQueue::QueuedPlayersMap::iterator qMapItr = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].m_QueuedPlayers[plr->GetBattleGroundQueueIdFromLevel()].find(m_PlayerGuid);
         if (qMapItr != sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].m_QueuedPlayers[plr->GetBattleGroundQueueIdFromLevel()].end() && qMapItr->second.GroupInfo && qMapItr->second.GroupInfo->IsInvitedToBGInstanceGUID == m_BgInstanceGUID)
         {
+            if (qMapItr->second.GroupInfo->IsRated)
+            {
+                ArenaTeam * at = objmgr.GetArenaTeamById(qMapItr->second.GroupInfo->ArenaTeamId);
+                if (at)
+                    at->MemberLost(plr, qMapItr->second.GroupInfo->OpponentsTeamRating);
+            }
             plr->RemoveBattleGroundQueueId(bgQueueTypeId);
             sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].RemovePlayer(m_PlayerGuid, true);
             sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].Update(bgQueueTypeId, bg->GetQueueType());

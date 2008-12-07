@@ -522,7 +522,7 @@ void BattleGround::EndBattleGround(uint32 winner)
             plr->SpawnCorpseBones();
         }
 
-        uint32 team = itr->second.Team;//GetPlayerTeam(plr->GetGUID());
+        uint32 team = itr->second.Team;
         if(!team) team = plr->GetTeam();
 
         // per player calculation

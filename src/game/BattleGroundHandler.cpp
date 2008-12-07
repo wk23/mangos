@@ -96,7 +96,7 @@ void WorldSession::HandleBattleGroundJoinOpcode( WorldPacket & recv_data )
     // can do this, since it's battleground, not arena
     uint32 bgQueueTypeId = sBattleGroundMgr.BGQueueTypeId(bgTypeId, 0);
 
-    // ignore if we already in BG or BG queue
+    // ignore if player is already in BG
     if(_player->InBattleGround())
         return;
 
@@ -434,6 +434,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
         uint32 arenatype = 0;
         uint32 israted = 0;
         uint32 rating = 0;
+        uint32 opponentsRating = 0;
         // get the team info from the queue
         BattleGroundQueue::QueuedPlayersMap::iterator pitr = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].m_QueuedPlayers[_player->GetBattleGroundQueueIdFromLevel()].find(_player->GetGUID());
         if(pitr !=sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].m_QueuedPlayers[_player->GetBattleGroundQueueIdFromLevel()].end()
@@ -443,6 +444,7 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
             arenatype = pitr->second.GroupInfo->ArenaType;
             israted = pitr->second.GroupInfo->IsRated;
             rating = pitr->second.GroupInfo->ArenaTeamRating;
+            opponentsRating = pitr->second.GroupInfo->OpponentsTeamRating;
         }
         else
         {
@@ -490,6 +492,15 @@ void WorldSession::HandleBattleGroundPlayerPortOpcode( WorldPacket &recv_data )
                 break;
             case 0:                                     // leave queue
                 queueSlot = _player->GetBattleGroundQueueIndex(bgQueueTypeId);
+                /*
+                if player leaves rated arena match before match start, it is counted as he played but he lost
+                */
+                if (israted)
+                {
+                    ArenaTeam * at = objmgr.GetArenaTeamById(team);
+                    if (at)
+                        at->MemberLost(_player, opponentsRating);
+                }
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId); // must be called this way, because if you move this call to queue->removeplayer, it causes bugs
                 sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, _player->GetTeam(), queueSlot, STATUS_NONE, 0, 0);
                 sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].RemovePlayer(_player->GetGUID(), true);
