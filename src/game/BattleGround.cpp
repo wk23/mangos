@@ -480,11 +480,9 @@ void BattleGround::EndBattleGround(uint32 winner)
         {
             loser_rating = loser_arena_team->GetStats().rating;
             winner_rating = winner_arena_team->GetStats().rating;
-            float winner_chance = winner_arena_team->GetChanceAgainst(loser_rating);
-            float loser_chance = loser_arena_team->GetChanceAgainst(winner_rating);
-            int32 winner_change = winner_arena_team->WonAgainstChance(winner_chance);
-            int32 loser_change = loser_arena_team->LostAgainstChance(loser_chance);
-            sLog.outDebug("--- %u ; %u ; %d ; %d ; %u ; %u ---",winner_rating,loser_rating,winner_chance,loser_chance,winner_change,loser_change);
+            int32 winner_change = winner_arena_team->WonAgainst(loser_rating);
+            int32 loser_change = loser_arena_team->LostAgainst(winner_rating);
+            sLog.outDebug("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Losser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
             if(winner == ALLIANCE)
             {
                 SetArenaTeamRatingChangeForTeam(ALLIANCE, winner_change);

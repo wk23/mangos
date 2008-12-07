@@ -189,9 +189,9 @@ class ArenaTeam
 
         uint32 GetPoints(uint32 MemberRating);
         float GetChanceAgainst(uint32 rating);
-        int32 WonAgainstChance(float chance);
+        int32 WonAgainst(uint32 againstRating);
         void MemberWon(Player * plr, uint32 againstRating);
-        int32 LostAgainstChance(float chance);
+        int32 LostAgainst(uint32 againstRating);
         void MemberLost(Player * plr, uint32 againstRating);
 
         void UpdateArenaPointsHelper(std::map<uint32, uint32> & PlayerPoints);
