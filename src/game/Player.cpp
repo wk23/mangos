@@ -17733,6 +17733,11 @@ uint32 Player::GetBattleGroundQueueIdFromLevel() const
         return 6;
     else
         return level/10 - 1;                                // 20..29 -> 1, 30-39 -> 2, ...
+    /*
+    assert(bgTypeId < MAX_BATTLEGROUND_TYPES);
+    BattleGround *bg = sBattleGroundMgr.GetBattleGroundTemplate(bgTypeId);
+    assert(bg);
+    return (getLevel() - bg->GetMinLevel()) / 10;*/
 }
 
 float Player::GetReputationPriceDiscount( Creature const* pCreature ) const
