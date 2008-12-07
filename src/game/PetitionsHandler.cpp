@@ -811,7 +811,7 @@ void WorldSession::HandleTurnInPetitionOpcode(WorldPacket & recv_data)
     else                                                    // or arena team
     {
         ArenaTeam* at = new ArenaTeam;
-        if(!at->create(_player->GetGUID(), type, name))
+        if(!at->Create(_player->GetGUID(), type, name))
         {
             sLog.outError("PetitionsHandler: arena team create failed.");
             delete at;

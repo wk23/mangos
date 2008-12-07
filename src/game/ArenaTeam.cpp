@@ -44,7 +44,7 @@ ArenaTeam::~ArenaTeam()
 
 }
 
-bool ArenaTeam::create(uint64 captainGuid, uint32 type, std::string ArenaTeamName)
+bool ArenaTeam::Create(uint64 captainGuid, uint32 type, std::string ArenaTeamName)
 {
     if(!objmgr.GetPlayer(captainGuid))                      // player not exist
         return false;
@@ -448,11 +448,6 @@ void ArenaTeam::SetStats(uint32 stat_type, uint32 value)
     }
 }
 
-uint8 ArenaTeam::GetSlot() const
-{
-    return GetSlotByType(GetType());
-}
-
 void ArenaTeam::BroadcastPacket(WorldPacket *packet)
 {
     for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
@@ -639,7 +634,7 @@ void ArenaTeam::UpdateArenaPointsHelper(std::map<uint32, uint32>& PlayerPoints)
 void ArenaTeam::SaveToDB()
 {
     // save team and member stats to db
-    // called after a match has ended
+    // called after a match has ended, or when calculating arena_points
     CharacterDatabase.PExecute("UPDATE arena_team_stats SET rating = '%u',games = '%u',played = '%u',rank = '%u',wins = '%u',wins2 = '%u' WHERE arenateamid = '%u'", stats.rating, stats.games_week, stats.games_season, stats.rank, stats.wins_week, stats.wins_season, GetId());
     for(MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
     {

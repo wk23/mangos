@@ -85,8 +85,6 @@ struct ArenaTeamMember
 {
     uint64 guid;
     std::string name;
-    //uint32 unk2;
-    //uint8 unk1;
     uint8 Class;
     uint32 games_week;
     uint32 wins_week;
@@ -96,9 +94,10 @@ struct ArenaTeamMember
 
     void ModifyPersonalRating(Player* plr, int32 mod, uint32 slot)
     {
-        personal_rating += mod;
-        if(personal_rating < 0)
+        if (personal_rating + mod < 0)
             personal_rating = 0;
+        else
+            personal_rating += mod;
         if(plr)
             plr->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (slot*6) + 5, personal_rating);
     }
@@ -122,25 +121,25 @@ class ArenaTeam
         ArenaTeam();
         ~ArenaTeam();
 
-        bool create(uint64 CaptainGuid, uint32 type, std::string ArenaTeamName);
+        bool Create(uint64 CaptainGuid, uint32 type, std::string ArenaTeamName);
         void Disband(WorldSession *session);
 
         typedef std::list<ArenaTeamMember> MemberList;
 
-        uint32 GetId() const { return Id; }
-        uint32 GetType() const { return Type; }
-        uint8 GetSlot() const;
+        uint32 GetId() const              { return Id; }
+        uint32 GetType() const            { return Type; }
+        uint8  GetSlot() const            { return GetSlotByType(GetType()); }
         static uint8 GetSlotByType(uint32 type);
-        const uint64& GetCaptain() const { return CaptainGuid; }
-        std::string GetName() const { return Name; }
+        const uint64& GetCaptain() const  { return CaptainGuid; }
+        std::string GetName() const       { return Name; }
         const ArenaTeamStats& GetStats() const { return stats; }
         void SetStats(uint32 stat_type, uint32 value);
-        uint32 GetRating() const { return stats.rating; }
+        uint32 GetRating() const          { return stats.rating; }
 
-        uint32 GetEmblemStyle() const { return EmblemStyle; }
-        uint32 GetEmblemColor() const { return EmblemColor; }
-        uint32 GetBorderStyle() const { return BorderStyle; }
-        uint32 GetBorderColor() const { return BorderColor; }
+        uint32 GetEmblemStyle() const     { return EmblemStyle; }
+        uint32 GetEmblemColor() const     { return EmblemColor; }
+        uint32 GetBorderStyle() const     { return BorderStyle; }
+        uint32 GetBorderColor() const     { return BorderColor; }
         uint32 GetBackgroundColor() const { return BackgroundColor; }
 
         void SetCaptain(const uint64& guid);
@@ -152,15 +151,15 @@ class ArenaTeam
 
         void SetEmblem(uint32 backgroundColor, uint32 emblemStyle, uint32 emblemColor, uint32 borderStyle, uint32 borderColor);
 
-        size_t GetMembersSize() const { return members.size(); }
-        bool   Empty() const { return members.empty(); }
-        MemberList::iterator membersbegin(){ return members.begin(); }
-        MemberList::iterator membersEnd(){ return members.end(); }
+        size_t GetMembersSize() const       { return members.size(); }
+        bool   Empty() const                { return members.empty(); }
+        MemberList::iterator membersBegin() { return members.begin(); }
+        MemberList::iterator membersEnd()   { return members.end(); }
         bool HaveMember(const uint64& guid) const;
         ArenaTeamMember* GetMember(const uint64& guid)
         {
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
-                if(itr->guid==guid)
+                if(itr->guid == guid)
                     return &(*itr);
 
             return NULL;

@@ -30,7 +30,6 @@
 void WorldSession::HandleInspectArenaStatsOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug("MSG_INSPECT_ARENA_TEAMS");
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 8);
 
@@ -54,7 +53,6 @@ void WorldSession::HandleInspectArenaStatsOpcode(WorldPacket & recv_data)
 void WorldSession::HandleArenaTeamQueryOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug( "WORLD: Received CMSG_ARENA_TEAM_QUERY" );
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4);
 
@@ -72,7 +70,6 @@ void WorldSession::HandleArenaTeamQueryOpcode(WorldPacket & recv_data)
 void WorldSession::HandleArenaTeamRosterOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug( "WORLD: Received CMSG_ARENA_TEAM_ROSTER" );
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4);
 
@@ -89,7 +86,6 @@ void WorldSession::HandleArenaTeamRosterOpcode(WorldPacket & recv_data)
 void WorldSession::HandleArenaTeamAddMemberOpcode(WorldPacket & recv_data)
 {
     sLog.outDebug("CMSG_ARENA_TEAM_ADD_MEMBER");
-    //recv_data.hexlike();
 
     CHECK_PACKET_SIZE(recv_data, 4+1);
 
@@ -153,8 +149,7 @@ void WorldSession::HandleArenaTeamAddMemberOpcode(WorldPacket & recv_data)
 
     if(arenateam->GetMembersSize() >= arenateam->GetType() * 2)
     {
-        // should send an "arena team is full" or the likes message, I just don't know the proper values so... ERR_INTERNAL
-//        SendArenaTeamCommandResult(ERR_ARENA_TEAM_INVITE_SS, "", "", ERR_ARENA_TEAM_INTERNAL);
+        // should send an "arena team is full"
         SendNotification(LANG_YOUR_ARENA_TEAM_FULL, player->GetName());
         return;
     }
@@ -244,7 +239,8 @@ void WorldSession::HandleArenaTeamLeaveOpcode(WorldPacket & recv_data)
     BuildArenaTeamEventPacket(&data, ERR_ARENA_TEAM_LEAVE_SS, 2, _player->GetName(), at->GetName(), "");
     at->BroadcastPacket(&data);
 
-    //SendArenaTeamCommandResult(ERR_ARENA_TEAM_QUIT_S, at->GetName(), "", 0);
+    //send you are no longer member of team
+    SendArenaTeamCommandResult(ERR_ARENA_TEAM_QUIT_S, at->GetName(), "", 0);
 }
 
 void WorldSession::HandleArenaTeamDisbandOpcode(WorldPacket & recv_data)
