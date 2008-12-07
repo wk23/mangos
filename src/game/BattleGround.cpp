@@ -1008,7 +1008,7 @@ void BattleGround::RemoveFromBGFreeSlotQueue()
 // works in similar way that HasFreeSlotsForTeam did, but this is needed for join as group
 uint32 BattleGround::GetFreeSlotsForTeam(uint32 Team) const
 {
-    //if BG is starting ... invite anyone:
+    //if BG is starting ... invite anyone
     if (GetStatus() == STATUS_WAIT_JOIN)
         return (GetInvitedCount(Team) < GetMaxPlayersPerTeam()) ? GetMaxPlayersPerTeam() - GetInvitedCount(Team) : 0;
     //if BG is already started .. do not allow to join too much players of one faction
@@ -1049,8 +1049,8 @@ uint32 BattleGround::GetFreeSlotsForTeam(uint32 Team) const
         else if (otherIn > GetPlayersCountByTeam(Team))
             diff3 = otherIn - GetPlayersCountByTeam(Team);
         // or other side has less than minPlayersPerTeam
-        else if (otherTeam <= GetMinPlayersPerTeam())
-            diff3 = GetMinPlayersPerTeam() - otherTeam + 1;
+        else if (GetInvitedCount(Team) <= GetMinPlayersPerTeam())
+            diff3 = GetMinPlayersPerTeam() - GetInvitedCount(Team) + 1;
 
         // return the minimum of the 3 differences
 
