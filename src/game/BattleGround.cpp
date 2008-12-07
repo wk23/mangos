@@ -1096,8 +1096,6 @@ void BattleGround::UpdatePlayerScore(Player *Source, uint32 type, uint32 value)
                 if(Source->RewardHonor(NULL, 1, value))
                     itr->second->BonusHonor += value;
             }
-            else
-
             break;
             //used only in EY, but in MSG_PVP_LOG_DATA opcode
         case SCORE_DAMAGE_DONE:                             // Damage Done
