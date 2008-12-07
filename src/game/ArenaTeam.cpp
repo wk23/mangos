@@ -77,7 +77,7 @@ bool ArenaTeam::create(uint64 captainGuid, uint32 type, std::string ArenaTeamNam
     return true;
 }
 
-bool ArenaTeam::AddMember(uint64 PlayerGuid)
+bool ArenaTeam::AddMember(const uint64& PlayerGuid)
 {
     std::string plName;
     uint8 plClass;
@@ -233,7 +233,7 @@ void ArenaTeam::LoadMembersFromDB(uint32 ArenaTeamId)
     delete result;
 }
 
-void ArenaTeam::SetCaptain(uint64 guid)
+void ArenaTeam::SetCaptain(const uint64& guid)
 {
     // disable remove/promote buttons
     Player *oldcaptain = objmgr.GetPlayer(GetCaptain());
@@ -254,8 +254,7 @@ void ArenaTeam::SetCaptain(uint64 guid)
 
 void ArenaTeam::DelMember(uint64 guid)
 {
-    MemberList::iterator itr;
-    for (itr = members.begin(); itr != members.end(); ++itr)
+    for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
     {
         if (itr->guid == guid)
         {
@@ -287,18 +286,11 @@ void ArenaTeam::Disband(WorldSession *session)
     session->BuildArenaTeamEventPacket(&data, ERR_ARENA_TEAM_DISBANDED_S, 2, session->GetPlayerName(), GetName(), "");
     BroadcastPacket(&data);
 
-    uint32 count = members.size();
-    uint64 *memberGuids = new uint64[count];
-
-    MemberList::iterator itr;
-    uint32 i=0;
-    for(itr = members.begin(); itr != members.end(); ++itr, i++)
-        memberGuids[i] = itr->guid;
-
-    members.clear();
-    for(uint32 j = 0; j < count; j++)
-        DelMember(memberGuids[j]);
-    delete[] memberGuids;
+    while (!members.empty())
+    {
+        // Removing from members is done in DelMember.
+        DelMember(members.front().guid);
+    }
 
     CharacterDatabase.BeginTransaction();
     CharacterDatabase.PExecute("DELETE FROM arena_team WHERE arenateamid = '%u'", Id);

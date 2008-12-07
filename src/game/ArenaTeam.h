@@ -143,8 +143,11 @@ class ArenaTeam
         uint32 GetBorderColor() const { return BorderColor; }
         uint32 GetBackgroundColor() const { return BackgroundColor; }
 
-        void SetCaptain(uint64 guid);
-        bool AddMember(uint64 PlayerGuid);
+        void SetCaptain(const uint64& guid);
+        bool AddMember(const uint64& PlayerGuid);
+
+        // Shouldn't be const uint64& ed, because than can reference guid from members on Disband
+        // and this method removes given record from list. So invalid reference can happen.
         void DelMember(uint64 guid);
 
         void SetEmblem(uint32 backgroundColor, uint32 emblemStyle, uint32 emblemColor, uint32 borderStyle, uint32 borderColor);
