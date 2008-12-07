@@ -173,14 +173,6 @@ class ArenaTeam
 
             return NULL;
         }
-        ArenaTeamMember* GetMember(std::string& name)
-        {
-            for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
-                if(itr->name==name)
-                    return &(*itr);
-
-            return NULL;
-        }
 
         bool LoadArenaTeamFromDB(uint32 ArenaTeamId);
         void LoadMembersFromDB(uint32 ArenaTeamId);
