@@ -302,7 +302,7 @@ void ArenaTeam::Disband(WorldSession *session)
 
     CharacterDatabase.BeginTransaction();
     CharacterDatabase.PExecute("DELETE FROM arena_team WHERE arenateamid = '%u'", Id);
-    CharacterDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid = '%u'", Id);
+    CharacterDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid = '%u'", Id); //< this should be alredy done by calling DelMember(memberGuids[j]); for each member
     CharacterDatabase.PExecute("DELETE FROM arena_team_stats WHERE arenateamid = '%u'", Id);
     CharacterDatabase.CommitTransaction();
     objmgr.RemoveArenaTeam(this);
