@@ -559,7 +559,7 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
     }
 
     //if no players in queue ... do nothing
-    if (m_QueuedGroups[queue_id].size() == 0)
+    if (m_QueuedGroups[queue_id].empty())
         return;
 
     uint32 bgQueueTypeId = sBattleGroundMgr.BGQueueTypeId(bgTypeId, arenatype);
@@ -1078,7 +1078,7 @@ void BattleGroundMgr::Update(time_t diff)
             {
                 DistributeArenaPoints();
                 m_NextAutoDistributionTime = sWorld.GetGameTime() + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS);
-                CharacterDatabase.PExecute("UPDATE saved_variables SET NextArenaPointDistributionTime = FROM_UNIXTIME('"I64FMTD"')",(uint64)m_NextAutoDistributionTime);
+                CharacterDatabase.PExecute("UPDATE saved_variables SET NextArenaPointDistributionTime = '"I64FMTD"'", m_NextAutoDistributionTime);
             }
             m_AutoDistributionTimeChecker = 600000; // check 10 minutes
         }
@@ -1607,12 +1607,12 @@ void BattleGroundMgr::InitAutomaticArenaPointDistribution()
     if(m_AutoDistributePoints)
     {
         sLog.outDebug("Initializing Automatic Arena Point Distribution");
-        QueryResult * result = CharacterDatabase.Query("SELECT UNIX_TIMESTAMP(NextArenaPointDistributionTime) FROM saved_variables");
+        QueryResult * result = CharacterDatabase.Query("SELECT NextArenaPointDistributionTime FROM saved_variables");
         if(!result)
         {
             sLog.outDebug("Battleground: Next arena point distribution time not found in SavedVariables, reseting it now.");
             m_NextAutoDistributionTime = sWorld.GetGameTime() + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS);
-            CharacterDatabase.PExecute("INSERT INTO saved_variables (NextArenaPointDistributionTime) VALUES ( FROM_UNIXTIME('"I64FMTD"') )",(uint64)m_NextAutoDistributionTime);
+            CharacterDatabase.PExecute("INSERT INTO saved_variables (NextArenaPointDistributionTime) VALUES ('"I64FMTD"')", m_NextAutoDistributionTime);
         }
         else
         {

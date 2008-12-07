@@ -1,5 +1,5 @@
 CREATE TABLE `saved_variables` (
-    `NextArenaPointDistributionTime` timestamp NOT NULL
+    `NextArenaPointDistributionTime` bigint(40) UNSIGNED NOT NULL DEFAULT '0'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Variable Saves';
 
 ALTER TABLE `arena_team_member` ADD COLUMN `personal_rating` int(10) UNSIGNED NOT NULL DEFAULT '0';
