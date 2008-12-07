@@ -164,6 +164,7 @@ class ArenaTeam
 
             return NULL;
         }
+
         ArenaTeamMember* GetMember(std::string& name)
         {
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
