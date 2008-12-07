@@ -745,8 +745,8 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
 
         if (isRated)
         {
-            std::list<GroupQueueInfo* >::iterator itr_alliance = m_SelectionPools[mode1].SelectedGroups.begin();
-            std::list<GroupQueueInfo* >::iterator itr_horde = m_SelectionPools[mode2].SelectedGroups.begin();
+            std::list<GroupQueueInfo* >::iterator itr_alliance = m_SelectionPools[NORMAL_ALLIANCE].SelectedGroups.begin();
+            std::list<GroupQueueInfo* >::iterator itr_horde = m_SelectionPools[NORMAL_HORDE].SelectedGroups.begin();
             (*itr_alliance)->OpponentsTeamRating = (*itr_horde)->ArenaTeamRating;
             (*itr_horde)->OpponentsTeamRating = (*itr_alliance)->ArenaTeamRating;
         }
