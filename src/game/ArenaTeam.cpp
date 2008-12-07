@@ -208,11 +208,11 @@ void ArenaTeam::LoadStatsFromDB(uint32 ArenaTeamId)
 
 void ArenaTeam::LoadMembersFromDB(uint32 ArenaTeamId)
 {
-    //                                                      0        1          2           3            4             5         6     7
+    //                                                      0                     1           2         3             4           5               6    7
     QueryResult *result = CharacterDatabase.PQuery("SELECT arena_team_member.guid,played_week,wons_week,played_season,wons_season,personal_rating,name,class "
-                                                   "FROM arena_team_member "
-                                                   "INNER JOIN characters on arena_team_member.guid = characters.guid "
-                                                   "WHERE arenateamid = '%u'", ArenaTeamId);
+                                                   "FROM arena_team_member member"
+                                                   "INNER JOIN characters chars on member.guid = chars.guid "
+                                                   "WHERE member.arenateamid = '%u'", ArenaTeamId);
     if(!result)
         return;
 
@@ -533,15 +533,7 @@ int32 ArenaTeam::WonAgainstChance(float chance)
         if (i->second->GetType() == this->Type && i->second->GetStats().rating > stats.rating)
             ++stats.rank;
     }
-    
-    /*
-    QueryResult *result = CharacterDatabase.PQuery("SELECT COUNT (arenateamid) FROM arena_team_stats s INNER JOIN arena_team a ON a.arenateamid = s.arenateamid WHERE s.rating > '%u' AND a.type = '%u'",stats.rating, this->Type);
-    if(result)
-    {
-        stats.rank = result->Fetch()->GetUInt32() + 1;
-        delete result;
-    }
-    */
+
     // return the rating change, used to display it on the results screen
     return mod;
 }
@@ -565,14 +557,6 @@ int32 ArenaTeam::LostAgainstChance(float chance)
             ++stats.rank;
     }
 
-    /*
-    QueryResult *result = CharacterDatabase.PQuery("SELECT COUNT (arenateamid) FROM arena_team_stats s INNER JOIN arena_team a ON a.arenateamid = s.arenateamid WHERE s.rating > '%u' AND a.type = '%u'",stats.rating, this->Type);
-    if(result)
-    {
-        stats.rank = result->Fetch()->GetUInt32() + 1;
-        delete result;
-    }
-    */
     // return the rating change, used to display it on the results screen
     return mod;
 }
@@ -680,18 +664,18 @@ arenateam fields (id from 2.3.3 client):
 1415 - 0=captain, 1=member
 1416 - played this week
 1417 - played this season
-1418 - unk
+1418 - unk - rank?
 1419 - personal arena rating
 1420 - arena team id 3v3
 1421 - 0=captain, 1=member
 1422 - played this week
 1423 - played this season
-1424 - unk
+1424 - unk - rank?
 1425 - personal arena rating
 1426 - arena team id 5v5
 1427 - 0=captain, 1=member
 1428 - played this week
 1429 - played this season
-1430 - unk
+1430 - unk - rank?
 1431 - personal arena rating
 */
