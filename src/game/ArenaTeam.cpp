@@ -534,12 +534,22 @@ int32 ArenaTeam::WonAgainstChance(float chance)
     stats.games_season += 1;
     stats.wins_season += 1;
     //update team's rank
+    stats.rank = 1;
+    ObjectMgr::ArenaTeamMap::iterator i = objmgr.GetArenaTeamMapBegin();
+    for ( ; i != objmgr.GetArenaTeamMapEnd(); ++i)
+    {
+        if (i->second->GetType() == this->Type && i->second->GetStats().rating > stats.rating)
+            ++stats.rank;
+    }
+    
+    /*
     QueryResult *result = CharacterDatabase.PQuery("SELECT COUNT (arenateamid) FROM arena_team_stats s INNER JOIN arena_team a ON a.arenateamid = s.arenateamid WHERE s.rating > '%u' AND a.type = '%u'",stats.rating, this->Type);
     if(result)
     {
         stats.rank = result->Fetch()->GetUInt32() + 1;
         delete result;
     }
+    */
     // return the rating change, used to display it on the results screen
     return mod;
 }
@@ -554,12 +564,23 @@ int32 ArenaTeam::LostAgainstChance(float chance)
     stats.games_week += 1;
     stats.games_season += 1;
     //update team's rank
+
+    stats.rank = 1;
+    ObjectMgr::ArenaTeamMap::iterator i = objmgr.GetArenaTeamMapBegin();
+    for ( ; i != objmgr.GetArenaTeamMapEnd(); ++i)
+    {
+        if (i->second->GetType() == this->Type && i->second->GetStats().rating > stats.rating)
+            ++stats.rank;
+    }
+
+    /*
     QueryResult *result = CharacterDatabase.PQuery("SELECT COUNT (arenateamid) FROM arena_team_stats s INNER JOIN arena_team a ON a.arenateamid = s.arenateamid WHERE s.rating > '%u' AND a.type = '%u'",stats.rating, this->Type);
     if(result)
     {
         stats.rank = result->Fetch()->GetUInt32() + 1;
         delete result;
     }
+    */
     // return the rating change, used to display it on the results screen
     return mod;
 }
