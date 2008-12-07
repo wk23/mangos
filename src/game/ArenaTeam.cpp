@@ -171,7 +171,7 @@ bool ArenaTeam::LoadArenaTeamFromDB(uint32 ArenaTeamId)
     LoadStatsFromDB(ArenaTeamId);
     LoadMembersFromDB(ArenaTeamId);
 
-    if(!GetMembersSize())
+    if(Empty())
     {
         // arena team is empty, delete from db
         CharacterDatabase.BeginTransaction();
@@ -208,50 +208,28 @@ void ArenaTeam::LoadStatsFromDB(uint32 ArenaTeamId)
 
 void ArenaTeam::LoadMembersFromDB(uint32 ArenaTeamId)
 {
-    Field *fields;
-
-    QueryResult *result = CharacterDatabase.PQuery("SELECT guid,played_week,wons_week,played_season,wons_season FROM arena_team_member WHERE arenateamid = '%u'", ArenaTeamId);
+    //                                                      0        1          2           3            4             5         6     7
+    QueryResult *result = CharacterDatabase.PQuery("SELECT arena_team_member.guid,played_week,wons_week,played_season,wons_season,personal_rating,name,class "
+                                                   "FROM arena_team_member "
+                                                   "INNER JOIN characters on arena_team_member.guid = characters.guid "
+                                                   "WHERE arenateamid = '%u'", ArenaTeamId);
     if(!result)
         return;
 
     do
     {
-        fields = result->Fetch();
+        Field *fields = result->Fetch();
         ArenaTeamMember newmember;
         newmember.guid          = MAKE_NEW_GUID(fields[0].GetUInt32(), 0, HIGHGUID_PLAYER);
-        // check if this member is in this arenateam
-        // based on character data field
-        if(Player::GetUInt32ValueFromDB(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6),newmember.guid) != ArenaTeamId)
-        {
-            // the player's registered arena team for this slot isn't this team, so delete member info from here
-            CharacterDatabase.PExecute("DELETE FROM arena_team_member WHERE guid = '%u' AND arenateamid = '%u'",fields[0].GetUInt32(), ArenaTeamId);
-            continue;
-        }
-        LoadPlayerStats(&newmember);
         newmember.games_week    = fields[1].GetUInt32();
         newmember.wins_week     = fields[2].GetUInt32();
         newmember.games_season  = fields[3].GetUInt32();
         newmember.wins_season   = fields[4].GetUInt32();
+        newmember.personal_rating = fields[5].GetUInt32();
+        newmember.name          = fields[6].GetCppString();
+        newmember.Class         = fields[7].GetUInt8();
         members.push_back(newmember);
     }while( result->NextRow() );
-    delete result;
-}
-
-void ArenaTeam::LoadPlayerStats(ArenaTeamMember *member)
-{
-    Field *fields;
-
-    QueryResult *result = CharacterDatabase.PQuery("SELECT name,class,data FROM characters WHERE guid = '%u'", GUID_LOPART(member->guid));
-    if(!result)
-        return;
-    fields = result->Fetch();
-    member->name  = fields[0].GetCppString();
-    member->Class = fields[1].GetUInt8();
-
-    // for now load personal rating from data field
-    Tokens data = StrSplit(fields[2].GetCppString(), " ");
-    member->personal_rating = Player::GetUInt32ValueFromArray(data, PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot()*6) + 5);
-
     delete result;
 }
 
@@ -335,40 +313,40 @@ void ArenaTeam::Roster(WorldSession *session)
     Player *pl = NULL;
 
     WorldPacket data(SMSG_ARENA_TEAM_ROSTER, 100);
-    data << uint32(GetId());                                // arena team id
-    data << uint32(GetMembersSize());                       // members count
-    data << uint32(GetType());                              // arena team type?
+    data << (uint32)GetId();                                // arena team id
+    data << (uint32)GetMembersSize();                       // members count
+    data << (uint32)GetType();                              // arena team type?
 
     for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
     {
         pl = objmgr.GetPlayer(itr->guid);
         if(pl)
         {
-            data << uint64(pl->GetGUID());                  // guid
-            data << uint8(1);                               // online flag
+            data << (uint64)pl->GetGUID();                  // guid
+            data << (uint8)1;                               // online flag
             data << pl->GetName();                          // member name
-            data << uint32(itr->guid == GetCaptain() ? 0 : 1);// unknown
-            data << uint8(pl->getLevel());                  // unknown, probably level
-            data << uint8(pl->getClass());                  // class
-            data << uint32(itr->games_week);                // played this week
-            data << uint32(itr->wins_week);                 // wins this week
-            data << uint32(itr->games_season);              // played this season
-            data << uint32(itr->wins_season);               // wins this season
-            data << uint32(itr->personal_rating);           // personal rating
+            data << (uint32)(itr->guid == GetCaptain() ? 0 : 1);// unknown
+            data << (uint8)pl->getLevel();                  // unknown, probably level
+            data << (uint8)pl->getClass();                  // class
+            data << (uint32)itr->games_week;                // played this week
+            data << (uint32)itr->wins_week;                 // wins this week
+            data << (uint32)itr->games_season;              // played this season
+            data << (uint32)itr->wins_season;               // wins this season
+            data << (uint32)itr->personal_rating;           // personal rating
         }
         else
         {
-            data << uint64(itr->guid);                      // guid
-            data << uint8(0);                               // online flag
+            data << (uint64)itr->guid;                      // guid
+            data << (uint8)0;                               // online flag
             data << itr->name;                              // member name
-            data << uint32(itr->guid == GetCaptain() ? 0 : 1);// unknown
-            data << uint8(0);                               // unknown, level?
-            data << uint8(itr->Class);                      // class
-            data << uint32(itr->games_week);                // played this week
-            data << uint32(itr->wins_week);                 // wins this week
-            data << uint32(itr->games_season);              // played this season
-            data << uint32(itr->wins_season);               // wins this season
-            data << uint32(itr->personal_rating);           // personal rating
+            data << (uint32)(itr->guid == GetCaptain() ? 0 : 1);// unknown
+            data << (uint8)0;                               // unknown, level?
+            data << (uint8)itr->Class;                      // class
+            data << (uint32)itr->games_week;                // played this week
+            data << (uint32)itr->wins_week;                 // wins this week
+            data << (uint32)itr->games_season;              // played this season
+            data << (uint32)itr->wins_season;               // wins this season
+            data << (uint32)itr->personal_rating;           // personal rating
         }
     }
     session->SendPacket(&data);
@@ -378,14 +356,14 @@ void ArenaTeam::Roster(WorldSession *session)
 void ArenaTeam::Query(WorldSession *session)
 {
     WorldPacket data(SMSG_ARENA_TEAM_QUERY_RESPONSE, 4*7+GetName().size()+1);
-    data << uint32(GetId());                                // team id
+    data << (uint32)GetId();                                // team id
     data << GetName();                                      // team name
-    data << uint32(GetType());                              // arena team type (2=2x2, 3=3x3 or 5=5x5)
-    data << uint32(BackgroundColor);                        // background color
-    data << uint32(EmblemStyle);                            // emblem style
-    data << uint32(EmblemColor);                            // emblem color
-    data << uint32(BorderStyle);                            // border style
-    data << uint32(BorderColor);                            // border color
+    data << (uint32)GetType();                              // arena team type (2=2x2, 3=3x3 or 5=5x5)
+    data << (uint32)BackgroundColor;                        // background color
+    data << (uint32)EmblemStyle;                            // emblem style
+    data << (uint32)EmblemColor;                            // emblem color
+    data << (uint32)BorderStyle;                            // border style
+    data << (uint32)BorderColor;                            // border color
     session->SendPacket(&data);
     sLog.outDebug("WORLD: Sent SMSG_ARENA_TEAM_QUERY_RESPONSE");
 }
@@ -393,13 +371,13 @@ void ArenaTeam::Query(WorldSession *session)
 void ArenaTeam::Stats(WorldSession *session)
 {
     WorldPacket data(SMSG_ARENA_TEAM_STATS, 4*7);
-    data << uint32(GetId());                                // arena team id
-    data << uint32(stats.rating);                           // rating
-    data << uint32(stats.games_week);                       // games this week
-    data << uint32(stats.wins_week);                        // wins this week
-    data << uint32(stats.games_season);                     // played this season
-    data << uint32(stats.wins_season);                      // wins this season
-    data << uint32(stats.rank);                             // rank
+    data << (uint32)GetId();                                // arena team id
+    data << (uint32)stats.rating;                           // rating
+    data << (uint32)stats.games_week;                       // games this week
+    data << (uint32)stats.wins_week;                        // wins this week
+    data << (uint32)stats.games_season;                     // played this season
+    data << (uint32)stats.wins_season;                      // wins this season
+    data << (uint32)stats.rank;                             // rank
     session->SendPacket(&data);
 }
 
@@ -422,12 +400,12 @@ void ArenaTeam::InspectStats(WorldSession *session, uint64 guid)
         return;
 
     WorldPacket data(MSG_INSPECT_ARENA_TEAMS, 8+1+4*6);
-    data << uint64(guid);                                   // player guid
-    data << uint8(GetSlot());                               // slot (0...2)
-    data << uint32(GetId());                                // arena team id
-    data << uint32(stats.rating);                           // rating
-    data << uint32(stats.games_season);                     // season played
-    data << uint32(stats.wins_season);                      // season wins
+    data << (uint64)guid;                                   // player guid
+    data << (uint8)GetSlot();                               // slot (0...2)
+    data << (uint32)GetId();                                // arena team id
+    data << (uint32)stats.rating;                           // rating
+    data << (uint32)stats.games_season;                     // season played
+    data << (uint32)stats.wins_season;                      // season wins
     data << member->games_season;                           // played (count of all games, that the inspected member participated...)
     data << member->personal_rating;                        // personal rating
     session->SendPacket(&data);
@@ -668,7 +646,7 @@ void ArenaTeam::SaveToDB()
     CharacterDatabase.PExecute("UPDATE arena_team_stats SET rating = '%u',games = '%u',played = '%u',rank = '%u',wins = '%u',wins2 = '%u' WHERE arenateamid = '%u'", stats.rating, stats.games_week, stats.games_season, stats.rank, stats.wins_week, stats.wins_season, GetId());
     for(MemberList::iterator itr = members.begin(); itr !=  members.end(); ++itr)
     {
-        CharacterDatabase.PExecute("UPDATE arena_team_member SET played_week = '%u', wons_week = '%u', played_season = '%u', wons_season = '%u' WHERE arenateamid = '%u' AND guid = '%u'", itr->games_week, itr->wins_week, itr->games_season, itr->wins_season, Id, itr->guid);
+        CharacterDatabase.PExecute("UPDATE arena_team_member SET played_week = '%u', wons_week = '%u', played_season = '%u', wons_season = '%u', personal_rating = '%u' WHERE arenateamid = '%u' AND guid = '%u'", itr->games_week, itr->wins_week, itr->games_season, itr->wins_season, itr->personal_rating, Id, itr->guid);
     }
 }
 

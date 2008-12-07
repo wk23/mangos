@@ -149,7 +149,8 @@ class ArenaTeam
 
         void SetEmblem(uint32 backgroundColor, uint32 emblemStyle, uint32 emblemColor, uint32 borderStyle, uint32 borderColor);
 
-        uint32 GetMembersSize() const { return members.size(); }
+        size_t GetMembersSize() const { return members.size(); }
+        bool   Empty() const { return members.empty(); }
         MemberList::iterator membersbegin(){ return members.begin(); }
         MemberList::iterator membersEnd(){ return members.end(); }
         bool HaveMember(const uint64& guid) const;
@@ -173,7 +174,6 @@ class ArenaTeam
         bool LoadArenaTeamFromDB(uint32 ArenaTeamId);
         void LoadMembersFromDB(uint32 ArenaTeamId);
         void LoadStatsFromDB(uint32 ArenaTeamId);
-        void LoadPlayerStats(ArenaTeamMember* member);
 
         void SaveToDB();
 
