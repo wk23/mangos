@@ -218,7 +218,7 @@ GroupQueueInfo * BattleGroundQueue::AddGroup(Player *leader, uint32 BgTypeId, ui
     ginfo->JoinTime                  = getMSTime();
     ginfo->Team                      = leader->GetTeam();
     ginfo->ArenaTeamRating           = arenaRating;
-    ginfo->OpponentsTeamRating        = 0;                       //initialize it to 0
+    ginfo->OpponentsTeamRating       = 0;                       //initialize it to 0
 
     ginfo->Players.clear();
 
@@ -741,6 +741,14 @@ void BattleGroundQueue::Update(uint32 bgTypeId, uint32 queue_id, uint8 arenatype
         for(itr = m_SelectionPools[NORMAL_ALLIANCE].SelectedGroups.begin(); itr != m_SelectionPools[NORMAL_ALLIANCE].SelectedGroups.end(); ++itr)
         {
             InviteGroupToBG((*itr),bg2,ALLIANCE);
+        }
+
+        if (isRated)
+        {
+            std::list<GroupQueueInfo* >::iterator itr_alliance = m_SelectionPools[mode1].SelectedGroups.begin();
+            std::list<GroupQueueInfo* >::iterator itr_horde = m_SelectionPools[mode2].SelectedGroups.begin();
+            (*itr_alliance)->OpponentsTeamRating = (*itr_horde)->ArenaTeamRating;
+            (*itr_horde)->OpponentsTeamRating = (*itr_alliance)->ArenaTeamRating;
         }
 
         // start the battleground
