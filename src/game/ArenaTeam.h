@@ -174,6 +174,19 @@ class ArenaTeam
             return NULL;
         }
 
+        bool IsFighting() const
+        {
+            for (MemberList::const_iterator i = members.begin(); i != members.end(); ++i)
+            {
+                if (Player *p = objmgr.GetPlayer(i->guid))
+                {
+                    if (p->GetMap()->IsBattleArena())
+                        return true;
+                }
+            }
+            return false;
+        }
+
         bool LoadArenaTeamFromDB(uint32 ArenaTeamId);
         void LoadMembersFromDB(uint32 ArenaTeamId);
         void LoadStatsFromDB(uint32 ArenaTeamId);

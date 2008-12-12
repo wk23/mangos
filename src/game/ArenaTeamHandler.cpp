@@ -265,6 +265,9 @@ void WorldSession::HandleArenaTeamDisbandOpcode(WorldPacket & recv_data)
         return;
     }
 
+    if (at->IsFighting())
+        return;
+
     at->Disband(this);
     delete at;
 }
