@@ -114,14 +114,12 @@ bool WorldSession::SendAuctionInfo(WorldPacket & data, AuctionEntry* auction)
 }
 
 //call this method when player bids, creates, or deletes auction
-void WorldSession::SendAuctionCommandResult(uint32 auctionId, uint32 Action, uint32 ErrorCode, uint32 bidError )
+void WorldSession::SendAuctionCommandResult(uint32 auctionId, uint32 Action, uint32 ErrorCode)
 {
     WorldPacket data( SMSG_AUCTION_COMMAND_RESULT, 16 );
     data << auctionId;
     data << Action;
     data << ErrorCode;
-    if ( !ErrorCode && Action )
-        data << bidError;                                   //when bid, then send 0, once...
     SendPacket(&data);
 }
 
@@ -404,7 +402,7 @@ void WorldSession::HandleAuctionPlaceBid( WorldPacket & recv_data )
         // after this update we should save player's money ...
         CharacterDatabase.PExecute("UPDATE auctionhouse SET buyguid = '%u',lastbid = '%u' WHERE id = '%u'", auction->bidder, auction->bid, auction->Id);
 
-        SendAuctionCommandResult(auction->Id, AUCTION_PLACE_BID, AUCTION_OK, 0 );
+        SendAuctionCommandResult(auction->Id, AUCTION_PLACE_BID, AUCTION_OK );
     }
     else
     {

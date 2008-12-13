@@ -83,7 +83,7 @@ class MANGOS_DLL_SPEC WorldSession
         void SendNotification(int32 string_id,...);
         void SendPetNameInvalid(uint32 error, std::string name, DeclinedName *declinedName);
         void SendLfgResult(uint32 type, uint32 entry, uint8 lfg_type);
-        void SendPartyResult(PartyOperation operation, std::string member, PartyResult res);
+        void SendPartyCommandResult(uint32 operation, std::string member, uint32 res);
         void SendAreaTriggerMessage(const char* Text, ...) ATTR_PRINTF(2,3);
 
         uint32 GetSecurity() const { return _security; }
@@ -158,7 +158,7 @@ class MANGOS_DLL_SPEC WorldSession
 
         //auction
         void SendAuctionHello( uint64 guid, Creature * unit );
-        void SendAuctionCommandResult( uint32 auctionId, uint32 Action, uint32 ErrorCode, uint32 bidError = 0);
+        void SendAuctionCommandResult( uint32 auctionId, uint32 Action, uint32 ErrorCode);
         void SendAuctionBidderNotification( uint32 location, uint32 auctionId, uint64 bidder, uint32 bidSum, uint32 diff, uint32 item_template);
         void SendAuctionOwnerNotification( AuctionEntry * auction );
         bool SendAuctionInfo(WorldPacket & data, AuctionEntry* auction);
