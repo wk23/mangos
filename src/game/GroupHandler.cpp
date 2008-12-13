@@ -929,3 +929,21 @@ void WorldSession::HandleGroupPassOnLootOpcode( WorldPacket & recv_data )
     if(unkn!=0)
         sLog.outError("CMSG_GROUP_PASS_ON_LOOT: activation not implemented!");
 }
+
+//SendPartyCommandResult(x,y,name)
+//x==0
+// 0 "You have invited %s, to join your group"
+// 1 "Can't find player %s"
+// 2 "%s doesn't belong to your group."
+// 3 "%s is not in your instance"
+// 4 "Your Group is full"
+// 5 "%s is already in a group"
+// 6 "You are in no group"
+// 7 "You are not the group leader"
+// 8 "Target is hostil" (red)
+// 9 "%s ignores you"
+// 12 "You have an unconfirmed assignment" (ihr habt eine unbestaetigte zuordnung)
+// 13 "Guestaccouts can't invite players to their group"
+
+// x==2
+// 0 "You left the group"

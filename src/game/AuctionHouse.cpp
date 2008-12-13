@@ -743,3 +743,26 @@ void WorldSession::HandleAuctionListItems( WorldPacket & recv_data )
     data << (uint32) 300;                                   // unk 2.3.0 const?
     SendPacket(&data);
 }
+
+//SendAuctionCommandResult(x,y)
+//x=0
+// 0 "Auction created"
+// 1 "internal bag error" (red text)
+// 2 "internal auction error" (red text)
+// 3 "you don't have enough money" (red)
+// 4 "the item wasn't found" (red)
+// 5 "there is already an higher bid for this item" (red)
+// 6 == 2 (auction error)
+// 7 "the step of your bid is to small" (red) (die steigerung eures gebots ist zu klein)
+// 8,9 =2
+// 10 "you can't bid at your own auction" (red)
+// 11,12=2
+// 13 "this action can't be made with guest-accounts" (red)
+// ++=2
+
+//x==1
+// 0 "Auction aborted"
+
+//x==2
+// 0 "Bid accepted"
+//

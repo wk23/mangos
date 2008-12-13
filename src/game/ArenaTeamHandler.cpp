@@ -445,3 +445,36 @@ ERR_ARENA_TEAM_TOO_MANY_MEMBERS_S "%s is full"
 
 ERR_ARENA_TEAM_LEVEL_TOO_LOW_I "You must be level %d to form an arena team"
 */
+
+//SendArenatTeamCommand(x,t1,t2,y)
+//t1 is always the team-name, t2 is always the players name
+// x==0
+// 0 "%s created.  To disband, use /teamdisband [2v2, 3v3, 5v5].",t1
+// 1 "Internal arena team error"
+// 2 "You are already in an arena team of that size"
+// 3 "%s is already in an arena team of that size", t2
+// 4 "You have already been invited into an arena team"
+// 5 "%s has already been invited to an arena team",t2
+// 6 "That name contains invalid characters, please enter a new name"
+// 7 "There is already an arena team named \"%s\"", t1
+// 8 "You don't have permission to do that"
+// 9 "You are not in an arena team of that size"
+// 10 "%s is not in %s",t2,t1
+// 11 "\"%s\" not found", t2
+// 12 "You cannot invite players from the opposing alliance"
+// 19 "%s ignores you",t2
+// 21 "The level of %s is not high enough, to join your team",t2
+// 22 "\"%s\" is full",t1
+// 26 "The Arenateam is now offline"
+// 29 "Arenateams are at this time closed" ([ger]derzeit)
+
+// x==1
+// 0 "You have invited %s to join %s",t1,t2
+// rest, seems to be the same as in x==0
+
+// x==3
+// 0 "You are no longer a member of %s",t1
+// 8 "You must promote a new team captain using /teamcaptain before leaving the team"
+
+// x==14
+// 0 "Congratulations, you are a founding member of %s!  To leave, use /teamquit [2v2, 3v3, 5v5].",t1

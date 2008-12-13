@@ -1701,3 +1701,40 @@ void WorldSession::SendSaveGuildEmblem( uint32 msg )
     data << uint32(msg);                                    // not part of guild
     SendPacket( &data );
 }
+
+//SendGuildCommandResult(x,t,y)
+//i translated this from german to english
+//x==0
+//0 "%s created."
+// 1 "Internal guild error"
+// 2 "You are already in a guild"
+// 3 "%s is already in a guild"
+// 4 "You have already been invited into a guild"
+// 5 "%s has already been invited to a guild",t2
+// 6 "That name contains invalid characters, please enter a new name" (pops up as red text)
+// 7 "There is already a guild named \"%s\"" (red text)
+// 8 "You don't have permission to do that"
+// 9 "You are not in a guild"
+// 10 "%s is not in your guild"
+// 11 "\"%s\" not found", t2
+// 12 "You cannot invite players from the opposing alliance"
+// 13 "The rank of %s is to high"
+// 14 "%s is already on the lowest rank"
+// 17 "Temporary guild error. Please try again"
+// 18 "This guild rank is currently in use" (dieser gildenrang ist zurzeit vergeben)
+// 19 "%s ignores you",t2
+// 24 "You can't take so much gold from the guild-bank" (red text)
+// 25 "There is not enough gold in the guild bank" (red text)
+// 27 "The Guild-bank-tab is full" (red text) (das gildenbankfach ist voll)
+// 28 "This item wasn't found" (red text) (der gegenstand wurde nicht gefunden)
+
+//x==1
+// 0 "You have invited %s to join your guild"
+// rest, seems to be the same as in x==0
+
+// x==3
+// 0 "You are no longer a member of %s",t1
+// 8 "You must promote a new guild master before leaving this guild"
+
+// x==14
+// 0 "Congratulations, you are a founding member of %s!",t1
