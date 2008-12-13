@@ -86,9 +86,6 @@ bool ChatHandler::HandleSetPoiCommand(const char* args)
         return false;
 
     uint32 icon = atol(icon_text);
-    if ( icon < 0 )
-        icon = 0;
-
     uint32 flags = atol(flags_text);
 
     sLog.outDetail("Command : POI, NPC = %u, icon = %u flags = %u", target->GetGUIDLow(), icon,flags);
@@ -123,6 +120,55 @@ bool ChatHandler::HandleBuyErrorCommand(const char* args)
 
     uint8 msg = atoi(args);
     m_session->GetPlayer()->SendBuyError(msg, 0, 0, 0);
+    return true;
+}
+
+bool ChatHandler::HandleSendCommandResultArena(const char* args)
+{
+    char* a = strtok((char*)args, " ");
+    char* b = strtok(NULL, " ");
+    if(!a || !b)
+        return false;
+
+    uint32 unk1 = atol(a);
+    uint32 unk2 = atol(b);
+    m_session->SendArenaTeamCommandResult(unk1,"test1","test2",unk2);
+    return true;
+}
+
+bool ChatHandler::HandleSendCommandResultGuild(const char* args)
+{
+    char* a = strtok((char*)args, " ");
+    char* b = strtok(NULL, " ");
+    if (!a || !b)
+        return false;
+    uint32 typecmd = atol(a);
+    uint32 cmdresult = atol(b);
+    m_session->SendGuildCommandResult(typecmd,"test",cmdresult);
+    return true;
+}
+
+bool ChatHandler::HandleSendCommandResultParty(const char* args)
+{
+    char* a = strtok((char*)args, " ");
+    char* b = strtok(NULL, " ");
+    if (!a || !b)
+        return false;
+    uint32 typecmd = atol(a);
+    uint32 cmdresult = atol(b);
+    m_session->SendPartyCommandResult(typecmd, "test", cmdresult);
+    return true;
+}
+
+bool ChatHandler::HandleSendCommandResultAuction(const char* args)
+{
+    char* a = strtok((char*)args, " ");
+    char* b = strtok(NULL, " ");
+    if (!a || !b)
+        return false;
+    uint32 typecmd = atol(a);
+    uint32 cmdresult = atol(b);
+    m_session->SendAuctionCommandResult(42, typecmd, cmdresult);
     return true;
 }
 

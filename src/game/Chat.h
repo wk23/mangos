@@ -400,6 +400,10 @@ class ChatHandler
         bool HandleSendOpcodeCommand(const char* args);
         bool HandleSellErrorCommand(const char* args);
         bool HandleBuyErrorCommand(const char* args);
+        bool HandleSendCommandResultArena(const char* args);
+        bool HandleSendCommandResultGuild(const char* args);
+        bool HandleSendCommandResultParty(const char* args);
+        bool HandleSendCommandResultAuction(const char* args);
         bool HandleUpdateWorldStateCommand(const char* args);
         bool HandlePlaySound2Command(const char* args);
         bool HandleSendChannelNotifyCommand(const char* args);
