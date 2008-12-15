@@ -156,6 +156,7 @@ class ArenaTeam
         MemberList::iterator membersBegin() { return members.begin(); }
         MemberList::iterator membersEnd()   { return members.end(); }
         bool HaveMember(const uint64& guid) const;
+
         ArenaTeamMember* GetMember(const uint64& guid)
         {
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
@@ -165,10 +166,10 @@ class ArenaTeam
             return NULL;
         }
 
-        ArenaTeamMember* GetMember(std::string& name)
+        ArenaTeamMember* GetMember(const std::string& name)
         {
             for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
-                if(itr->name==name)
+                if(itr->name == name)
                     return &(*itr);
 
             return NULL;
@@ -176,9 +177,9 @@ class ArenaTeam
 
         bool IsFighting() const
         {
-            for (MemberList::const_iterator i = members.begin(); i != members.end(); ++i)
+            for (MemberList::const_iterator itr = members.begin(); itr != members.end(); ++itr)
             {
-                if (Player *p = objmgr.GetPlayer(i->guid))
+                if (Player *p = objmgr.GetPlayer(itr->guid))
                 {
                     if (p->GetMap()->IsBattleArena())
                         return true;

@@ -313,34 +313,18 @@ void ArenaTeam::Roster(WorldSession *session)
     for (MemberList::iterator itr = members.begin(); itr != members.end(); ++itr)
     {
         pl = objmgr.GetPlayer(itr->guid);
-        if(pl)
-        {
-            data << (uint64)pl->GetGUID();                  // guid
-            data << (uint8)1;                               // online flag
-            data << pl->GetName();                          // member name
-            data << (uint32)(itr->guid == GetCaptain() ? 0 : 1);// unknown
-            data << (uint8)pl->getLevel();                  // unknown, probably level
-            data << (uint8)pl->getClass();                  // class
-            data << (uint32)itr->games_week;                // played this week
-            data << (uint32)itr->wins_week;                 // wins this week
-            data << (uint32)itr->games_season;              // played this season
-            data << (uint32)itr->wins_season;               // wins this season
-            data << (uint32)itr->personal_rating;           // personal rating
-        }
-        else
-        {
-            data << (uint64)itr->guid;                      // guid
-            data << (uint8)0;                               // online flag
-            data << itr->name;                              // member name
-            data << (uint32)(itr->guid == GetCaptain() ? 0 : 1);// unknown
-            data << (uint8)0;                               // unknown, level?
-            data << (uint8)itr->Class;                      // class
-            data << (uint32)itr->games_week;                // played this week
-            data << (uint32)itr->wins_week;                 // wins this week
-            data << (uint32)itr->games_season;              // played this season
-            data << (uint32)itr->wins_season;               // wins this season
-            data << (uint32)itr->personal_rating;           // personal rating
-        }
+
+        data << (uint64)itr->guid;                      // guid
+        data << (uint8)(pl ? 1 : 0);                    // online flag
+        data << itr->name;                              // member name
+        data << (uint32)(itr->guid == GetCaptain() ? 0 : 1);// captain flag 0 captain 1 member
+        data << (uint8)(pl ? pl->getLevel() : 0);       // unknown, level?
+        data << (uint8)itr->Class;                      // class
+        data << (uint32)itr->games_week;                // played this week
+        data << (uint32)itr->wins_week;                 // wins this week
+        data << (uint32)itr->games_season;              // played this season
+        data << (uint32)itr->wins_season;               // wins this season
+        data << (uint32)itr->personal_rating;           // personal rating
     }
     session->SendPacket(&data);
     sLog.outDebug("WORLD: Sent SMSG_ARENA_TEAM_ROSTER");
