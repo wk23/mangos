@@ -43,7 +43,9 @@ enum ArenaTeamCommandErrors
     ERR_ARENA_TEAM_PLAYER_NOT_IN_TEAM       = 0x09,
     ERR_ARENA_TEAM_PLAYER_NOT_IN_TEAM_SS    = 0x0A,
     ERR_ARENA_TEAM_PLAYER_NOT_FOUND_S       = 0x0B,
-    ERR_ARENA_TEAM_NOT_ALLIED               = 0x0C
+    ERR_ARENA_TEAM_NOT_ALLIED               = 0x0C,
+    ERR_ARENA_TEAM_PLAYER_TO_LOW            = 0x15,
+    ERR_ARENA_TEAM_FULL                     = 0x16
 };
 
 enum ArenaTeamEvents

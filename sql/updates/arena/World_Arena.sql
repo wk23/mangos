@@ -13,6 +13,7 @@ INSERT INTO `command` (`name`, `security`, `help`) VALUES
 ('flusharenapoints','3','Syntax: .flusharenapoints\r\n\r\nUse it to distribute arena points based on arena team ratings, and start a new week.');
 
 DELETE FROM mangos_string WHERE entry BETWEEN 7007 AND 7023;
+
 INSERT INTO mangos_string (entry, content_default) VALUES
     (7007,'Your group is too large for this battleground. Please regroup to join.'),
     (7008,'Your group is too large for this arena. Please regroup to join.'),
@@ -32,6 +33,7 @@ INSERT INTO mangos_string (entry, content_default) VALUES
     (7022, 'You must be in GM mode to teleport to a player in a battleground.'),
     (7023, 'You cannot teleport to a battleground from another battleground. Please leave the current battleground first.');
 
+DELETE FROM mangos_string WHERE entry = 714 OR entry = 716;
 
 ## Change the doors to be untargettable
 UPDATE `gameobject_template` SET `flags`='4' WHERE `entry`='183970';

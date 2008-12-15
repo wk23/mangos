@@ -643,9 +643,9 @@ enum MangosStrings
 
 
     LANG_YOUR_ARENA_LEVEL_REQ_ERROR     = 713,
-    LANG_HIS_ARENA_LEVEL_REQ_ERROR      = 714,
+//    LANG_HIS_ARENA_LEVEL_REQ_ERROR      = 714, an opcode exists for this
     LANG_YOUR_BG_LEVEL_REQ_ERROR        = 715,
-    LANG_YOUR_ARENA_TEAM_FULL           = 716,
+//    LANG_YOUR_ARENA_TEAM_FULL           = 716, an opcode exists for this
 
     LANG_BG_GROUP_TOO_LARGE             = 7007, // "Your group is too large for this battleground. Please regroup to join."
     LANG_ARENA_GROUP_TOO_LARGE          = 7008, // "Your group is too large for this arena. Please regroup to join."

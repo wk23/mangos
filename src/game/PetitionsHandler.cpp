@@ -549,6 +549,7 @@ void WorldSession::HandlePetitionSignOpcode(WorldPacket & recv_data)
             SendGuildCommandResult(GUILD_INVITE_S, _player->GetName(), ALREADY_INVITED_TO_GUILD);
             return;
         }
+        return;
     }
 
     signs += 1;
