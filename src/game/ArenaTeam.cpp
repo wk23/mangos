@@ -487,18 +487,18 @@ uint32 ArenaTeam::GetPoints(uint32 MemberRating)
     return (uint32) points;
 }
 
-float ArenaTeam::GetChanceAgainst(uint32 rating)
+float ArenaTeam::GetChanceAgainst(uint32 own_rating, uint32 enemy_rating)
 {
     // returns the chance to win against a team with the given rating, used in the rating adjustment calculation
     // ELO system
-    return 1.0f/(1.0f+exp(log(10.0f)*(float)((float)rating - (float)stats.rating)/400.0f));
+    return 1.0f/(1.0f+exp(log(10.0f)*(float)((float)enemy_rating - (float)own_rating)/400.0f));
 }
 
 int32 ArenaTeam::WonAgainst(uint32 againstRating)
 {
     // called when the team has won
     //'chance' calculation - to beat the opponent
-    float chance = GetChanceAgainst(againstRating);
+    float chance = GetChanceAgainst(stats.rating,againstRating);
     // calculate the rating modification (ELO system with k=32)
     int32 mod = (int32)floor(32.0f * (1.0f - chance));
     // modify the team stats accordingly
@@ -524,7 +524,7 @@ int32 ArenaTeam::LostAgainst(uint32 againstRating)
 {
     // called when the team has lost
     //'chance' calculation - to loose to the opponent
-    float chance = GetChanceAgainst(againstRating);
+    float chance = GetChanceAgainst(stats.rating,againstRating);
     // calculate the rating modification (ELO system with k=32)
     int32 mod = (int32)ceil(32.0f * (0.0f - chance));
     // modify the team stats accordingly
@@ -553,7 +553,7 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstRating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            float chance = GetChanceAgainst(againstRating);
+            float chance = GetChanceAgainst(itr->personal_rating, againstRating);
             int32 mod = (int32)ceil(32.0f * (0.0f - chance));
             itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal played stats
@@ -575,7 +575,7 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstRating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            float chance = GetChanceAgainst(againstRating);
+            float chance = GetChanceAgainst(itr->personal_rating, againstRating);
             int32 mod = (int32)floor(32.0f * (1.0f - chance));
             itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal stats
