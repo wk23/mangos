@@ -20,6 +20,7 @@
 #define _PLAYER_H
 
 #include "Common.h"
+#include "World.h"
 #include "ItemPrototype.h"
 #include "Unit.h"
 #include "Item.h"
@@ -943,7 +944,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void SetSummonPoint(uint32 mapid, float x, float y, float z)
         {
-            m_summon_expire = time(NULL) + MAX_PLAYER_SUMMON_DELAY;
+            m_summon_expire = sWorld.GetGameTime() + MAX_PLAYER_SUMMON_DELAY;
             m_summon_mapid = mapid;
             m_summon_x = x;
             m_summon_y = y;
@@ -1481,12 +1482,12 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool HasSpellCooldown(uint32 spell_id) const
         {
             SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
-            return itr != m_spellCooldowns.end() && itr->second.end > time(NULL);
+            return itr != m_spellCooldowns.end() && itr->second.end > sWorld.GetGameTime();
         }
         uint32 GetSpellCooldownDelay(uint32 spell_id) const
         {
             SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
-            time_t t = time(NULL);
+            time_t t = sWorld.GetGameTime();
             return itr != m_spellCooldowns.end() && itr->second.end > t ? itr->second.end - t : 0;
         }
         void AddSpellCooldown(uint32 spell_id, uint32 itemid, time_t end_time);

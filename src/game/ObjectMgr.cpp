@@ -4268,7 +4268,7 @@ void ObjectMgr::LoadNpcTextLocales()
 //not very fast function but it is called only once a day, or on starting-up
 void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
 {
-    time_t basetime = time(NULL);
+    time_t basetime = sWorld.GetGameTime();
     sLog.outDebug("Returning mails current time: hour: %d, minute: %d, second: %d ", localtime(&basetime)->tm_hour, localtime(&basetime)->tm_min, localtime(&basetime)->tm_sec);
     //delete all old mails without item and without body immediately, if starting server
     if (!serverUp)

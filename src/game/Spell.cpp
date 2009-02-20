@@ -2524,7 +2524,7 @@ void Spell::SendSpellCooldown()
     // Cooldown started on SendCooldownEvent call
     if (m_spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
     {
-        _player->AddSpellCooldown(m_spellInfo->Id, 0, time(NULL) - 1);
+        _player->AddSpellCooldown(m_spellInfo->Id, 0, sWorld.GetGameTime() - 1);
         return;
     }
 
@@ -2583,7 +2583,7 @@ void Spell::SendSpellCooldown()
     if( rec == 0 && catrec == 0)
         return;
 
-    time_t curTime = time(NULL);
+    time_t curTime = sWorld.GetGameTime();
 
     time_t catrecTime = catrec ? curTime+catrec/1000 : 0;   // in secs
     time_t recTime    = rec ? curTime+rec/1000 : catrecTime;// in secs

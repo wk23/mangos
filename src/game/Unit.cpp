@@ -1711,7 +1711,7 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
                         roll_chance_i(currentAbsorb))                     // Only if roll
                     {
                         pVictim->CastSpell(pVictim,31231,true);
-                        ((Player*)pVictim)->AddSpellCooldown(31231,0,time(NULL)+60);
+                        ((Player*)pVictim)->AddSpellCooldown(31231,0,sWorld.GetGameTime()+60);
                         // with health > 10% lost health until health==10%, in other case no losses
                         uint32 health10 = pVictim->GetMaxHealth()/10;
                         RemainingDamage = pVictim->GetHealth() > health10 ? pVictim->GetHealth() - health10 : 0;
@@ -4380,7 +4380,7 @@ bool Unit::HandleHasteAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         CastSpell(target,triggered_spell_id,true,castItem,triggeredByAura);
 
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
-        ((Player*)this)->AddSpellCooldown(triggered_spell_id,0,time(NULL) + cooldown);
+        ((Player*)this)->AddSpellCooldown(triggered_spell_id,0,sWorld.GetGameTime() + cooldown);
 
     return true;
 }
@@ -5638,7 +5638,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
 
                     // apply cooldown before cast to prevent processing itself
                     if( cooldown )
-                        ((Player*)this)->AddSpellCooldown(dummySpell->Id,0,time(NULL) + cooldown);
+                        ((Player*)this)->AddSpellCooldown(dummySpell->Id,0,sWorld.GetGameTime() + cooldown);
 
                     // Attack Twice
                     for ( uint32 i = 0; i<2; ++i )
@@ -5802,7 +5802,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 ((Player*)this)->AddSpellMod(mod, false);
 
                 if( cooldown && GetTypeId()==TYPEID_PLAYER )
-                    ((Player*)this)->AddSpellCooldown(dummySpell->Id,0,time(NULL) + cooldown);
+                    ((Player*)this)->AddSpellCooldown(dummySpell->Id,0,sWorld.GetGameTime() + cooldown);
 
                 return true;
             }
@@ -5948,7 +5948,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         CastSpell(target,triggered_spell_id,true,castItem,triggeredByAura);
 
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
-        ((Player*)this)->AddSpellCooldown(triggered_spell_id,0,time(NULL) + cooldown);
+        ((Player*)this)->AddSpellCooldown(triggered_spell_id,0,sWorld.GetGameTime() + cooldown);
 
     return true;
 }
@@ -6666,7 +6666,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
         CastSpell(target,trigger_spell_id,true,castItem,triggeredByAura);
 
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
-        ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,time(NULL) + cooldown);
+        ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,sWorld.GetGameTime() + cooldown);
 
     return true;
 }
@@ -6769,7 +6769,7 @@ bool Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint32 damage, Aura 
     CastSpell(pVictim, triggered_spell_id, true, castItem, triggeredByAura);
 
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
-        ((Player*)this)->AddSpellCooldown(triggered_spell_id,0,time(NULL) + cooldown);
+        ((Player*)this)->AddSpellCooldown(triggered_spell_id,0,sWorld.GetGameTime() + cooldown);
 
     return true;
 }

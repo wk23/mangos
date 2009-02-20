@@ -161,7 +161,7 @@ void Creature::RemoveCorpse()
     setDeathState(DEAD);
     ObjectAccessor::UpdateObjectVisibility(this);
     loot.clear();
-    m_respawnTime = time(NULL) + m_respawnDelay;
+    m_respawnTime = sWorld.GetGameTime() + m_respawnDelay;
 
     float x,y,z,o;
     GetRespawnCoord(x, y, z, &o);
@@ -322,7 +322,7 @@ void Creature::Update(uint32 diff)
             break;
         case DEAD:
         {
-            if( m_respawnTime <= time(NULL) )
+            if( m_respawnTime <= sWorld.GetGameTime() )
             {
                 DEBUG_LOG("Respawning...");
                 m_respawnTime = 0;
@@ -1308,7 +1308,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     m_deathState = m_isDeadByDefault ? DEAD : ALIVE;
 
     m_respawnTime  = objmgr.GetCreatureRespawnTime(m_DBTableGuid,GetInstanceId());
-    if(m_respawnTime > time(NULL))                          // not ready to respawn
+    if(m_respawnTime > sWorld.GetGameTime())                          // not ready to respawn
     {
         m_deathState = DEAD;
         if(canFly())
@@ -1529,7 +1529,7 @@ void Creature::Respawn()
     {
         if (m_DBTableGuid)
             objmgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),0);
-        m_respawnTime = time(NULL);                         // respawn at next tick
+        m_respawnTime = sWorld.GetGameTime();                         // respawn at next tick
     }
 }
 
@@ -1753,10 +1753,10 @@ void Creature::SaveRespawnTime()
     if(isPet() || !m_DBTableGuid)
         return;
 
-    if(m_respawnTime > time(NULL))                          // dead (no corpse)
+    if(m_respawnTime > sWorld.GetGameTime())                          // dead (no corpse)
         objmgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnTime);
     else if(m_deathTimer > 0)                               // dead (corpse)
-        objmgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),time(NULL)+m_respawnDelay+m_deathTimer/1000);
+        objmgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),sWorld.GetGameTime()+m_respawnDelay+m_deathTimer/1000);
 }
 
 bool Creature::IsOutOfThreatArea(Unit* pVictim) const
@@ -1877,10 +1877,10 @@ void Creature::AddCreatureSpellCooldown(uint32 spellid)
 
     uint32 cooldown = GetSpellRecoveryTime(spellInfo);
     if(cooldown)
-        _AddCreatureSpellCooldown(spellid, time(NULL) + cooldown/1000);
+        _AddCreatureSpellCooldown(spellid, sWorld.GetGameTime() + cooldown/1000);
 
     if(spellInfo->Category)
-        _AddCreatureCategoryCooldown(spellInfo->Category, time(NULL));
+        _AddCreatureCategoryCooldown(spellInfo->Category, sWorld.GetGameTime());
 
     m_GlobalCooldown = spellInfo->StartRecoveryTime;
 }
@@ -1896,13 +1896,13 @@ bool Creature::HasCategoryCooldown(uint32 spell_id) const
         return true;
 
     CreatureSpellCooldowns::const_iterator itr = m_CreatureCategoryCooldowns.find(spellInfo->Category);
-    return(itr != m_CreatureCategoryCooldowns.end() && time_t(itr->second + (spellInfo->CategoryRecoveryTime / 1000)) > time(NULL));
+    return(itr != m_CreatureCategoryCooldowns.end() && time_t(itr->second + (spellInfo->CategoryRecoveryTime / 1000)) > sWorld.GetGameTime());
 }
 
 bool Creature::HasSpellCooldown(uint32 spell_id) const
 {
     CreatureSpellCooldowns::const_iterator itr = m_CreatureSpellCooldowns.find(spell_id);
-    return (itr != m_CreatureSpellCooldowns.end() && itr->second > time(NULL)) || HasCategoryCooldown(spell_id);
+    return (itr != m_CreatureSpellCooldowns.end() && itr->second > sWorld.GetGameTime()) || HasCategoryCooldown(spell_id);
 }
 
 bool Creature::IsInEvadeMode() const
@@ -1921,7 +1921,7 @@ bool Creature::HasSpell(uint32 spellID) const
 
 time_t Creature::GetRespawnTimeEx() const
 {
-    time_t now = time(NULL);
+    time_t now = sWorld.GetGameTime();
     if(m_respawnTime > now)                                 // dead (no corpse)
         return m_respawnTime;
     else if(m_deathTimer > 0)                               // dead (corpse)
@@ -2021,7 +2021,7 @@ uint32 Creature::GetVendorItemCurrentCount(VendorItem const* vItem)
 
     VendorItemCount* vCount = &*itr;
 
-    time_t ptime = time(NULL);
+    time_t ptime = sWorld.GetGameTime();
 
     if( vCount->lastIncrementTime + vItem->incrtime <= ptime )
     {
@@ -2060,7 +2060,7 @@ uint32 Creature::UpdateVendorItemCurrentCount(VendorItem const* vItem, uint32 us
 
     VendorItemCount* vCount = &*itr;
 
-    time_t ptime = time(NULL);
+    time_t ptime = sWorld.GetGameTime();
 
     if( vCount->lastIncrementTime + vItem->incrtime <= ptime )
     {

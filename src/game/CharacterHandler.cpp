@@ -71,7 +71,7 @@ bool LoginQueryHolder::Initialize()
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADREPUTATION,      "SELECT faction,standing,flags FROM character_reputation WHERE guid = '%u'", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADINVENTORY,       "SELECT data,bag,slot,item,item_template FROM character_inventory JOIN item_instance ON character_inventory.item = item_instance.guid WHERE character_inventory.guid = '%u' ORDER BY bag,slot", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADACTIONS,         "SELECT button,action,type,misc FROM character_action WHERE guid = '%u' ORDER BY button", GUID_LOPART(m_guid));
-    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILCOUNT,       "SELECT COUNT(id) FROM mail WHERE receiver = '%u' AND (checked & 1)=0 AND deliver_time <= '" I64FMTD "'", GUID_LOPART(m_guid),(uint64)time(NULL));
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILCOUNT,       "SELECT COUNT(id) FROM mail WHERE receiver = '%u' AND (checked & 1)=0 AND deliver_time <= '" I64FMTD "'", GUID_LOPART(m_guid),(uint64)sWorld.GetGameTime());
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILDATE,        "SELECT MIN(deliver_time) FROM mail WHERE receiver = '%u' AND (checked & 1)=0", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADSOCIALLIST,      "SELECT friend,flags,note FROM character_social WHERE guid = '%u' LIMIT 255", GUID_LOPART(m_guid));
     res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADHOMEBIND,        "SELECT map,zone,position_x,position_y,position_z FROM character_homebind WHERE guid = '%u'", GUID_LOPART(m_guid));
@@ -593,7 +593,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     SendPacket(&data);
 
     data.Initialize( SMSG_ACCOUNT_DATA_TIMES, 4+1+8*4 );    // changed in WotLK
-    data << uint32(time(NULL));                             // unix time of something
+    data << uint32(sWorld.GetGameTime());                             // unix time of something
     data << uint8(1);
     for(int i = 0; i < NUM_ACCOUNT_DATA_TYPES; i++)
         data << uint32(GetAccountData(i)->Time);            // also unix time

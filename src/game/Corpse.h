@@ -19,6 +19,7 @@
 #ifndef MANGOSSERVER_CORPSE_H
 #define MANGOSSERVER_CORPSE_H
 
+#include "World.h"
 #include "Object.h"
 #include "Database/DatabaseEnv.h"
 #include "GridDefines.h"
@@ -68,7 +69,7 @@ class Corpse : public WorldObject
         uint64 const& GetOwnerGUID() const { return GetUInt64Value(CORPSE_FIELD_OWNER); }
 
         time_t const& GetGhostTime() const { return m_time; }
-        void ResetGhostTime() { m_time = time(NULL); }
+        void ResetGhostTime() { m_time = sWorld.GetGameTime(); }
         CorpseType GetType() const { return m_type; }
 
         GridPair const& GetGrid() const { return m_grid; }

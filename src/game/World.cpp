@@ -1027,7 +1027,7 @@ void World::LoadConfigSettings(bool reload)
 void World::SetInitialWorldSettings()
 {
     ///- Initialize the random number generator
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)GetGameTime());
 
     ///- Initialize config settings
     LoadConfigSettings();
@@ -1343,11 +1343,6 @@ void World::SetInitialWorldSettings()
     if(!LoadScriptingModule())
         exit(1);
 
-    ///- Initialize game time and timers
-    sLog.outString( "DEBUG:: Initialize game time and timers" );
-    m_gameTime = time(NULL);
-    m_startTime=m_gameTime;
-
     tm local;
     time_t curr;
     time(&curr);
@@ -1521,11 +1516,10 @@ void World::Update(uint32 diff)
     /// <li> Update uptime table
     if (m_timers[WUPDATE_UPTIME].Passed())
     {
-        uint32 tmpDiff = (m_gameTime - m_startTime);
         uint32 maxClientsNum = sWorld.GetMaxActiveSessionCount();
 
         m_timers[WUPDATE_UPTIME].Reset();
-        WorldDatabase.PExecute("UPDATE uptime SET uptime = %d, maxplayers = %d WHERE starttime = " I64FMTD, tmpDiff, maxClientsNum, uint64(m_startTime));
+        WorldDatabase.PExecute("UPDATE uptime SET uptime = %d, maxplayers = %d WHERE starttime = " I64FMTD, GetUptime(), maxClientsNum, uint64(m_startTime));
     }
 
     /// <li> Handle all other objects
@@ -2701,7 +2695,7 @@ void World::InitDailyQuestResetTime()
 
     // client built-in time for reset is 6:00 AM
     // FIX ME: client not show day start time
-    time_t curTime = time(NULL);
+    time_t curTime = GetGameTime();
     tm localTm = *localtime(&curTime);
     localTm.tm_hour = 6;
     localTm.tm_min  = 0;

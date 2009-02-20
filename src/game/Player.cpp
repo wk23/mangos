@@ -373,7 +373,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this)
     }
     m_bgTeam = 0;
 
-    m_logintime = time(NULL);
+    m_logintime = sWorld.GetGameTime();
     m_Last_tick = m_logintime;
     m_WeaponProficiency = 0;
     m_ArmorProficiency = 0;
@@ -434,7 +434,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this)
     m_baseManaRegen = 0;
 
     // Honor System
-    m_lastHonorUpdateTime = time(NULL);
+    m_lastHonorUpdateTime = sWorld.GetGameTime();
 
     // Player summoning
     m_summon_expire = 0;
@@ -614,7 +614,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
     SetUInt32Value (PLAYER_FIELD_ARENA_CURRENCY, sWorld.getConfig(CONFIG_START_ARENA_POINTS));
 
     // Played time
-    m_Last_tick = time(NULL);
+    m_Last_tick = sWorld.GetGameTime();
     m_Played_time[0] = 0;
     m_Played_time[1] = 0;
 
@@ -1002,7 +1002,7 @@ void Player::Update( uint32 p_time )
         return;
 
     // undelivered mail
-    if(m_nextMailDelivereTime && m_nextMailDelivereTime <= time(NULL))
+    if(m_nextMailDelivereTime && m_nextMailDelivereTime <= sWorld.GetGameTime())
     {
         SendNewMail();
         ++unReadMails;
@@ -1024,7 +1024,7 @@ void Player::Update( uint32 p_time )
         setAttackTimer(OFF_ATTACK, (p_time >= off_att ? 0 : off_att - p_time) );
     }
 
-    time_t now = time (NULL);
+    time_t now = sWorld.GetGameTime();
 
     UpdatePvPFlag(now);
 
@@ -1146,13 +1146,13 @@ void Player::Update( uint32 p_time )
     {
         if(roll_chance_i(3) && GetTimeInnEnter() > 0)       //freeze update
         {
-            int time_inn = time(NULL)-GetTimeInnEnter();
+            int time_inn = sWorld.GetGameTime()-GetTimeInnEnter();
             if (time_inn >= 10)                             //freeze update
             {
                 float bubble = 0.125*sWorld.getRate(RATE_REST_INGAME);
                                                             //speed collect rest bonus (section/in hour)
                 SetRestBonus( GetRestBonus()+ time_inn*((float)GetUInt32Value(PLAYER_NEXT_LEVEL_XP)/72000)*bubble );
-                UpdateInnerTime(time(NULL));
+                UpdateInnerTime(sWorld.GetGameTime());
             }
         }
     }
@@ -2436,7 +2436,7 @@ void Player::SendInitialSpells()
         data << uint16(itr->first);
 
         time_t cooldown = 0;
-        time_t curTime = time(NULL);
+        time_t curTime = sWorld.GetGameTime();
         if(itr->second.end > curTime)
             cooldown = (itr->second.end-curTime)*1000;
 
@@ -2500,7 +2500,7 @@ void Player::UpdateNextMailTimeAndUnreads()
 {
     // calculate next delivery time (min. from non-delivered mails
     // and recalculate unReadMail
-    time_t cTime = time(NULL);
+    time_t cTime = sWorld.GetGameTime();
     m_nextMailDelivereTime = 0;
     unReadMails = 0;
     for(PlayerMails::iterator itr = m_mail.begin(); itr != m_mail.end(); ++itr)
@@ -2517,7 +2517,7 @@ void Player::UpdateNextMailTimeAndUnreads()
 
 void Player::AddNewMailDeliverTime(time_t deliver_time)
 {
-    if(deliver_time <= time(NULL))                          // ready now
+    if(deliver_time <= sWorld.GetGameTime())                          // ready now
     {
         ++unReadMails;
         SendNewMail();
@@ -3162,7 +3162,7 @@ void Player::_LoadSpellCooldowns(QueryResult *result)
 
     if(result)
     {
-        time_t curTime = time(NULL);
+        time_t curTime = sWorld.GetGameTime();
 
         do
         {
@@ -3196,7 +3196,7 @@ void Player::_SaveSpellCooldowns()
 {
     CharacterDatabase.PExecute("DELETE FROM character_spell_cooldown WHERE guid = '%u'", GetGUIDLow());
 
-    time_t curTime = time(NULL);
+    time_t curTime = sWorld.GetGameTime();
 
     // remove outdated and save active
     for(SpellCooldowns::iterator itr = m_spellCooldowns.begin();itr != m_spellCooldowns.end();)
@@ -3324,7 +3324,7 @@ bool Player::resetTalents(bool no_cost)
         ModifyMoney(-(int32)cost);
 
         m_resetTalentsCost = cost;
-        m_resetTalentsTime = time(NULL);
+        m_resetTalentsTime = sWorld.GetGameTime();
     }
 
     //FIXME: remove pet before or after unlearn spells? for now after unlearn to allow removing of talent related, pet affecting auras
@@ -3830,7 +3830,7 @@ void Player::SendDelayResponse(const uint32 ml_seconds)
 {
     //FIXME: is this delay time arg really need? 50msec by default in code
     WorldPacket data( SMSG_QUERY_TIME_RESPONSE, 4+4 );
-    data << (uint32)time(NULL);
+    data << (uint32)sWorld.GetGameTime();
     data << (uint32)0;
     SendDirectMessage( &data );
 }
@@ -6030,8 +6030,8 @@ void Player::UpdateArenaFields(void)
 void Player::UpdateHonorFields()
 {
     /// called when rewarding honor and at each save
-    uint64 now = time(NULL);
-    uint64 today = uint64(time(NULL) / DAY) * DAY;
+    uint64 now = sWorld.GetGameTime();
+    uint64 today = uint64(sWorld.GetGameTime() / DAY) * DAY;
 
     if(m_lastHonorUpdateTime < today)
     {
@@ -11533,7 +11533,7 @@ void Player::AddItemToBuyBackSlot( Item *pItem )
         sLog.outDebug( "STORAGE: AddItemToBuyBackSlot item = %u, slot = %u", pItem->GetEntry(), slot);
 
         m_items[slot] = pItem;
-        time_t base = time(NULL);
+        time_t base = sWorld.GetGameTime();
         uint32 etime = uint32(base - m_logintime + (30 * 3600));
         uint32 eslot = slot - BUYBACK_SLOT_START;
 
@@ -12633,7 +12633,7 @@ void Player::AddQuest( Quest const *pQuest, Object *questGiver )
 
         AddTimedQuest( quest_id );
         questStatusData.m_timer = limittime * 1000;
-        qtime = static_cast<uint32>(time(NULL)) + limittime;
+        qtime = static_cast<uint32>(sWorld.GetGameTime()) + limittime;
     }
     else
         questStatusData.m_timer = 0;
@@ -14322,7 +14322,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
 
     SaveRecallPosition();
 
-    time_t now = time(NULL);
+    time_t now = sWorld.GetGameTime();
     time_t logoutTime = time_t(fields[16].GetUInt64());
 
     // since last logout (in seconds)
@@ -15421,7 +15421,7 @@ void Player::SendRaidInfo()
             {
                 InstanceSave *save = itr->second.save;
                 data << uint32(save->GetMapId());
-                data << uint32(save->GetResetTime() - time(NULL));
+                data << uint32(save->GetResetTime() - sWorld.GetGameTime());
                 data << uint32(save->GetInstanceId());
                 data << uint32(save->GetDifficulty());
                 ++counter;
@@ -15657,7 +15657,7 @@ void Player::SaveToDB()
     ss << ", ";
     ss << finiteAlways(m_rest_bonus);
     ss << ", ";
-    ss << (uint64)time(NULL);
+    ss << (uint64)sWorld.GetGameTime();
     ss << ", ";
     ss << is_save_resting;
     ss << ", ";
@@ -16092,7 +16092,7 @@ void Player::UpdateSpeakTime()
     if(GetSession()->GetSecurity() > SEC_PLAYER)
         return;
 
-    time_t current = time (NULL);
+    time_t current = sWorld.GetGameTime();
     if(m_speakTime > current)
     {
         uint32 max_count = sWorld.getConfig(CONFIG_CHATFLOOD_MESSAGE_COUNT);
@@ -16118,7 +16118,7 @@ void Player::UpdateSpeakTime()
 
 bool Player::CanSpeak() const
 {
-    return  GetSession()->m_muteTime <= time (NULL);
+    return  GetSession()->m_muteTime <= sWorld.GetGameTime();
 }
 
 /*********************************************************/
@@ -16675,7 +16675,7 @@ void Player::PetSpellInitialize()
     uint8 cooldownsCount = pet->m_CreatureSpellCooldowns.size() + pet->m_CreatureCategoryCooldowns.size();
     data << uint8(cooldownsCount);
 
-    time_t curTime = time(NULL);
+    time_t curTime = sWorld.GetGameTime();
 
     for(CreatureSpellCooldowns::const_iterator itr = pet->m_CreatureSpellCooldowns.begin(); itr != pet->m_CreatureSpellCooldowns.end(); ++itr)
     {
@@ -17191,7 +17191,7 @@ void Player::ProhibitSpellScholl(SpellSchoolMask idSchoolMask, uint32 unTimeMs )
     WorldPacket data(SMSG_SPELL_COOLDOWN, 8+1+m_spells.size()*8);
     data << GetGUID();
     data << uint8(0x0);                                     // flags (0x1, 0x2)
-    time_t curTime = time(NULL);
+    time_t curTime = sWorld.GetGameTime();
     for(PlayerSpellMap::const_iterator itr = m_spells.begin(); itr != m_spells.end(); ++itr)
     {
         if (itr->second->state == PLAYERSPELL_REMOVED)
@@ -17566,7 +17566,7 @@ void Player::UpdatePvP(bool state, bool ovrride)
     else
     {
         if(pvpInfo.endTimer != 0)
-            pvpInfo.endTimer = time(NULL);
+            pvpInfo.endTimer = sWorld.GetGameTime();
         else
         {
             SetPvP(state);
@@ -17599,7 +17599,7 @@ void Player::SendCooldownEvent(SpellEntry const *spellInfo)
     if (cooldown < 0)
         cooldown = 0;
     // Add cooldown
-    AddSpellCooldown(spellInfo->Id, 0, time(NULL) +  cooldown / 1000);
+    AddSpellCooldown(spellInfo->Id, 0, sWorld.GetGameTime() +  cooldown / 1000);
     // Send activate
     WorldPacket data(SMSG_COOLDOWN_EVENT, (4+8));
     data << spellInfo->Id;
@@ -18207,7 +18207,7 @@ void Player::ApplyEquipCooldown( Item * pItem )
         if( spellData.SpellTrigger != ITEM_SPELLTRIGGER_ON_USE )
             continue;
 
-        AddSpellCooldown(spellData.SpellId, pItem->GetEntry(), time(NULL) + 30);
+        AddSpellCooldown(spellData.SpellId, pItem->GetEntry(), sWorld.GetGameTime() + 30);
 
         WorldPacket data(SMSG_ITEM_COOLDOWN, 12);
         data << pItem->GetGUID();
@@ -18423,7 +18423,7 @@ void Player::SetDailyQuestStatus( uint32 quest_id )
         if(!GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx))
         {
             SetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx,quest_id);
-            m_lastDailyQuestTime = time(NULL);              // last daily quest time
+            m_lastDailyQuestTime = sWorld.GetGameTime();              // last daily quest time
             m_DailyQuestChanged = true;
             break;
         }
@@ -18604,7 +18604,7 @@ void Player::SummonIfPossible(bool agree)
     }
 
     // expire and auto declined
-    if(m_summon_expire < time(NULL))
+    if(m_summon_expire < sWorld.GetGameTime())
         return;
 
     // stop taxi flight at summon
@@ -19066,7 +19066,7 @@ uint32 Player::GetCorpseReclaimDelay(bool pvp) const
         return copseReclaimDelay[0];
     }
 
-    time_t now = time(NULL);
+    time_t now = sWorld.GetGameTime();
     // 0..2 full period
     uint32 count = (now < m_deathExpireTime) ? (m_deathExpireTime - now)/DEATH_EXPIRE_STEP : 0;
     return copseReclaimDelay[count];
@@ -19080,7 +19080,7 @@ void Player::UpdateCorpseReclaimDelay()
         !pvp && !sWorld.getConfig(CONFIG_DEATH_CORPSE_RECLAIM_DELAY_PVE) )
         return;
 
-    time_t now = time(NULL);
+    time_t now = sWorld.GetGameTime();
     if(now < m_deathExpireTime)
     {
         // full and partly periods 1..3
@@ -19121,7 +19121,7 @@ void Player::SendCorpseReclaimDelay(bool load)
 
         time_t expected_time = corpse->GetGhostTime()+copseReclaimDelay[count];
 
-        time_t now = time(NULL);
+        time_t now = sWorld.GetGameTime();
         if(now >= expected_time)
             return;
 

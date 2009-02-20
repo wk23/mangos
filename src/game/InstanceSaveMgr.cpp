@@ -95,7 +95,7 @@ InstanceSave* InstanceSaveManager::AddInstanceSave(uint32 mapId, uint32 instance
             resetTime = GetResetTimeFor(mapId);
         else
         {
-            resetTime = time(NULL) + 2 * HOUR;
+            resetTime = sWorld.GetGameTime() + 2 * HOUR;
             // normally this will be removed soon after in InstanceMap::Add, prevent error
             ScheduleReset(true, resetTime, InstResetEvent(0, mapId, instanceId));
         }
@@ -361,7 +361,7 @@ void InstanceSaveManager::PackInstances()
 
 void InstanceSaveManager::LoadResetTimes()
 {
-    time_t now = time(NULL);
+    time_t now = sWorld.GetGameTime();
     time_t today = (now / DAY) * DAY;
 
     // NOTE: Use DirectPExecute for tables that will be queried later
@@ -509,7 +509,7 @@ void InstanceSaveManager::ScheduleReset(bool add, time_t time, InstResetEvent ev
 
 void InstanceSaveManager::Update()
 {
-    time_t now = time(NULL), t;
+    time_t now = sWorld.GetGameTime(), t;
     while(!m_resetTimeQueue.empty() && (t = m_resetTimeQueue.begin()->first) < now)
     {
         InstResetEvent &event = m_resetTimeQueue.begin()->second;
@@ -580,7 +580,7 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, bool warn, uint32 timeLe
     Map const *map = MapManager::Instance().GetBaseMap(mapid);
     if(!map->Instanceable())
         return;
-    uint64 now = (uint64)time(NULL);
+    uint64 now = (uint64)sWorld.GetGameTime();
 
     if(!warn)
     {

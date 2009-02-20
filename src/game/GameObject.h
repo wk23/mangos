@@ -19,6 +19,7 @@
 #ifndef MANGOSSERVER_GAMEOBJECT_H
 #define MANGOSSERVER_GAMEOBJECT_H
 
+#include "World.h"
 #include "Common.h"
 #include "SharedDefines.h"
 #include "Object.h"
@@ -478,7 +479,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         time_t GetRespawnTime() const { return m_respawnTime; }
         time_t GetRespawnTimeEx() const
         {
-            time_t now = time(NULL);
+            time_t now = sWorld.GetGameTime();
             if(m_respawnTime > now)
                 return m_respawnTime;
             else
@@ -487,7 +488,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         void SetRespawnTime(int32 respawn)
         {
-            m_respawnTime = respawn > 0 ? time(NULL) + respawn : 0;
+            m_respawnTime = respawn > 0 ? sWorld.GetGameTime() + respawn : 0;
             m_respawnDelayTime = respawn > 0 ? respawn : 0;
         }
         void Respawn();

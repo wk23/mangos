@@ -20,6 +20,7 @@
 #define MANGOSSERVER_CREATURE_H
 
 #include "Common.h"
+#include "World.h"
 #include "Unit.h"
 #include "UpdateMask.h"
 #include "ItemPrototype.h"
@@ -352,7 +353,7 @@ struct VendorItemData
 struct VendorItemCount
 {
     explicit VendorItemCount(uint32 _item, uint32 _count)
-        : itemId(_item), count(_count), lastIncrementTime(time(NULL)) {}
+        : itemId(_item), count(_count), lastIncrementTime(sWorld.GetGameTime()) {}
 
     uint32 itemId;
     uint32 count;
@@ -575,7 +576,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         time_t const& GetRespawnTime() const { return m_respawnTime; }
         time_t GetRespawnTimeEx() const;
-        void SetRespawnTime(uint32 respawn) { m_respawnTime = respawn ? time(NULL) + respawn : 0; }
+        void SetRespawnTime(uint32 respawn) { m_respawnTime = respawn ? sWorld.GetGameTime() + respawn : 0; }
         void Respawn();
         void SaveRespawnTime();
 
