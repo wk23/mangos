@@ -226,6 +226,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "update",         SEC_ADMINISTRATOR,  false, &ChatHandler::HandleBgUpdateCommand,            "", NULL },
         { "end",            SEC_ADMINISTRATOR,  false, &ChatHandler::HandleBgEndCommand,               "", NULL },
         { "list",           SEC_ADMINISTRATOR,  false, &ChatHandler::HandleBgListCommand,              "", NULL },
+        { "join",           SEC_ADMINISTRATOR,  false, &ChatHandler::HandleBgJoinCommand,              "", NULL },
+        { "create",         SEC_ADMINISTRATOR,  false, &ChatHandler::HandleBgCreateCommand,            "", NULL },
         { "debug",          SEC_ADMINISTRATOR,  false, &ChatHandler::HandleBgDebugCommand,             "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };

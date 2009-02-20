@@ -482,6 +482,8 @@ class ChatHandler
         bool HandleBgUpdateCommand(const char* args);
         bool HandleBgEndCommand(const char* args);
         bool HandleBgListCommand(const char* args);
+        bool HandleBgJoinCommand(const char* args);
+        bool HandleBgCreateCommand(const char* args);
         bool HandleBgDebugCommand(const char * args);
 
         BattleGround* extractBattleGroundFromLinkOrTargetOrPlayer(char* text);
