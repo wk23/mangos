@@ -39,6 +39,9 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include "BattleGround.h"
+#include "BattleGroundMgr.h"
+#include "ArenaTeam.h"
 #include "GlobalEvents.h"
 
 #include "TargetedMovementGenerator.h"                      // for HandleNpcUnFollowCommand
@@ -4373,3 +4376,146 @@ bool ChatHandler::HandleWaterwalkCommand(const char* args)
     return true;
 }
 
+bool ChatHandler::HandleBgUpdateCommand(const char* args)
+{
+    if(!*args)
+        return false;
+
+    char* arg1 = strtok((char*)args, " ");
+    if (!arg1)
+        return false;
+
+    uint32 diff = atoi(arg1);
+
+    char* arg2 = strtok(NULL,"");
+    BattleGround* bg = extractBattleGroundFromLinkOrTargetOrPlayer(arg2);
+    if(!bg)
+    {
+        SendSysMessage(LANG_BG_COMMAND_NO_BG_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    bg->Update(diff*1000); //*1000 cause update is called in milliseconds
+    PSendSysMessage(LANG_BG_COMMAND_UPDATE, battlegroundLink(bg).c_str(), diff);
+    return true;
+}
+
+bool ChatHandler::HandleBgEndCommand(const char* args)
+{
+    if(!*args)
+        return false;
+
+    char* arg1 = strtok((char*)args, " ");
+    if (!arg1)
+        return false;
+
+    uint32 winner = atoi(arg1);
+    std::string winner_str;
+    if(winner==0)
+    {
+        winner=HORDE;
+        winner_str = GetMangosString(LANG_BG_AB_HORDE);
+    }
+    else if(winner=1)
+    {
+        winner=ALLIANCE;
+        winner_str = GetMangosString(LANG_BG_AB_ALLY);
+    }
+    else
+    {
+        winner=0;
+        winner_str = "draw";
+    }
+
+    char* arg2 = strtok(NULL,"");
+    BattleGround* bg = extractBattleGroundFromLinkOrTargetOrPlayer(arg2);
+    if(!bg)
+    {
+        SendSysMessage(LANG_BG_COMMAND_NO_BG_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    bg->EndBattleGround(winner);
+    PSendSysMessage(LANG_BG_COMMAND_END, battlegroundLink(bg).c_str(), winner_str.c_str());
+    return true;
+}
+
+bool ChatHandler::HandleBgListCommand(const char* args)
+{
+    uint32 arena_filter  = 0;
+    uint32 bgtype_filter = 0;
+    if(*args)
+    {
+        BattleGroundQueueTypeId bgQueueTypeId = extractBgQueueTypeIdFromLink((char*)args);
+        arena_filter = sBattleGroundMgr.BGArenaType(bgQueueTypeId);
+        if(!arena_filter)
+            bgtype_filter = sBattleGroundMgr.BGTemplateId(bgQueueTypeId);
+    }
+    BattleGroundSet::iterator itr;
+    std::ostringstream reply;
+    BattleGround* current_bg = m_session->GetPlayer()->GetBattleGround();
+
+    for(uint32 bgtype_itr = BATTLEGROUND_AV; bgtype_itr < MAX_BATTLEGROUND_TYPE_ID; bgtype_itr++)
+    {
+        if(bgtype_filter && bgtype_itr != bgtype_filter)
+            continue;
+        BattleGroundTypeId bgtype = BattleGroundTypeId(bgtype_itr);
+
+        for(itr = sBattleGroundMgr.GetBattleGroundsBegin(bgtype); itr != sBattleGroundMgr.GetBattleGroundsEnd(bgtype); ++itr)
+        {
+            BattleGround* bg = itr->second;
+            if(!bg)
+                continue;
+            if(bg->GetInstanceID()==0) //skip templates
+                continue;
+            if(arena_filter && bg->GetArenaType()!=arena_filter)
+                continue;
+
+            if( current_bg && current_bg==bg ) //a star will mark the current battleground where the player is inside
+                reply << "* ";
+            else
+                reply << "  ";
+            reply << battlegroundLink(bg).c_str();
+            if(bg->isArena())
+            {
+                if( bg->isRated() )
+                    reply << " rated";
+                switch(bg->GetArenaType())
+                {
+                    case ARENA_TYPE_2v2: reply << " 2v2"; break;
+                    case ARENA_TYPE_3v3: reply << " 3v3"; break;
+                    case ARENA_TYPE_5v5: reply << " 5v5"; break;
+                    default: break;
+                }
+                //note: teams doesn't have to do with alliance and Horde
+                ArenaTeam* teamA = objmgr.GetArenaTeamById(bg->GetArenaTeamIdForTeam(ALLIANCE));
+                ArenaTeam* teamH = objmgr.GetArenaTeamById(bg->GetArenaTeamIdForTeam(HORDE));
+                if(teamA)
+                    reply << " Team1:" << teamA->GetName() << ":" << teamA->GetRating();
+                if(teamH)
+                    reply << " Team2:" << teamH->GetName() << ":" << teamH->GetRating();
+            }
+            else
+            {
+                reply << " lvl:" << bg->GetMinLevel() << "-" << bg->GetMaxLevel();
+                reply << " Invited, A:" << bg->GetInvitedCount(ALLIANCE) << " H:" << bg->GetInvitedCount(HORDE);
+            }
+            reply << " time:" << bg->GetStartTime()%60000;
+            reply << "\n";
+        }
+    }
+    if(reply.str().empty())
+        SendSysMessage(LANG_BG_COMMAND_NO_BG_FOUND);
+    else
+        PSendSysMessage(LANG_BG_COMMAND_LIST,reply.str().c_str());
+
+    return true;
+}
+
+bool ChatHandler::HandleBgDebugCommand(const char * /*args*/)
+{
+    sBattleGroundMgr.ToggleTesting();
+    return true;
+}

@@ -698,6 +698,12 @@ enum MangosStrings
 //  LANG_BG_EY_START_TWO_MINUTES        = 755, - defined above
     // Room for batleground/arena strings 756-799 not used
 
+    LANG_BG_COMMAND_UPDATE              = 756,
+    LANG_BG_COMMAND_END                 = 757,
+    LANG_BG_COMMAND_NO_BG_FOUND         = 758,
+    LANG_BG_COMMAND_LIST                = 759,
+    // Room for batleground/arena strings 759-799 not used
+
     // in game strings
     //                                  = 800, not used
     LANG_NOT_ENOUGH_GOLD                = 801,
