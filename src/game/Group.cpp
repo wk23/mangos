@@ -320,12 +320,12 @@ uint32 Group::RemoveMember(const uint64 &guid, const uint8 &method)
             if(method == 1)
             {
                 data.Initialize( SMSG_GROUP_UNINVITE, 0 );
-                player->GetSession()->SendPacket( &data );
+                player->SendDirectMessage( &data );
             }
 
             data.Initialize(SMSG_GROUP_LIST, 24);
             data << uint64(0) << uint64(0) << uint64(0);
-            player->GetSession()->SendPacket(&data);
+            player->SendDirectMessage(&data);
 
             _homebindIfInstance(player);
         }
@@ -385,12 +385,12 @@ void Group::Disband(bool hideDestroy)
         if(!hideDestroy)
         {
             data.Initialize(SMSG_GROUP_DESTROYED, 0);
-            player->GetSession()->SendPacket(&data);
+            player->SendDirectMessage(&data);
         }
 
         data.Initialize(SMSG_GROUP_LIST, 24);
         data << uint64(0) << uint64(0) << uint64(0);
-        player->GetSession()->SendPacket(&data);
+        player->SendDirectMessage(&data);
 
         _homebindIfInstance(player);
     }
@@ -433,7 +433,7 @@ void Group::SendLootStartRoll(uint32 CountDown, const Roll &r)
             continue;
 
         if(itr->second != NOT_VALID)
-            p->GetSession()->SendPacket( &data );
+            p->SendDirectMessage( &data );
     }
 }
 
@@ -457,7 +457,7 @@ void Group::SendLootRoll(const uint64& SourceGuid, const uint64& TargetGuid, uin
             continue;
 
         if(itr->second != NOT_VALID)
-            p->GetSession()->SendPacket( &data );
+            p->SendDirectMessage( &data );
     }
 }
 
@@ -480,7 +480,7 @@ void Group::SendLootRollWon(const uint64& SourceGuid, const uint64& TargetGuid, 
             continue;
 
         if(itr->second != NOT_VALID)
-            p->GetSession()->SendPacket( &data );
+            p->SendDirectMessage( &data );
     }
 }
 
@@ -500,7 +500,7 @@ void Group::SendLootAllPassed(uint32 NumberOfPlayers, const Roll &r)
             continue;
 
         if(itr->second != NOT_VALID)
-            p->GetSession()->SendPacket( &data );
+            p->SendDirectMessage( &data );
     }
 }
 
@@ -646,7 +646,7 @@ void Group::MasterLoot(const uint64& playerGUID, Loot* /*loot*/, Creature *creat
     {
         Player *looter = itr->getSource();
         if (looter->GetDistance2d(creature) < sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE))
-            looter->GetSession()->SendPacket(&data);
+            looter->SendDirectMessage(&data);
     }
 }
 
@@ -922,7 +922,7 @@ void Group::SendUpdate()
             data << (uint8)m_lootThreshold;                 // loot threshold
             data << (uint8)m_difficulty;                    // Heroic Mod Group
         }
-        player->GetSession()->SendPacket( &data );
+        player->SendDirectMessage( &data );
     }
 }
 
@@ -939,7 +939,7 @@ void Group::UpdatePlayerOutOfRange(Player* pPlayer)
     {
         player = itr->getSource();
         if (player && player != pPlayer && !pPlayer->isVisibleFor(player))
-            player->GetSession()->SendPacket(&data);
+            player->SendDirectMessage(&data);
     }
 }
 
@@ -952,7 +952,7 @@ void Group::BroadcastPacket(WorldPacket *packet, int group, uint64 ignore)
             continue;
 
         if (pl->GetSession() && (group==-1 || itr->getSubGroup()==group))
-            pl->GetSession()->SendPacket(packet);
+            pl->SendDirectMessage(packet);
     }
 }
 
@@ -963,7 +963,7 @@ void Group::BroadcastReadyCheck(WorldPacket *packet)
         Player *pl = itr->getSource();
         if(pl && pl->GetSession())
             if(IsLeader(pl->GetGUID()) || IsAssistant(pl->GetGUID()))
-                pl->GetSession()->SendPacket(packet);
+                pl->SendDirectMessage(packet);
     }
 }
 

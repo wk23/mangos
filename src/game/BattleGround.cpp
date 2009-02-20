@@ -146,7 +146,7 @@ void BattleGround::Update(uint32 diff)
                     if(plr)
                     {
                         sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, this, plr->GetTeam(), plr->GetBattleGroundQueueIndex(m_TypeID), STATUS_NONE, 0, 0);
-                        plr->GetSession()->SendPacket(&data);
+                        plr->SendDirectMessage(&data);
                     }
                     break;*/
                 case 1:                                     // currently in bg and was removed from bg
@@ -288,7 +288,7 @@ void BattleGround::SendPacketToAll(WorldPacket *packet)
     {
         Player *plr = objmgr.GetPlayer(itr->first);
         if(plr)
-            plr->GetSession()->SendPacket(packet);
+            plr->SendDirectMessage(packet);
         else
             sLog.outError("BattleGround: Player " I64FMTD " not found!", itr->first);
     }
@@ -313,7 +313,7 @@ void BattleGround::SendPacketToTeam(uint32 TeamID, WorldPacket *packet, Player *
         if(!team) team = plr->GetTeam();
 
         if(team == TeamID)
-            plr->GetSession()->SendPacket(packet);
+            plr->SendDirectMessage(packet);
     }
 }
 
@@ -344,7 +344,7 @@ void BattleGround::PlaySoundToTeam(uint32 SoundID, uint32 TeamID)
         if(team == TeamID)
         {
             sBattleGroundMgr.BuildPlaySoundPacket(&data, SoundID);
-            plr->GetSession()->SendPacket(&data);
+            plr->SendDirectMessage(&data);
         }
     }
 }
@@ -425,7 +425,7 @@ void BattleGround::UpdateWorldStateForPlayer(uint32 Field, uint32 Value, Player 
 {
     WorldPacket data;
     sBattleGroundMgr.BuildUpdateWorldStatePacket(&data, Field, Value);
-    Source->GetSession()->SendPacket(&data);
+    Source->SendDirectMessage(&data);
 }
 
 void BattleGround::EndBattleGround(uint32 winner)
@@ -557,11 +557,11 @@ void BattleGround::EndBattleGround(uint32 winner)
         BlockMovement(plr);
 
         sBattleGroundMgr.BuildPvpLogDataPacket(&data, this);
-        plr->GetSession()->SendPacket(&data);
+        plr->SendDirectMessage(&data);
 
         BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BGQueueTypeId(GetTypeID(), GetArenaType());
         sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, this, plr->GetTeam(), plr->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime());
-        plr->GetSession()->SendPacket(&data);
+        plr->SendDirectMessage(&data);
         plr->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_BATTLEGROUND, 1);
     }
 
@@ -819,7 +819,7 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
             if(SendPacket)
             {
                 sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, this, team, plr->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_NONE, 0, 0);
-                plr->GetSession()->SendPacket(&data);
+                plr->SendDirectMessage(&data);
             }
 
             // this call is important, because player, when joins to battleground, this method is not called, so it must be called when leaving bg
@@ -1547,10 +1547,10 @@ void BattleGround::PlayerRelogin(Player* plr)
     BlockMovement(plr);
 
     sBattleGroundMgr.BuildPvpLogDataPacket(&data, this);
-    plr->GetSession()->SendPacket(&data);
+    plr->SendDirectMessage(&data);
 
     sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, this, plr->GetTeam(), plr->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime());
-    plr->GetSession()->SendPacket(&data);
+    plr->SendDirectMessage(&data);
 }
 
 uint32 BattleGround::GetAlivePlayersCountByTeam(uint32 Team) const

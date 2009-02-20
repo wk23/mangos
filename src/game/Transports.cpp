@@ -458,7 +458,7 @@ void Transport::TeleportTransport(uint32 newMapid, float x, float y, float z)
 
         //WorldPacket data(SMSG_811, 4);
         //data << uint32(0);
-        //plr->GetSession()->SendPacket(&data);
+        //plr->SendDirectMessage(&data);
     }
 }
 

@@ -1035,7 +1035,7 @@ void Pet::_LoadSpellCooldowns()
 
         if(!m_CreatureSpellCooldowns.empty() && GetOwner())
         {
-            ((Player*)GetOwner())->GetSession()->SendPacket(&data);
+            ((Player*)GetOwner())->SendDirectMessage(&data);
         }
     }
 }
@@ -1348,7 +1348,7 @@ bool Pet::learnSpell(uint32 spell_id)
         {
             WorldPacket data(SMSG_PET_LEARNED_SPELL, 2);
             data << uint16(spell_id);
-            ((Player*)owner)->GetSession()->SendPacket(&data);
+            ((Player*)owner)->SendDirectMessage(&data);
         }
         ((Player*)owner)->PetSpellInitialize();
     }
@@ -1382,7 +1382,7 @@ bool Pet::unlearnSpell(uint32 spell_id)
             {
                 WorldPacket data(SMSG_PET_REMOVED_SPELL, 2);
                 data << uint16(spell_id);
-                ((Player*)GetOwner())->GetSession()->SendPacket(&data);
+                ((Player*)GetOwner())->SendDirectMessage(&data);
             }
         }
         return true;

@@ -1849,7 +1849,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void SendInitWorldStates();
         void SendUpdateWorldState(uint32 Field, uint32 Value);
-        void SendDirectMessage(WorldPacket *data);
+        void SendDirectMessage(WorldPacket const* data) const { GetSession()->SendPacket(data); }
 
         void SendAurasForTarget(Unit *target);
 

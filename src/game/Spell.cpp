@@ -522,7 +522,7 @@ void Spell::FillTargetMap()
                                     WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
                                     data << uint32(m_spellInfo->Id);
                                     data << uint64(m_caster->GetGUID());
-                                    ((Player*)m_caster)->GetSession()->SendPacket(&data);
+                                    ((Player*)m_caster)->SendDirectMessage(&data);
                                 }
 
                                 SendCastResult(SPELL_FAILED_NO_EDIBLE_CORPSES);
@@ -2863,7 +2863,7 @@ void Spell::SendCastResult(uint8 result)
                 //data << uint32(m_spellInfo->EquippedItemInventoryTypeMask);
                 break;
         }
-        ((Player*)m_caster)->GetSession()->SendPacket(&data);
+        ((Player*)m_caster)->SendDirectMessage(&data);
     }
 }
 
@@ -3227,7 +3227,7 @@ void Spell::SendChannelUpdate(uint32 time)
     data.append(m_caster->GetPackGUID());
     data << uint32(time);
 
-    ((Player*)m_caster)->GetSession()->SendPacket( &data );
+    ((Player*)m_caster)->SendDirectMessage( &data );
 }
 
 void Spell::SendChannelStart(uint32 duration)
@@ -3265,7 +3265,7 @@ void Spell::SendChannelStart(uint32 duration)
         data << uint32(m_spellInfo->Id);
         data << uint32(duration);
 
-        ((Player*)m_caster)->GetSession()->SendPacket( &data );
+        ((Player*)m_caster)->SendDirectMessage( &data );
     }
 
     m_timer = duration;
@@ -3289,7 +3289,7 @@ void Spell::SendResurrectRequest(Player* target)
     data << uint8(0);
 
     data << uint8(m_caster->GetTypeId()==TYPEID_PLAYER ?0:1);
-    target->GetSession()->SendPacket(&data);
+    target->SendDirectMessage(&data);
 }
 
 void Spell::SendPlaySpellVisual(uint32 SpellID)
@@ -3300,7 +3300,7 @@ void Spell::SendPlaySpellVisual(uint32 SpellID)
     WorldPacket data(SMSG_PLAY_SPELL_VISUAL, 12);
     data << uint64(m_caster->GetGUID());
     data << uint32(SpellID);                                // spell visual id?
-    ((Player*)m_caster)->GetSession()->SendPacket(&data);
+    ((Player*)m_caster)->SendDirectMessage(&data);
 }
 
 void Spell::TakeCastItem()

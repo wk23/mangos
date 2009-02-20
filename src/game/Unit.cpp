@@ -296,7 +296,7 @@ void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint8 ty
     data << NewPosX << NewPosY << NewPosZ;                  // the single waypoint Point B
 
     if(player)
-        player->GetSession()->SendPacket(&data);
+        player->SendDirectMessage(&data);
     else
         SendMessageToSet( &data, true );
 }
@@ -623,7 +623,7 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
                 ((Player*)pVictim)->DurabilityLossAll(0.10f,false);
                 // durability lost message
                 WorldPacket data(SMSG_DURABILITY_DAMAGE_DEATH, 0);
-                ((Player*)pVictim)->GetSession()->SendPacket(&data);
+                ((Player*)pVictim)->SendDirectMessage(&data);
             }
         }
         else                                                // creature died
@@ -10595,7 +10595,7 @@ void Unit::SendPetCastFail(uint32 spellid, uint8 msg)
     data << uint8(msg);
     // uint32 for some reason
     // uint32 for some reason
-    ((Player*)owner)->GetSession()->SendPacket(&data);
+    ((Player*)owner)->SendDirectMessage(&data);
 }
 
 void Unit::SendPetActionFeedback (uint8 msg)
@@ -10606,7 +10606,7 @@ void Unit::SendPetActionFeedback (uint8 msg)
 
     WorldPacket data(SMSG_PET_ACTION_FEEDBACK, 1);
     data << uint8(msg);
-    ((Player*)owner)->GetSession()->SendPacket(&data);
+    ((Player*)owner)->SendDirectMessage(&data);
 }
 
 void Unit::SendPetTalk (uint32 pettalk)
@@ -10618,7 +10618,7 @@ void Unit::SendPetTalk (uint32 pettalk)
     WorldPacket data(SMSG_PET_ACTION_SOUND, 8+4);
     data << uint64(GetGUID());
     data << uint32(pettalk);
-    ((Player*)owner)->GetSession()->SendPacket(&data);
+    ((Player*)owner)->SendDirectMessage(&data);
 }
 
 void Unit::SendPetSpellCooldown (uint32 spellid, time_t cooltime)
@@ -10633,7 +10633,7 @@ void Unit::SendPetSpellCooldown (uint32 spellid, time_t cooltime)
     data << uint32(spellid);
     data << uint32(cooltime);
 
-    ((Player*)owner)->GetSession()->SendPacket(&data);
+    ((Player*)owner)->SendDirectMessage(&data);
 }
 
 void Unit::SendPetClearCooldown (uint32 spellid)
@@ -10645,7 +10645,7 @@ void Unit::SendPetClearCooldown (uint32 spellid)
     WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
     data << uint32(spellid);
     data << uint64(GetGUID());
-    ((Player*)owner)->GetSession()->SendPacket(&data);
+    ((Player*)owner)->SendDirectMessage(&data);
 }
 
 void Unit::SendPetAIReaction(uint64 guid)
@@ -10656,7 +10656,7 @@ void Unit::SendPetAIReaction(uint64 guid)
 
     WorldPacket data(SMSG_AI_REACTION, 12);
     data << uint64(guid) << uint32(00000002);
-    ((Player*)owner)->GetSession()->SendPacket(&data);
+    ((Player*)owner)->SendDirectMessage(&data);
 }
 
 ///----------End of Pet responses methods----------
@@ -10775,7 +10775,7 @@ void Unit::SetStandState(uint8 state)
     {
         WorldPacket data(SMSG_STANDSTATE_UPDATE, 1);
         data << (uint8)state;
-        ((Player*)this)->GetSession()->SendPacket(&data);
+        ((Player*)this)->SendDirectMessage(&data);
     }
 }
 

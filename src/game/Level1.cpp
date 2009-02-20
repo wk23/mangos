@@ -1058,7 +1058,7 @@ bool ChatHandler::HandleModifySpellCommand(const char* args)
     data << uint8(op);
     data << uint16(val);
     data << uint16(mark);
-    chr->GetSession()->SendPacket(&data);
+    chr->SendDirectMessage(&data);
 
     return true;
 }

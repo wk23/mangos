@@ -218,7 +218,7 @@ void Object::SendUpdateToPlayer(Player* player)
     upd.Clear();
     BuildCreateUpdateBlockForPlayer(&upd, player);
     upd.BuildPacket(&packet);
-    player->GetSession()->SendPacket(&packet);
+    player->SendDirectMessage(&packet);
 
     // now object updated/(create updated)
 }
@@ -253,7 +253,7 @@ void Object::DestroyForPlayer(Player *target) const
     WorldPacket data(SMSG_DESTROY_OBJECT, 8);
     data << GetGUID();
     data << uint8(0);                                       // WotLK (bool)
-    target->GetSession()->SendPacket( &data );
+    target->SendDirectMessage( &data );
 }
 
 void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2) const
@@ -1241,7 +1241,7 @@ void WorldObject::MonsterWhisper(const char* text, uint64 receiver, bool IsBossW
     WorldPacket data(SMSG_MESSAGECHAT, 200);
     BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER,text,LANG_UNIVERSAL,GetName(),receiver);
 
-    player->GetSession()->SendPacket(&data);
+    player->SendDirectMessage(&data);
 }
 
 namespace MaNGOS
@@ -1328,7 +1328,7 @@ void WorldObject::MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisp
     WorldPacket data(SMSG_MESSAGECHAT, 200);
     BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER,text,LANG_UNIVERSAL,GetNameForLocaleIdx(loc_idx),receiver);
 
-    player->GetSession()->SendPacket(&data);
+    player->SendDirectMessage(&data);
 }
 
 void WorldObject::BuildMonsterChat(WorldPacket *data, uint8 msgtype, char const* text, uint32 language, char const* name, uint64 targetGuid) const

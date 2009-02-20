@@ -991,7 +991,7 @@ void AchievementMgr::SendAllAchievementData()
     // since we don't know the exact size of the packed GUIDs this is just an approximation
     WorldPacket data(SMSG_ALL_ACHIEVEMENT_DATA, 4*2+m_completedAchievements.size()*4*2+m_completedAchievements.size()*7*4);
     BuildAllDataPacket(&data);
-    GetPlayer()->GetSession()->SendPacket(&data);
+    GetPlayer()->SendDirectMessage(&data);
 }
 
 void AchievementMgr::SendRespondInspectAchievements(Player* player)
@@ -1000,7 +1000,7 @@ void AchievementMgr::SendRespondInspectAchievements(Player* player)
     WorldPacket data(SMSG_RESPOND_INSPECT_ACHIEVEMENTS, 4+4*2+m_completedAchievements.size()*4*2+m_completedAchievements.size()*7*4);
     data.append(GetPlayer()->GetPackGUID());
     BuildAllDataPacket(&data);
-    player->GetSession()->SendPacket(&data);
+    player->SendDirectMessage(&data);
 }
 
 /**

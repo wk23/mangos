@@ -1373,7 +1373,7 @@ void WorldSession::HandleWhoisOpcode(WorldPacket& recv_data)
 
     WorldPacket data(SMSG_WHOIS, msg.size()+1);
     data << msg;
-    _player->GetSession()->SendPacket(&data);
+    _player->SendDirectMessage(&data);
 
     delete result;
 

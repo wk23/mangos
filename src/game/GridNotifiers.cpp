@@ -105,7 +105,7 @@ VisibleNotifier::Notify()
 
         WorldPacket packet;
         iter->second.BuildPacket(&packet);
-        iter->first->GetSession()->SendPacket(&packet);
+        iter->first->SendDirectMessage(&packet);
     }
 
     if( i_data.HasData() )
@@ -113,7 +113,7 @@ VisibleNotifier::Notify()
         // send create/outofrange packet to player (except player create updates that already sent using SendUpdateToPlayer)
         WorldPacket packet;
         i_data.BuildPacket(&packet);
-        i_player.GetSession()->SendPacket(&packet);
+        i_player.SendDirectMessage(&packet);
 
         // send out of range to other players if need
         std::set<uint64> const& oor = i_data.GetOutOfRangeGUIDs();

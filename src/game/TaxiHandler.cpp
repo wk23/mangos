@@ -235,7 +235,7 @@ void WorldSession::HandleTaxiNextDestinationOpcode(WorldPacket& /*recv_data*/)
             if(GetPlayer()->m_taxi.SetTaximaskNode(sourcenode))
             {
                 WorldPacket data(SMSG_NEW_TAXI_PATH, 0);
-                _player->GetSession()->SendPacket( &data );
+                _player->SendDirectMessage( &data );
             }
         }
 

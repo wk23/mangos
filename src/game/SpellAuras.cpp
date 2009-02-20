@@ -2073,7 +2073,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             // spells with SpellEffect=72 and aura=4: 6196, 6197, 21171, 21425
             ((Player*)m_target)->SetFarSightGUID(0);
             WorldPacket data(SMSG_CLEAR_FAR_SIGHT_IMMEDIATE, 0);
-            ((Player*)m_target)->GetSession()->SendPacket(&data);
+            ((Player*)m_target)->SendDirectMessage(&data);
             return;
         }
 
@@ -3045,7 +3045,7 @@ void Aura::HandleModPossess(bool apply, bool Real)
             WorldPacket data(SMSG_PET_SPELLS, 8);
             data << uint64(0);
             data << uint32(0);
-            ((Player*)caster)->GetSession()->SendPacket(&data);
+            ((Player*)caster)->SendDirectMessage(&data);
         }
         if(m_target->GetTypeId() == TYPEID_UNIT)
         {
@@ -3201,7 +3201,7 @@ void Aura::HandleModCharm(bool apply, bool Real)
                 WorldPacket data(SMSG_PET_SPELLS, 8);
                 data << uint64(0);
                 data << uint32(0);
-                ((Player*)caster)->GetSession()->SendPacket(&data);
+                ((Player*)caster)->SendDirectMessage(&data);
             }
             if(m_target->GetTypeId() == TYPEID_UNIT)
             {
@@ -6581,7 +6581,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
         pet->Remove(PET_SAVE_AS_CURRENT);
 
     WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
-    ((Player*)m_target)->GetSession()->SendPacket(&data);
+    ((Player*)m_target)->SendDirectMessage(&data);
 }
 
 void Aura::HandleAuraConvertRune(bool apply, bool Real)

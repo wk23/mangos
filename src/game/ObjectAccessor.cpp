@@ -252,7 +252,7 @@ ObjectAccessor::UpdateObject(Object* obj, Player* exceptPlayer)
             continue;
 
         iter->second.BuildPacket(&packet);
-        iter->first->GetSession()->SendPacket(&packet);
+        iter->first->SendDirectMessage(&packet);
         packet.clear();
     }
 }
@@ -485,7 +485,7 @@ ObjectAccessor::Update(uint32 diff)
     for(UpdateDataMapType::iterator iter = update_players.begin(); iter != update_players.end(); ++iter)
     {
         iter->second.BuildPacket(&packet);
-        iter->first->GetSession()->SendPacket(&packet);
+        iter->first->SendDirectMessage(&packet);
         packet.clear();                                     // clean the string
     }
 }

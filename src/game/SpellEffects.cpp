@@ -756,7 +756,7 @@ void Spell::EffectDummy(uint32 i)
                     {
                         WorldPacket data(SMSG_SPIRIT_HEALER_CONFIRM, 8);
                         data << unitTarget->GetGUID();
-                        ((Player*)m_originalCaster)->GetSession()->SendPacket( &data );
+                        ((Player*)m_originalCaster)->SendDirectMessage( &data );
                     }
                     return;
                 }
@@ -1161,7 +1161,7 @@ void Spell::EffectDummy(uint32 i)
                             WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
                             data << uint32(classspell);
                             data << uint64(m_caster->GetGUID());
-                            ((Player*)m_caster)->GetSession()->SendPacket(&data);
+                            ((Player*)m_caster)->SendDirectMessage(&data);
                         }
                     }
                     return;
@@ -1403,7 +1403,7 @@ void Spell::EffectDummy(uint32 i)
                             WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
                             data << uint32(classspell);
                             data << uint64(m_caster->GetGUID());
-                            ((Player*)m_caster)->GetSession()->SendPacket(&data);
+                            ((Player*)m_caster)->SendDirectMessage(&data);
                         }
                     }
                     return;
@@ -1461,7 +1461,7 @@ void Spell::EffectDummy(uint32 i)
                             WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
                             data << uint32(classspell);
                             data << uint64(m_caster->GetGUID());
-                            ((Player*)m_caster)->GetSession()->SendPacket(&data);
+                            ((Player*)m_caster)->SendDirectMessage(&data);
                         }
                     }
                     return;
@@ -1569,7 +1569,7 @@ void Spell::EffectDummy(uint32 i)
                             WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
                             data << uint32(m_spellInfo->Id);
                             data << uint64(m_caster->GetGUID());
-                            ((Player*)m_caster)->GetSession()->SendPacket(&data);
+                            ((Player*)m_caster)->SendDirectMessage(&data);
                         }
 
                         SendCastResult(SPELL_FAILED_TARGET_AFFECTING_COMBAT);
@@ -3476,7 +3476,7 @@ void Spell::EffectDistract(uint32 /*i*/)
         // For players just turn them
         WorldPacket data;
         ((Player*)unitTarget)->BuildTeleportAckMsg(&data, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), angle);
-        ((Player*)unitTarget)->GetSession()->SendPacket( &data );
+        ((Player*)unitTarget)->SendDirectMessage( &data );
         ((Player*)unitTarget)->SetPosition(unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), angle, false);
     }
     else
@@ -5254,8 +5254,8 @@ void Spell::EffectDuel(uint32 i)
     WorldPacket data(SMSG_DUEL_REQUESTED, 16);
     data << pGameObj->GetGUID();
     data << caster->GetGUID();
-    caster->GetSession()->SendPacket(&data);
-    target->GetSession()->SendPacket(&data);
+    caster->SendDirectMessage(&data);
+    target->SendDirectMessage(&data);
 
     // create duel-info
     DuelInfo *duel   = new DuelInfo;
@@ -5321,7 +5321,7 @@ void Spell::EffectSummonPlayer(uint32 /*i*/)
     data << uint64(m_caster->GetGUID());                    // summoner guid
     data << uint32(m_caster->GetZoneId());                  // summoner zone
     data << uint32(MAX_PLAYER_SUMMON_DELAY*1000);           // auto decline after msecs
-    ((Player*)unitTarget)->GetSession()->SendPacket(&data);
+    ((Player*)unitTarget)->SendDirectMessage(&data);
 }
 
 static ScriptInfo generateActivateCommand()
@@ -5962,7 +5962,7 @@ void Spell::EffectKnockBack(uint32 i)
     data << float(m_spellInfo->EffectMiscValue[i])/10;      // Horizontal speed
     data << float(damage/-10);                              // Z Movement speed (vertical)
 
-    ((Player*)unitTarget)->GetSession()->SendPacket(&data);
+    ((Player*)unitTarget)->SendDirectMessage(&data);
 }
 
 void Spell::EffectSendTaxi(uint32 i)
@@ -6030,7 +6030,7 @@ void Spell::EffectPlayerPull(uint32 i)
     data << float(damage ? damage : unitTarget->GetDistance2d(m_caster));
     data << float(m_spellInfo->EffectMiscValue[i])/-10;     // Z Movement speed
 
-    ((Player*)unitTarget)->GetSession()->SendPacket(&data);
+    ((Player*)unitTarget)->SendDirectMessage(&data);
 }
 
 void Spell::EffectDispelMechanic(uint32 i)

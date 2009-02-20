@@ -305,7 +305,7 @@ void WorldSession::SendPetNameQuery( uint64 petguid, uint32 petnumber)
     else
         data << uint8(0);
 
-    _player->GetSession()->SendPacket(&data);
+    _player->SendDirectMessage(&data);
 }
 
 void WorldSession::HandlePetSetAction( WorldPacket & recv_data )

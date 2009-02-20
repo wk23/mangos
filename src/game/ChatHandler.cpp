@@ -579,5 +579,5 @@ void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data )
 
     WorldPacket data;
     ChatHandler::FillMessageData(&data, this, CHAT_MSG_IGNORED, LANG_UNIVERSAL, NULL, GetPlayer()->GetGUID(), GetPlayer()->GetName(),NULL);
-    player->GetSession()->SendPacket(&data);
+    player->SendDirectMessage(&data);
 }

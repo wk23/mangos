@@ -214,7 +214,7 @@ void GameObject::Update(uint32 /*p_time*/)
                             WorldPacket packet;
                             BuildValuesUpdateBlockForPlayer(&udata,((Player*)caster));
                             udata.BuildPacket(&packet);
-                            ((Player*)caster)->GetSession()->SendPacket(&packet);
+                            ((Player*)caster)->SendDirectMessage(&packet);
 
                             WorldPacket data(SMSG_GAMEOBJECT_CUSTOM_ANIM,8+4);
                             data << GetGUID();
@@ -256,7 +256,7 @@ void GameObject::Update(uint32 /*p_time*/)
                                 }
 
                                 WorldPacket data(SMSG_FISH_NOT_HOOKED,0);
-                                ((Player*)caster)->GetSession()->SendPacket(&data);
+                                ((Player*)caster)->SendDirectMessage(&data);
                             }
                             // can be delete
                             m_lootState = GO_JUST_DEACTIVATED;
@@ -971,7 +971,7 @@ void GameObject::Use(Unit* user)
                 {
                     WorldPacket data(SMSG_GAMEOBJECT_PAGETEXT, 8);
                     data << GetGUID();
-                    player->GetSession()->SendPacket(&data);
+                    player->SendDirectMessage(&data);
                 }
 
                 // possible quest objective for active quests
@@ -998,7 +998,7 @@ void GameObject::Use(Unit* user)
             {
                 WorldPacket data(SMSG_TRIGGER_CINEMATIC, 4);
                 data << info->camera.cinematicId;
-                player->GetSession()->SendPacket(&data);
+                player->SendDirectMessage(&data);
             }
             return;
         }
@@ -1061,7 +1061,7 @@ void GameObject::Use(Unit* user)
                         SetLootState(GO_JUST_DEACTIVATED);
 
                         WorldPacket data(SMSG_FISH_ESCAPED, 0);
-                        player->GetSession()->SendPacket(&data);
+                        player->SendDirectMessage(&data);
                     }
                     break;
                 }
@@ -1072,7 +1072,7 @@ void GameObject::Use(Unit* user)
                     SetLootState(GO_JUST_DEACTIVATED);
 
                     WorldPacket data(SMSG_FISH_NOT_HOOKED, 0);
-                    player->GetSession()->SendPacket(&data);
+                    player->SendDirectMessage(&data);
                     break;
                 }
             }
@@ -1273,7 +1273,7 @@ void GameObject::Use(Unit* user)
             player->TeleportTo(GetMapId(), GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation(),TELE_TO_NOT_LEAVE_TRANSPORT | TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET);
 
             WorldPacket data(SMSG_ENABLE_BARBER_SHOP, 0);
-            player->GetSession()->SendPacket(&data);
+            player->SendDirectMessage(&data);
 
             player->SetStandState(UNIT_STAND_STATE_SIT_LOW_CHAIR+info->barberChair.chairheight);
             return;

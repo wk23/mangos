@@ -335,7 +335,7 @@ void BattleGroundQueue::RemovePlayer(const uint64& guid, bool decreaseInvitedCou
                 plr2->RemoveBattleGroundQueueId(bgQueueTypeId); // must be called this way, because if you move this call to queue->removeplayer, it causes bugs
                 WorldPacket data;
                 sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, plr2->GetTeam(), queueSlot, STATUS_NONE, 0, 0);
-                plr2->GetSession()->SendPacket(&data);
+                plr2->SendDirectMessage(&data);
             }
             // then actually delete, this may delete the group as well!
             RemovePlayer(group->Players.begin()->first,decreaseInvitedCount);
@@ -458,7 +458,7 @@ bool BattleGroundQueue::InviteGroupToBG(GroupQueueInfo * ginfo, BattleGround * b
 
             // send status packet
             sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, side?side:plr->GetTeam(), queueSlot, STATUS_WAIT_JOIN, INVITE_ACCEPT_WAIT_TIME, 0);
-            plr->GetSession()->SendPacket(&data);
+            plr->SendDirectMessage(&data);
         }
         return true;
     }
@@ -572,7 +572,7 @@ void BattleGroundQueue::BGEndedRemoveInvites(BattleGround *bg)
                     // send info to client
                     WorldPacket data;
                     sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, team, queueSlot, STATUS_NONE, 0, 0);
-                    plr->GetSession()->SendPacket(&data);
+                    plr->SendDirectMessage(&data);
                 }
             }
         }
@@ -992,7 +992,7 @@ bool BGQueueInviteEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
         {
             WorldPacket data;
             sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, qItr->second.GroupInfo->Team, queueSlot, STATUS_WAIT_JOIN, INVITE_ACCEPT_WAIT_TIME/2, 0);
-            plr->GetSession()->SendPacket(&data);
+            plr->SendDirectMessage(&data);
         }
     }
     return true;                                            //event will be deleted
@@ -1042,7 +1042,7 @@ bool BGQueueRemoveEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
             sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].Update(bg->GetTypeID(),bg->GetQueueId());
             WorldPacket data;
             sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, m_PlayersTeam, queueSlot, STATUS_NONE, 0, 0);
-            plr->GetSession()->SendPacket(&data);
+            plr->SendDirectMessage(&data);
         }
     }
     else
@@ -1800,7 +1800,7 @@ void BattleGroundMgr::SendAreaSpiritHealerQueryOpcode(Player *pl, BattleGround *
     if(time_ == uint32(-1))
         time_ = 0;
     data << guid << time_;
-    pl->GetSession()->SendPacket(&data);
+    pl->SendDirectMessage(&data);
 }
 
 bool BattleGroundMgr::IsArenaType(BattleGroundTypeId bgTypeId)
