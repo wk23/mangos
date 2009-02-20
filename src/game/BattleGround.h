@@ -84,18 +84,18 @@ enum BattleGroundSpells
 
 enum BattleGroundTimeIntervals
 {
-    RESURRECTION_INTERVAL           = 30000,                // ms
-    REMIND_INTERVAL                 = 30000,                // ms
-    INVITE_ACCEPT_WAIT_TIME         = 80000,                // ms
-    TIME_TO_AUTOREMOVE              = 120000,               // ms
-    MAX_OFFLINE_TIME                = 300000,               // ms
-    START_DELAY0                    = 120000,               // ms
-    START_DELAY1                    = 60000,                // ms
-    START_DELAY2                    = 30000,                // ms
-    START_DELAY3                    = 15000,                // ms used only in arena
-    RESPAWN_ONE_DAY                 = 86400,                // secs
+    RESURRECTION_INTERVAL           = 30000,                // 0:30 ms
+    REMIND_INTERVAL                 = 30000,                // 0:30 ms
+    INVITE_ACCEPT_WAIT_TIME         = 80000,                // 1:20 ms
+    TIME_TO_AUTOREMOVE              = 120000,               // 2:00 ms
+    START_DELAY0                    = 120000,               // 2:00 ms
+    START_DELAY1                    = 60000,                // 1:00 ms
+    START_DELAY2                    = 30000,                // 0:30 ms
+    START_DELAY3                    = 15000,                // 0:15 ms used only in arena
+    MAX_OFFLINE_TIME                = 300,                  // 5:00 secs
+    RESPAWN_ONE_DAY                 = 86400,                // 24h secs
     RESPAWN_IMMEDIATELY             = 0,                    // secs
-    BUFF_RESPAWN_TIME               = 180,                  // secs
+    BUFF_RESPAWN_TIME               = 180,                  // 3:00 secs
     BG_HONOR_SCORE_TICKS            = 330                   // points
 };
 

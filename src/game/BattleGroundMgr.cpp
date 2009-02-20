@@ -236,7 +236,7 @@ void BattleGroundQueue::AddPlayer(Player *plr, GroupQueueInfo *ginfo)
     PlayerQueueInfo& info = m_QueuedPlayers[queue_id][plr->GetGUID()];
     info.InviteTime                 = 0;
     info.LastInviteTime             = 0;
-    info.LastOnlineTime             = getMSTime();
+    info.LastOnlineTime             = uint32(sWorld.GetGameTime());
     info.GroupInfo                  = ginfo;
 
     // add the pinfo to ginfo's list
@@ -438,8 +438,8 @@ bool BattleGroundQueue::InviteGroupToBG(GroupQueueInfo * ginfo, BattleGround * b
         for(std::map<uint64,PlayerQueueInfo*>::iterator itr = ginfo->Players.begin(); itr != ginfo->Players.end(); ++itr)
         {
             // set status
-            itr->second->InviteTime = getMSTime();
-            itr->second->LastInviteTime = getMSTime();
+            itr->second->InviteTime     = uint32(sWorld.GetGameTime());
+            itr->second->LastInviteTime = uint32(sWorld.GetGameTime());
 
             // get the player
             Player* plr = objmgr.GetPlayer(itr->first);
