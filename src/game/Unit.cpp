@@ -263,9 +263,9 @@ void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint8 ty
     // Point A, starting location
     data << GetPositionX() << GetPositionY() << GetPositionZ();
     // unknown field - unrelated to orientation
-    // seems to increment about 1000 for every 1.7 seconds
-    // for now, we'll just use mstime
-    data << getMSTime();
+    // (seems to increment about 1000 for every 1.7 seconds)
+    // seems to be related to x,y,z (for same xyz it stays the same)
+    data << (uint32) 0;
 
     data << uint8(type);                                    // unknown
     switch(type)
@@ -314,9 +314,9 @@ void Unit::SendMonsterMoveByPath(Path const& path, uint32 start, uint32 end, uin
     data << GetPositionZ();
 
     // unknown field - unrelated to orientation
-    // seems to increment about 1000 for every 1.7 seconds
-    // for now, we'll just use mstime
-    data << getMSTime();
+    // (seems to increment about 1000 for every 1.7 seconds)
+    // seems to be related to x,y,z (for same xyz it stays the same)
+    data << 0;
 
     data << uint8( 0 );
     data << uint32( MovementFlags );
@@ -9096,7 +9096,7 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced)
         data.append(GetPackGUID());
         data << uint32(0);                                  // movement flags
         data << uint16(0);                                  // unk flags
-        data << uint32(getMSTime());
+        data << uint32(0);
         data << float(GetPositionX());
         data << float(GetPositionY());
         data << float(GetPositionZ());

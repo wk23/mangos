@@ -1292,10 +1292,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint64 GetDivider() { return m_divider; };
         void SetDivider( uint64 guid ) { m_divider = guid; };
 
-        uint32 GetInGameTime() { return m_ingametime; };
-
-        void SetInGameTime( uint32 time ) { m_ingametime = time; };
-
         void AddTimedQuest( uint32 quest_id ) { m_timedquests.insert(quest_id); }
 
         /*********************************************************/
@@ -2176,7 +2172,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         std::set<uint32> m_timedquests;
 
         uint64 m_divider;
-        uint32 m_ingametime;
 
         /*********************************************************/
         /***                   LOAD SYSTEM                     ***/
