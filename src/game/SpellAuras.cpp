@@ -2481,38 +2481,23 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
     switch(form)
     {
         case FORM_CAT:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 892;
-            else
-                modelid = 8571;
+            modelid = (((Player*)m_target)->GetTeam()==ALLIANCE)? 892:8571;
             PowerType = POWER_ENERGY;
             break;
         case FORM_TRAVEL:
             modelid = 632;
             break;
         case FORM_AQUA:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 2428;
-            else
-                modelid = 2428;
+            modelid = 2428;
             break;
         case FORM_BEAR:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 2281;
-            else
-                modelid = 2289;
+        case FORM_DIREBEAR:
+            modelid = (((Player*)m_target)->GetTeam()==ALLIANCE)? 2281:2289;
             PowerType = POWER_RAGE;
             break;
         case FORM_GHOUL:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
+            if(((Player*)m_target)->GetTeam()==ALLIANCE)
                 modelid = 10045;
-            break;
-        case FORM_DIREBEAR:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 2281;
-            else
-                modelid = 2289;
-            PowerType = POWER_RAGE;
             break;
         case FORM_CREATUREBEAR:
             modelid = 902;
@@ -2521,22 +2506,13 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             modelid = 4613;
             break;
         case FORM_FLIGHT:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 20857;
-            else
-                modelid = 20872;
+            modelid = (((Player*)m_target)->GetTeam()==ALLIANCE)? 20857:20872;
             break;
         case FORM_MOONKIN:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 15374;
-            else
-                modelid = 15375;
+            modelid = (((Player*)m_target)->GetTeam()==ALLIANCE)? 15374:15375;
             break;
         case FORM_FLIGHT_EPIC:
-            if(Player::TeamForRace(m_target->getRace())==ALLIANCE)
-                modelid = 21243;
-            else
-                modelid = 21244;
+            modelid = (((Player*)m_target)->GetTeam()==ALLIANCE)? 21243:21244;
             break;
         case FORM_METAMORPHOSIS:
             modelid = 25277;
