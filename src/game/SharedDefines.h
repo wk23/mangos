@@ -2229,4 +2229,9 @@ enum BattleGroundTypeId
 };
 #define MAX_BATTLEGROUND_TYPE_ID 12
 
+enum SavedTimerTypes
+{
+    SAVED_TIMER_ARENA_DISTRIBUTION = 1,
+};
+
 #endif
