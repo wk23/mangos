@@ -433,9 +433,6 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this)
     m_baseFeralAP = 0;
     m_baseManaRegen = 0;
 
-    // Honor System
-    m_lastHonorUpdateTime = sWorld.GetGameTime();
-
     // Player summoning
     m_summon_expire = 0;
     m_summon_mapid = 0;
@@ -6027,36 +6024,26 @@ void Player::UpdateArenaFields(void)
     /* arena calcs go here */
 }
 
-void Player::UpdateHonorFields()
+//lastupdate=0 if no argument is given
+void Player::UpdateHonorFields(time_t lastupdate)
 {
-    /// called when rewarding honor and at each save
-    uint64 now = sWorld.GetGameTime();
-    uint64 today = uint64(sWorld.GetGameTime() / DAY) * DAY;
-
-    if(m_lastHonorUpdateTime < today)
+    /// called on login or at 0:00 from World.cpp
+    time_t next_update = sWorld.GetNextUpdateHonorFieldsTime();
+    if(lastupdate<next_update-DAY)
     {
-        uint64 yesterday = today - DAY;
-
-        uint16 kills_today = PAIR32_LOPART(GetUInt32Value(PLAYER_FIELD_KILLS));
-
-        // update yesterday's contribution
-        if(m_lastHonorUpdateTime >= yesterday )
+        if(lastupdate<next_update-(DAY+DAY))
         {
-            SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, GetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION));
-
-            // this is the first update today, reset today's contribution
+            //missed the last second updates - reset yesterday and today
+            SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, 0);
             SetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION, 0);
-            SetUInt32Value(PLAYER_FIELD_KILLS, MAKE_PAIR32(0,kills_today));
         }
         else
         {
-            // no honor/kills yesterday or today, reset
-            SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, 0);
-            SetUInt32Value(PLAYER_FIELD_KILLS, 0);
+            //just missed the last update, move today to yesterday and set today to 0
+            SetUInt32Value(PLAYER_FIELD_YESTERDAY_CONTRIBUTION, GetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION));
+            SetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION, 0);
         }
     }
-
-    m_lastHonorUpdateTime = now;
 }
 
 ///Calculate the amount of honor gained based on the victim
@@ -6082,9 +6069,6 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
 
     uint64 victim_guid = 0;
     uint32 victim_rank = 0;
-
-    // need call before fields update to have chance move yesterday data to appropriate fields before today data change.
-    UpdateHonorFields();
 
     if(honor <= 0)
     {
@@ -14381,8 +14365,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
 
     // Honor system
     // Update Honor kills data
-    m_lastHonorUpdateTime = logoutTime;
-    UpdateHonorFields();
+    UpdateHonorFields(logoutTime);
 
     m_deathExpireTime = (time_t)fields[30].GetUInt64();
     if(m_deathExpireTime > now+MAX_DEATH_COUNT*DEATH_EXPIRE_STEP)
@@ -15568,9 +15551,6 @@ void Player::SaveToDB()
 {
     // delay auto save at any saves (manual, in code, or autosave)
     m_nextSave = sWorld.getConfig(CONFIG_INTERVAL_SAVE);
-
-    // first save/honor gain after midnight will also update the player's honor fields
-    UpdateHonorFields();
 
     int is_save_resting = HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) ? 1 : 0;
                                                             //save, far from tavern/city
