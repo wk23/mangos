@@ -348,7 +348,6 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this)
     m_TutorialsChanged = false;
 
     m_DailyQuestChanged = false;
-    m_lastDailyQuestTime = 0;
 
     m_regenTimer = 0;
     m_weaponChangeTimer = 0;
@@ -15150,9 +15149,6 @@ void Player::_LoadDailyQuestStatus(QueryResult *result)
 
             uint32 quest_id = fields[0].GetUInt32();
 
-            // save _any_ from daily quest times (it must be after last reset anyway)
-            m_lastDailyQuestTime = (time_t)fields[1].GetUInt64();
-
             Quest const* pQuest = objmgr.GetQuestTemplate(quest_id);
             if( !pQuest )
                 continue;
@@ -15969,8 +15965,8 @@ void Player::_SaveDailyQuestStatus()
     CharacterDatabase.PExecute("DELETE FROM character_queststatus_daily WHERE guid = '%u'",GetGUIDLow());
     for(uint32 quest_daily_idx = 0; quest_daily_idx < PLAYER_MAX_DAILY_QUESTS; ++quest_daily_idx)
         if(GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx))
-            CharacterDatabase.PExecute("INSERT INTO character_queststatus_daily (guid,quest,time) VALUES ('%u', '%u','" I64FMTD "')",
-                GetGUIDLow(), GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx),uint64(m_lastDailyQuestTime));
+            CharacterDatabase.PExecute("INSERT INTO character_queststatus_daily (guid,quest) VALUES ('%u', '%u','" I64FMTD "')",
+                GetGUIDLow(), GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx));
 }
 
 void Player::_SaveReputation()
@@ -18398,7 +18394,6 @@ void Player::SetDailyQuestStatus( uint32 quest_id )
         if(!GetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx))
         {
             SetUInt32Value(PLAYER_FIELD_DAILY_QUESTS_1+quest_daily_idx,quest_id);
-            m_lastDailyQuestTime = sWorld.GetGameTime();              // last daily quest time
             m_DailyQuestChanged = true;
             break;
         }
@@ -18412,7 +18407,6 @@ void Player::ResetDailyQuestStatus()
 
     // DB data deleted in caller
     m_DailyQuestChanged = false;
-    m_lastDailyQuestTime = 0;
 }
 
 BattleGround* Player::GetBattleGround() const

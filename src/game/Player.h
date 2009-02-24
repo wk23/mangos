@@ -2300,7 +2300,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool   m_TutorialsChanged;
 
         bool   m_DailyQuestChanged;
-        time_t m_lastDailyQuestTime;
 
         uint32 m_breathTimer;
         uint32 m_drunkTimer;

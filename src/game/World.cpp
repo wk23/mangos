@@ -1467,8 +1467,8 @@ void World::Update(uint32 diff)
     /// Handle daily quests reset time
     if(m_gameTime > m_NextDailyQuestReset)
     {
+        m_NextDailyQuestReset += DAY; //must be done before function call cause function will update db-timer too
         ResetDailyQuests();
-        m_NextDailyQuestReset += DAY;
     }
 
     /// Handle update honor fields time
@@ -2712,40 +2712,36 @@ void World::UpdateHonorFields()
 
 void World::InitDailyQuestResetTime()
 {
-    time_t mostRecentQuestTime;
-
-    QueryResult* result = CharacterDatabase.Query("SELECT MAX(time) FROM character_queststatus_daily");
-    if(result)
-    {
-        Field *fields = result->Fetch();
-
-        mostRecentQuestTime = (time_t)fields[0].GetUInt64();
-        delete result;
-    }
-    else
-        mostRecentQuestTime = 0;
-
     // client built-in time for reset is 6:00 AM
     // FIX ME: client not show day start time
-    time_t curTime = GetGameTime();
-    tm localTm = *localtime(&curTime);
+    tm localTm = *localtime(&GetGameTime());
     localTm.tm_hour = 6;
     localTm.tm_min  = 0;
     localTm.tm_sec  = 0;
 
     // current day reset time
-    time_t curDayResetTime = mktime(&localTm);
+    m_NextDailyQuestReset = mktime(&localTm);
+    if(m_NextDailyQuestReset < GetGameTime()) //next reset-time can't be in the past
+        m_NextDailyQuestReset+=DAY;
 
-    // last reset time before current moment
-    time_t resetTime = (curTime < curDayResetTime) ? curDayResetTime - DAY : curDayResetTime;
-
-    // need reset (if we have quest time before last reset time (not processed by some reason)
-    if(mostRecentQuestTime && mostRecentQuestTime <= resetTime)
-        m_NextDailyQuestReset = mostRecentQuestTime;
+    // look in the database if we need to reset daily quests
+    // this can happen, if the server was offline, at the time when the quests
+    // were reset
+    QueryResult * result = CharacterDatabase.PQuery("SELECT Timer FROM saved_timer WHERE TimerType=%i",SAVED_TIMER_NEXT_DAILY_RESET);
+    if(!result)
+    {
+        sLog.outDebug("Last daily reset not found in SavedTimer, reseting it now.");
+        //we have to insert here, else the update will fail..
+        CharacterDatabase.PExecute("INSERT INTO saved_timer (TimerType, Timer) VALUES (%i,"I64FMTD")",SAVED_TIMER_NEXT_DAILY_RESET, uint64(m_NextDailyQuestReset));
+        //ResetDailyQuests(); - i don't know if we should reset it or not.. but
+        //i have no idea how this timertype could get lost without someone who manually deleted it
+    }
     else
     {
-        // plan next reset time
-        m_NextDailyQuestReset = (curTime >= curDayResetTime) ? curDayResetTime + DAY : curDayResetTime;
+        Field *fields = result->Fetch();
+        if(GetGameTime() > (time_t)fields[0].GetUInt64()) //if current time is greater then db-next saved time -> reset
+            ResetDailyQuests(); //updates the saved_timer field too
+        delete result;
     }
 }
 
@@ -2756,6 +2752,7 @@ void World::ResetDailyQuests()
     for(SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
         if(itr->second->GetPlayer())
             itr->second->GetPlayer()->ResetDailyQuestStatus();
+    CharacterDatabase.PExecute("UPDATE saved_timer SET Timer="I64FMTD" WHERE TimerType=%i",uint64(m_NextDailyQuestReset), SAVED_TIMER_NEXT_DAILY_RESET);
 }
 
 void World::SetPlayerLimit( int32 limit, bool needUpdate )
