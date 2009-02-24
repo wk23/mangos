@@ -6019,11 +6019,6 @@ void Player::RewardReputation(Quest const *pQuest)
     // TODO: implement reputation spillover
 }
 
-void Player::UpdateArenaFields(void)
-{
-    /* arena calcs go here */
-}
-
 //lastupdate=0 if no argument is given
 void Player::UpdateHonorFields(time_t lastupdate)
 {
