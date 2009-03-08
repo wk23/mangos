@@ -100,8 +100,7 @@ World::World()
     m_allowMovement = true;
     m_ShutdownMask = 0;
     m_ShutdownTimer = 0;
-    m_gameTime=time(NULL);
-    m_startTime=m_gameTime;
+    m_startTime=GetGameTime();
     m_maxActiveSessionCount = 0;
     m_maxQueuedSessionCount = 0;
     m_resultQueue = NULL;
@@ -1029,8 +1028,11 @@ void World::LoadConfigSettings(bool reload)
 /// Initialize the World
 void World::SetInitialWorldSettings()
 {
+    ///- Initialize the game time
+    SetGameTime(GetGameTime());
+
     ///- Initialize the random number generator
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)GetGameTime());
 
     ///- Initialize config settings
     LoadConfigSettings();
@@ -1351,8 +1353,8 @@ void World::SetInitialWorldSettings()
 
     ///- Initialize game time and timers
     sLog.outString( "DEBUG:: Initialize game time and timers" );
-    m_gameTime = time(NULL);
-    m_startTime=m_gameTime;
+    SetGameTime(GetGameTime());
+    m_startTime=GetGameTime();
 
     tm local;
     time_t curr;
@@ -1377,7 +1379,7 @@ void World::SetInitialWorldSettings()
     //to set mailtimer to return mails every day between 4 and 5 am
     //mailtimer is increased when updating auctions
     //one second is 1000 -(tested on win system)
-    mail_timer = ((((localtime( &m_gameTime )->tm_hour + 20) % 24)* HOUR * IN_MILISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
+    mail_timer = ((((localtime( &GetGameTime())->tm_hour + 20) % 24)* HOUR * IN_MILISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
                                                             //1440
     mail_timer_expires = ( (DAY * IN_MILISECONDS) / (m_timers[WUPDATE_AUCTIONS].GetInterval()));
     sLog.outDebug("Mail timer set to: %u, mail return is called every %u minutes", mail_timer, mail_timer_expires);
@@ -1473,7 +1475,7 @@ void World::Update(uint32 diff)
     _UpdateGameTime();
 
     /// Handle daily quests reset time
-    if(m_gameTime > m_NextDailyQuestReset)
+    if(GetGameTime() > m_NextDailyQuestReset)
     {
         ResetDailyQuests();
         m_NextDailyQuestReset += DAY;
@@ -1528,7 +1530,7 @@ void World::Update(uint32 diff)
     /// <li> Update uptime table
     if (m_timers[WUPDATE_UPTIME].Passed())
     {
-        uint32 tmpDiff = (m_gameTime - m_startTime);
+        uint32 tmpDiff = (GetGameTime() - m_startTime);
         uint32 maxClientsNum = sWorld.GetMaxActiveSessionCount();
 
         m_timers[WUPDATE_UPTIME].Reset();
@@ -1604,7 +1606,7 @@ void World::ScriptsStart(ScriptMapMap const& scripts, uint32 id, Object* source,
         sa.ownerGUID  = ownerGUID;
 
         sa.script = &iter->second;
-        m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(m_gameTime + iter->first, sa));
+        m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(GetGameTime() + iter->first, sa));
         if (iter->first == 0)
             immedScript = true;
     }
@@ -1628,7 +1630,7 @@ void World::ScriptCommandStart(ScriptInfo const& script, uint32 delay, Object* s
     sa.ownerGUID  = ownerGUID;
 
     sa.script = &script;
-    m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(m_gameTime + delay, sa));
+    m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(GetGameTime()+ delay, sa));
 
     ///- If effects should be immediate, launch the script execution
     if(delay == 0)
@@ -1644,7 +1646,7 @@ void World::ScriptsProcess()
     ///- Process overdue queued scripts
     std::multimap<time_t, ScriptAction>::iterator iter = m_scriptSchedule.begin();
                                                             // ok as multimap is a *sorted* associative container
-    while (!m_scriptSchedule.empty() && (iter->first <= m_gameTime))
+    while (!m_scriptSchedule.empty() && (iter->first <= GetGameTime()))
     {
         ScriptAction const& step = iter->second;
 
@@ -2520,9 +2522,9 @@ bool World::RemoveBanAccount(BanMode mode, std::string nameOrIP)
 void World::_UpdateGameTime()
 {
     ///- update the time
-    time_t thisTime = time(NULL);
-    uint32 elapsed = uint32(thisTime - m_gameTime);
-    m_gameTime = thisTime;
+    time_t thisTime = GetGameTime();
+    uint32 elapsed = uint32(thisTime - GetGameTime());
+    SetGameTime(thisTime);
 
     ///- if there is a shutdown timer
     if(!m_stopEvent && m_ShutdownTimer > 0 && elapsed > 0)
@@ -2730,7 +2732,7 @@ void World::InitDailyQuestResetTime()
 
     // client built-in time for reset is 6:00 AM
     // FIX ME: client not show day start time
-    time_t curTime = time(NULL);
+    time_t curTime = GetGameTime();
     tm localTm = *localtime(&curTime);
     localTm.tm_hour = 6;
     localTm.tm_min  = 0;

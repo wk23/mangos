@@ -20,7 +20,6 @@
 #define MANGOS_TOTEMAI_H
 
 #include "CreatureAI.h"
-#include "Timer.h"
 
 class Creature;
 class Totem;

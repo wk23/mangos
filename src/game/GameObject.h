@@ -24,6 +24,7 @@
 #include "Object.h"
 #include "LootMgr.h"
 #include "Database/DatabaseEnv.h"
+#include "Timer.h"
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
@@ -478,7 +479,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         time_t GetRespawnTime() const { return m_respawnTime; }
         time_t GetRespawnTimeEx() const
         {
-            time_t now = time(NULL);
+            time_t now = GetGameTime();
             if(m_respawnTime > now)
                 return m_respawnTime;
             else
@@ -487,7 +488,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         void SetRespawnTime(int32 respawn)
         {
-            m_respawnTime = respawn > 0 ? time(NULL) + respawn : 0;
+            m_respawnTime = respawn > 0 ? GetGameTime() + respawn : 0;
             m_respawnDelayTime = respawn > 0 ? respawn : 0;
         }
         void Respawn();

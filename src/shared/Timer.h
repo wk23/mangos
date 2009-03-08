@@ -93,4 +93,12 @@ struct TimeTrackerSmall
     int32 i_expiryTime;
 };
 
+
+//those are only available after World.SetInitialWorldSettings
+//and will return the current time(NULL) they are used to get
+//better performance
+extern time_t e_gameTime;
+inline time_t const& GetGameTime() { return e_gameTime; }
+inline void SetGameTime(time_t set) { e_gameTime=set; return; }
+
 #endif

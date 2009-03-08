@@ -259,7 +259,7 @@ void BattleGround::Update(uint32 diff)
         BattleGroundPlayerMap::iterator itr = m_Players.find(*(m_OfflineQueue.begin()));
         if( itr != m_Players.end() )
         {
-            if( itr->second.OfflineRemoveTime <= sWorld.GetGameTime() )
+            if( itr->second.OfflineRemoveTime <= GetGameTime() )
             {
                 m_RemovedPlayers[itr->first] = 1;           // add to remove list (BG)
                 m_OfflineQueue.pop_front();                 // remove from offline queue
@@ -1195,7 +1195,7 @@ void BattleGround::EventPlayerLoggedOut(Player* player)
 {
     // player is correct pointer, it is checked in WorldSession::LogoutPlayer()
     m_OfflineQueue.push_back(player->GetGUID());
-    m_Players[player->GetGUID()].OfflineRemoveTime = sWorld.GetGameTime() + MAX_OFFLINE_TIME;
+    m_Players[player->GetGUID()].OfflineRemoveTime = GetGameTime() + MAX_OFFLINE_TIME;
     if( GetStatus() == STATUS_IN_PROGRESS )
     {
         if( isBattleGround() )

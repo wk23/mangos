@@ -29,7 +29,7 @@ void WorldSession::HandleCalendarGetCalendar(WorldPacket &recv_data)
     sLog.outDebug("WORLD: CMSG_CALENDAR_GET_CALENDAR");
     recv_data.hexlike();
 
-    time_t cur_time = time(NULL);
+    time_t cur_time = GetGameTime();
 
     WorldPacket data(SMSG_CALENDAR_SEND_CALENDAR,4+4*0+4+4*0+4+4);
 

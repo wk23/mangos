@@ -293,7 +293,7 @@ void AchievementMgr::LoadFromDB(QueryResult *achievementResult, QueryResult *cri
             time_t date    = time_t(fields[2].GetUInt64());
 
             AchievementCriteriaEntry const* criteria = sAchievementCriteriaStore.LookupEntry(id);
-            if (!criteria || (criteria->timeLimit && time_t(date + criteria->timeLimit) < time(NULL)))
+            if (!criteria || (criteria->timeLimit && time_t(date + criteria->timeLimit) < GetGameTime()))
                 continue;
 
             CriteriaProgress& progress = m_criteriaProgress[id];
@@ -344,7 +344,7 @@ void AchievementMgr::SendAchievementEarned(AchievementEntry const* achievement)
     WorldPacket data(SMSG_ACHIEVEMENT_EARNED, 8+4+8);
     data.append(GetPlayer()->GetPackGUID());
     data << uint32(achievement->ID);
-    data << uint32(secsToTimeBitFields(time(NULL)));
+    data << uint32(secsToTimeBitFields(GetGameTime()));
     data << uint32(0);
     GetPlayer()->SendMessageToSet(&data, true);
 }
@@ -1036,7 +1036,7 @@ void AchievementMgr::SetCriteriaProgress(AchievementCriteriaEntry const* entry, 
 
         progress = &m_criteriaProgress[entry->ID];
         progress->counter = changeValue;
-        progress->date = time(NULL);
+        progress->date = GetGameTime();
     }
     else
     {
@@ -1071,7 +1071,7 @@ void AchievementMgr::SetCriteriaProgress(AchievementCriteriaEntry const* entry, 
 
     if(entry->timeLimit)
     {
-        time_t now = time(NULL);
+        time_t now = GetGameTime();
         if(time_t(progress->date + entry->timeLimit) < now)
             progress->counter = 1;
 
@@ -1089,7 +1089,7 @@ void AchievementMgr::CompletedAchievement(AchievementEntry const* achievement)
 
     SendAchievementEarned(achievement);
     CompletedAchievementData& ca =  m_completedAchievements[achievement->ID];
-    ca.date = time(NULL);
+    ca.date = GetGameTime();
     ca.changed = true;
 
     // don't insert for ACHIEVEMENT_FLAG_REALM_FIRST_KILL since otherwise only the first group member would reach that achievement

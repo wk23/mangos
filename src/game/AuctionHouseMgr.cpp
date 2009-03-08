@@ -175,7 +175,7 @@ void AuctionHouseMgr::SendAuctionSalePendingMail( AuctionEntry * auction )
         std::ostringstream msgAuctionSalePendingBody;
         uint32 auctionCut = auction->GetAuctionCut();
 
-        time_t distrTime = time(NULL) + HOUR;
+        time_t distrTime = GetGameTime() + HOUR;
 
         msgAuctionSalePendingBody.width(16);
         msgAuctionSalePendingBody << std::right << std::hex << auction->bidder;
@@ -501,7 +501,7 @@ AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntry(uint32 factionTem
 
 void AuctionHouseObject::Update()
 {
-    time_t curTime = sWorld.GetGameTime();
+    time_t curTime = GetGameTime();
     ///- Handle expired auctions
     AuctionEntryMap::iterator next;
     for (AuctionEntryMap::iterator itr = AuctionsMap.begin(); itr != AuctionsMap.end();itr = next)
@@ -652,7 +652,7 @@ bool AuctionEntry::BuildAuctionInfo(WorldPacket & data) const
     data << uint32(bid ? GetAuctionOutBid() : 0);
     //minimal outbid
     data << uint32(buyout);                                 //auction->buyout
-    data << uint32((expire_time-time(NULL))*IN_MILISECONDS);//time left
+    data << uint32((expire_time-GetGameTime())*IN_MILISECONDS);//time left
     data << uint64(bidder) ;                                //auction->bidder current
     data << uint32(bid);                                    //current bid
     return true;

@@ -22,6 +22,7 @@
 #include "Policies/Singleton.h"
 #include "Database/DatabaseEnv.h"
 #include "Util.h"
+#include "Timer.h"
 #include <map>
 
 class GMTicket
@@ -49,7 +50,7 @@ class GMTicket
         void SetText(const char* text)
         {
             m_text = text ? text : "";
-            m_lastUpdate = time(NULL);
+            m_lastUpdate = GetGameTime();
 
             std::string escapedString = m_text;
             CharacterDatabase.escape_string(escapedString);
@@ -113,7 +114,7 @@ class GMTicketMgr
 
         void Create(uint32 guid, const char* text)
         {
-            GMTicket t = GMTicket(guid, text, time(NULL));
+            GMTicket t = GMTicket(guid, text, GetGameTime());
             t.SaveToDB();
             m_GMTicketMap[guid] = t;
         }

@@ -400,10 +400,8 @@ class World
 
         /// When server started?
         time_t const& GetStartTime() const { return m_startTime; }
-        /// What time is it?
-        time_t const& GetGameTime() const { return m_gameTime; }
         /// Uptime (in secs)
-        uint32 GetUptime() const { return uint32(m_gameTime - m_startTime); }
+        uint32 GetUptime() const { return uint32(GetGameTime() - m_startTime); }
 
         /// Get the maximum skill level a player can reach
         uint16 GetConfigMaxSkillValue() const
@@ -510,7 +508,6 @@ class World
         uint32 m_ShutdownMask;
 
         time_t m_startTime;
-        time_t m_gameTime;
         IntervalTimer m_timers[WUPDATE_COUNT];
         uint32 mail_timer;
         uint32 mail_timer_expires;

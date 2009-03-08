@@ -943,7 +943,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void SetSummonPoint(uint32 mapid, float x, float y, float z)
         {
-            m_summon_expire = time(NULL) + MAX_PLAYER_SUMMON_DELAY;
+            m_summon_expire = GetGameTime() + MAX_PLAYER_SUMMON_DELAY;
             m_summon_mapid = mapid;
             m_summon_x = x;
             m_summon_y = y;
@@ -1483,12 +1483,12 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool HasSpellCooldown(uint32 spell_id) const
         {
             SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
-            return itr != m_spellCooldowns.end() && itr->second.end > time(NULL);
+            return itr != m_spellCooldowns.end() && itr->second.end > GetGameTime();
         }
         uint32 GetSpellCooldownDelay(uint32 spell_id) const
         {
             SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
-            time_t t = time(NULL);
+            time_t t = GetGameTime();
             return itr != m_spellCooldowns.end() && itr->second.end > t ? itr->second.end - t : 0;
         }
         void AddSpellAndCategoryCooldowns(SpellEntry const* spellInfo, uint32 itemId, Spell* spell = NULL, bool infinityCooldown = false );
