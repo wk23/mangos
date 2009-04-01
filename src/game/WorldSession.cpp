@@ -34,6 +34,9 @@
 #include "World.h"
 #include "ObjectAccessor.h"
 #include "BattleGroundMgr.h"
+#include "OutdoorPvPMgr.h"
+#include "Language.h"                                       // for CMSG_DISMOUNT handler
+#include "Chat.h"
 #include "SocialMgr.h"
 
 /// WorldSession constructor
@@ -303,9 +306,13 @@ void WorldSession::LogoutPlayer(bool Save)
         if(_player->InBattleGround())
             _player->LeaveBattleground();
 
+        // Delete player from outdoorPVP  
+		sOutdoorPvPMgr.HandlePlayerLeaveZone(_player,_player->GetZoneId());
+
         ///- Teleport to home if the player is in an invalid instance
         if(!_player->m_InstanceValid && !_player->isGameMaster())
             _player->TeleportTo(_player->m_homebindMapId, _player->m_homebindX, _player->m_homebindY, _player->m_homebindZ, _player->GetOrientation());
+
 
         for (int i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; i++)
         {
