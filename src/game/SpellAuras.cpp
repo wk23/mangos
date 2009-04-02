@@ -38,6 +38,8 @@
 #include "Creature.h"
 #include "Formulas.h"
 #include "BattleGround.h"
+#include "OutdoorPvP.h"
+#include "OutdoorPvPMgr.h"
 #include "CreatureAI.h"
 #include "Util.h"
 #include "GridNotifiers.h"
@@ -3281,6 +3283,13 @@ void Aura::HandleModStealth(bool apply, bool Real)
             if(BattleGround *bg = ((Player*)pTarget)->GetBattleGround())
                 bg->EventPlayerDroppedFlag((Player*)pTarget);
 
+		if(Real && m_target->GetTypeId()==TYPEID_PLAYER)
+        {
+            // remove player from the objective's active player count at stealth
+            if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                pvp->HandlePlayerActivityChanged((Player*)m_target);
+        }
+
         // only at real aura add
         if (Real)
         {
@@ -3324,6 +3333,13 @@ void Aura::HandleModStealth(bool apply, bool Real)
                 }
                 else
                     pTarget->SetVisibility(VISIBILITY_ON);
+
+				if(pTarget->GetTypeId() == TYPEID_PLAYER)
+                {
+                    if(OutdoorPvP * pvp = ((Player*)pTarget)->GetOutdoorPvP())
+                        pvp->HandlePlayerActivityChanged((Player*)pTarget);
+                    pTarget->SendUpdateToPlayer((Player*)pTarget);
+                }
             }
         }
     }
@@ -3356,6 +3372,9 @@ void Aura::HandleInvisibility(bool apply, bool Real)
         {
             // apply glow vision
             m_target->SetFlag(PLAYER_FIELD_BYTES2,PLAYER_FIELD_BYTE2_INVISIBILITY_GLOW);
+            // remove player from the objective's active player count at invisibility
+            if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                pvp->HandlePlayerActivityChanged((Player*)m_target);
 
             // drop flag at invisible in bg
             if(((Player*)m_target)->InBattleGround())
@@ -3392,6 +3411,13 @@ void Aura::HandleInvisibility(bool apply, bool Real)
                 // if have stealth aura then already have stealth visibility
                 if(!m_target->HasAuraType(SPELL_AURA_MOD_STEALTH))
                     m_target->SetVisibility(VISIBILITY_ON);
+                if(m_target->GetTypeId() == TYPEID_PLAYER)
+                {
+                    if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                        pvp->HandlePlayerActivityChanged((Player*)m_target);
+
+                    m_target->SendUpdateToPlayer((Player*)m_target);
+                }
             }
         }
     }
@@ -3831,6 +3857,8 @@ void Aura::HandleAuraModEffectImmunity(bool apply, bool Real)
                     }
                 }
             }
+            else
+                sOutdoorPvPMgr.HandleDropFlag((Player*)m_target,GetSpellProto()->Id);
         }
     }
 
