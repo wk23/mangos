@@ -86,6 +86,10 @@ libmangosgame_a_SOURCES = \
 	CreatureAIRegistry.h \
 	CreatureAISelector.cpp \
 	CreatureAISelector.h \
+	CreatureEventAI.cpp \
+	CreatureEventAI.h \
+	CreatureEventAIMgr.cpp \
+	CreatureEventAIMgr.h \
 	Creature.cpp \
 	Creature.h \
 	DBCEnums.h \
@@ -189,7 +193,7 @@ libmangosgame_a_SOURCES = \
 	Opcodes.h \
 	OutdoorPvP.cpp \
   OutdoorPvP.h \
-  OutdoorPvPEP.cpp \  
+  OutdoorPvPEP.cpp \
   OutdoorPvPEP.h \
   OutdoorPvPHP.cpp \
   OutdoorPvPHP.h \
