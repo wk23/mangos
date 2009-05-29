@@ -13,7 +13,7 @@ UPDATE creature_template SET RegenHealth = 0 WHERE entry IN (18192,18256);
 -- 
 UPDATE creature_template SET faction_A = 1630, faction_H = 1630, ScriptName = 'mob_eventai' WHERE entry = 18225;
 -- pvp flag
-UPDATE creature_template SET flags = flags | 0x1000 WHERE entry IN (18816,18821,21474,21484,21483,18192,18817,18822,21485,21487,21488,18256);
+UPDATE creature_template SET unit_flags = unit_flags | 0x1000 WHERE entry IN (18816,18821,21474,21484,21483,18192,18817,18822,21485,21487,21488,18256);
 
 -- faction changes
 -- (destroyed) wyvern posts
