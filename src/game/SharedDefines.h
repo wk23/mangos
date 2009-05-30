@@ -1680,6 +1680,7 @@ enum CreatureType
 };
 
 uint32 const CREATURE_TYPEMASK_HUMANOID_OR_UNDEAD = (1 << (CREATURE_TYPE_HUMANOID-1)) | (1 << (CREATURE_TYPE_UNDEAD-1));
+uint32 const CREATURE_TYPEMASK_MECHANICAL_OR_ELEMENTAL = (1 << (CREATURE_TYPE_MECHANICAL-1)) | (1 << (CREATURE_TYPE_ELEMENTAL-1));
 
 enum CreatureFamily
 {
@@ -1731,6 +1732,28 @@ enum CreatureEliteType
     CREATURE_ELITE_WORLDBOSS       = 3,
     CREATURE_ELITE_RARE            = 4,
     CREATURE_UNKNOWN               = 5                      // found in 2.2.3 for 2 mobs
+};
+
+enum HolidayIds
+{
+    HOLIDAY_FIREWORKS_SPECTACULAR    = 62,
+    HOLIDAY_FEAST_OF_WINTER_VEIL     = 141,
+    HOLIDAY_NOBLEGARDEN              = 181,
+    HOLIDAY_CHILDRENS_WEEK           = 201,
+    HOLIDAY_CALL_TO_ARMS_AV          = 283,
+    HOLIDAY_CALL_TO_ARMS_WG          = 284,
+    HOLIDAY_CALL_TO_ARMS_AB          = 285,
+    HOLIDAY_FISHING_EXTRAVAGANZA     = 301,
+    HOLIDAY_HARVEST_FESTIVAL         = 321,
+    HOLIDAY_HALLOWS_END              = 324,
+    HOLIDAY_LUNAR_FESTIVAL           = 327,
+    HOLIDAY_LOVE_IS_IN_THE_AIR       = 335,
+    HOLIDAY_FIRE_FESTIVAL            = 341,
+    HOLIDAY_CALL_TO_ARMS_ES          = 353,
+    HOLIDAY_BREWFEST                 = 372,
+    HOLIDAY_DARKMOON_FAIRE_ELWYNN    = 374,
+    HOLIDAY_DARKMOON_FAIRE_THUNDER   = 375,
+    HOLIDAY_DARKMOON_FAIRE_SHATTRATH = 376,
 };
 
 // values based at QuestInfo.dbc
@@ -2337,5 +2360,32 @@ enum BattleGroundTypeId
     BATTLEGROUND_RL            = 8
 };
 #define MAX_BATTLEGROUND_TYPE_ID 9
+
+enum MailResponseType
+{
+    MAIL_SEND               = 0,
+    MAIL_MONEY_TAKEN        = 1,
+    MAIL_ITEM_TAKEN         = 2,
+    MAIL_RETURNED_TO_SENDER = 3,
+    MAIL_DELETED            = 4,
+    MAIL_MADE_PERMANENT     = 5
+};
+
+enum MailResponseResult
+{
+    MAIL_OK                            = 0,
+    MAIL_ERR_EQUIP_ERROR               = 1,
+    MAIL_ERR_CANNOT_SEND_TO_SELF       = 2,
+    MAIL_ERR_NOT_ENOUGH_MONEY          = 3,
+    MAIL_ERR_RECIPIENT_NOT_FOUND       = 4,
+    MAIL_ERR_NOT_YOUR_TEAM             = 5,
+    MAIL_ERR_INTERNAL_ERROR            = 6,
+    MAIL_ERR_DISABLED_FOR_TRIAL_ACC    = 14,
+    MAIL_ERR_RECIPIENT_CAP_REACHED     = 15,
+    MAIL_ERR_CANT_SEND_WRAPPED_COD     = 16,
+    MAIL_ERR_MAIL_AND_CHAT_SUSPENDED   = 17,
+    MAIL_ERR_TOO_MANY_ATTACHMENTS      = 18,
+    MAIL_ERR_MAIL_ATTACHMENT_INVALID   = 19,
+};
 
 #endif

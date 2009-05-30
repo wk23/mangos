@@ -196,9 +196,10 @@ void WorldSession::HandleMoveTeleportAck(WorldPacket& recv_data)
 
     plMover->SetPosition(dest.x, dest.y, dest.z, dest.o, true);
 
-    uint32 newzone = plMover->GetZoneId();
+    uint32 newzone,newarea;
+    plMover->GetZoneAndAreaId(newzone,newarea);
 
-    plMover->UpdateZone(newzone);
+    plMover->UpdateZone(newzone,newarea);
 
     // new zone
     if(old_zone != newzone)
@@ -307,7 +308,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         if (!GetPlayer()->m_transport)
         {
             // elevators also cause the client to send MOVEMENTFLAG_ONTRANSPORT - just unmount if the guid can be found in the transport list
-            for (MapManager::TransportSet::iterator iter = MapManager::Instance().m_Transports.begin(); iter != MapManager::Instance().m_Transports.end(); ++iter)
+            for (MapManager::TransportSet::const_iterator iter = MapManager::Instance().m_Transports.begin(); iter != MapManager::Instance().m_Transports.end(); ++iter)
             {
                 if ((*iter)->GetGUID() == movementInfo.t_guid)
                 {

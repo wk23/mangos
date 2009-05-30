@@ -212,10 +212,13 @@ struct CreatureFamilyEntry
                                                             // 25 icon, unused
 };
 
+#define MAX_CREATURE_SPELL_DATA_SLOT 4
+
 struct CreatureSpellDataEntry
 {
-    uint32    ID;                                           // 0
-    //uint32    spellId[4];                                 // 1-4 hunter pet learned spell (for later use)
+    uint32    ID;                                           // 0        m_ID
+    uint32    spellId[MAX_CREATURE_SPELL_DATA_SLOT];        // 1-4      m_spells[4]
+    //uint32    availability[MAX_CREATURE_SPELL_DATA_SLOT]; // 4-7      m_availability[4]
 };
 
 struct DurabilityCostsEntry
@@ -850,15 +853,14 @@ struct TalentTabEntry
 
 struct TaxiNodesEntry
 {
-    uint32    ID;                                           // 0
-    uint32    map_id;                                       // 1
-    float     x;                                            // 2
-    float     y;                                            // 3
-    float     z;                                            // 4
-    //char*     name[16];                                   // 5-21
-                                                            // 22 string flags, unused
-    uint32    horde_mount_type;                             // 23
-    uint32    alliance_mount_type;                          // 24
+    uint32    ID;                                           // 0        m_ID
+    uint32    map_id;                                       // 1        m_ContinentID
+    float     x;                                            // 2        m_x
+    float     y;                                            // 3        m_y
+    float     z;                                            // 4        m_z
+    char*     name[16];                                     // 5-21     m_Name_lang
+                                                            // 22 string flags
+    uint32    MountCreatureID[2];                           // 23-24    m_MountCreatureID[2]
 };
 
 struct TaxiPathEntry
@@ -902,6 +904,20 @@ struct WorldMapAreaEntry
     float     x2;                                           // 7
     int32   virtual_map_id;                                 // 8 -1 (map_id have correct map) other: virtual map where zone show (map_id - where zone in fact internally)
 };
+
+/* not used in 2.4.3 code
+#define MAX_WORLD_MAP_OVERLAY_AREA_IDX 4
+
+struct WorldMapOverlayEntry
+{
+    uint32    ID;                                           // 0
+    //uint32    worldMapAreaId;                             // 1 idx in WorldMapArea.dbc
+    uint32    areatableID[MAX_WORLD_MAP_OVERLAY_AREA_IDX];  // 2-5
+                                                            // 6-7 always 0, possible part of areatableID[]
+    //char* internal_name                                   // 8
+                                                            // 9-16 some ints
+};
+*/
 
 struct WorldSafeLocsEntry
 {

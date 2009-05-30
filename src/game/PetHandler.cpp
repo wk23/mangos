@@ -156,9 +156,9 @@ void WorldSession::HandlePetAction( WorldPacket & recv_data )
                     break;
             }
             break;
-        case ACT_DISABLED:                                  //0x8100    spell (disabled), ignore
-        case ACT_CAST:                                      //0x0100
-        case ACT_ENABLED:                                   //0xc100    spell
+        case ACT_DISABLED:                                  // 0x8100    spell (disabled), ignore
+        case ACT_PASSIVE:                                   // 0x0100
+        case ACT_ENABLED:                                   // 0xC100    spell
         {
             Unit* unit_target = NULL;
             if (((Creature*)pet)->GetGlobalCooldown() > 0)
@@ -175,7 +175,7 @@ void WorldSession::HandlePetAction( WorldPacket & recv_data )
                 return;
             }
 
-            for(uint32 i = 0; i < 3;i++)
+            for(uint32 i = 0; i < 3;++i)
             {
                 if(spellInfo->EffectImplicitTargetA[i] == TARGET_ALL_ENEMY_IN_AREA || spellInfo->EffectImplicitTargetA[i] == TARGET_ALL_ENEMY_IN_AREA_INSTANT || spellInfo->EffectImplicitTargetA[i] == TARGET_ALL_ENEMY_IN_AREA_CHANNELED)
                     return;
@@ -194,10 +194,19 @@ void WorldSession::HandlePetAction( WorldPacket & recv_data )
             //auto turn to target unless possessed
             if(result == SPELL_FAILED_UNIT_NOT_INFRONT && !pet->HasAuraType(SPELL_AURA_MOD_POSSESS))
             {
-                pet->SetInFront(unit_target);
-                if( unit_target->GetTypeId() == TYPEID_PLAYER )
-                    pet->SendUpdateToPlayer( (Player*)unit_target );
-                if(Unit* powner = pet->GetCharmerOrOwner())
+                if(unit_target)
+                {
+                    pet->SetInFront(unit_target);
+                    if (unit_target->GetTypeId() == TYPEID_PLAYER)
+                        pet->SendUpdateToPlayer( (Player*)unit_target );
+                }
+                else if(Unit *unit_target2 = spell->m_targets.getUnitTarget())
+                {
+                    pet->SetInFront(unit_target2);
+                    if (unit_target2->GetTypeId() == TYPEID_PLAYER)
+                        pet->SendUpdateToPlayer( (Player*)unit_target2 );
+                }
+                if (Unit* powner = pet->GetCharmerOrOwner())
                     if(powner->GetTypeId() == TYPEID_PLAYER)
                         pet->SendUpdateToPlayer((Player*)powner);
                 result = SPELL_CAST_OK;
@@ -248,6 +257,8 @@ void WorldSession::HandlePetAction( WorldPacket & recv_data )
                             break;
                         case SPELL_FAILED_REQUIRES_AREA:
                             data << uint32(spellInfo->AreaId);
+                            break;
+                        default:
                             break;
                     }
                     SendPacket(&data);
@@ -343,7 +354,7 @@ void WorldSession::HandlePetSetAction( WorldPacket & recv_data )
     }
 
     count = (recv_data.size() == 24) ? 2 : 1;
-    for(uint8 i = 0; i < count; i++)
+    for(uint8 i = 0; i < count; ++i)
     {
         recv_data >> position;
         recv_data >> spell_id;
@@ -351,8 +362,12 @@ void WorldSession::HandlePetSetAction( WorldPacket & recv_data )
 
         sLog.outDetail( "Player %s has changed pet spell action. Position: %u, Spell: %u, State: 0x%X", _player->GetName(), position, spell_id, act_state);
 
-                                                            //if it's act for spell (en/disable/cast) and there is a spell given (0 = remove spell) which pet doesn't know, don't add
-        if(!((act_state == ACT_ENABLED || act_state == ACT_DISABLED || act_state == ACT_CAST) && spell_id && !pet->HasSpell(spell_id)))
+        //ignore invalid position
+        if(position >= MAX_UNIT_ACTION_BAR_INDEX)
+            return;
+
+        //if it's act for spell (en/disable/cast) and there is a spell given (0 = remove spell) which pet doesn't know, don't add
+        if(!((act_state == ACT_ENABLED || act_state == ACT_DISABLED || act_state == ACT_PASSIVE) && spell_id && !pet->HasSpell(spell_id)))
         {
             //sign for autocast
             if(act_state == ACT_ENABLED && spell_id)
@@ -371,8 +386,7 @@ void WorldSession::HandlePetSetAction( WorldPacket & recv_data )
                     ((Pet*)pet)->ToggleAutocast(spell_id, false);
             }
 
-            charmInfo->GetActionBarEntry(position)->Type = act_state;
-            charmInfo->GetActionBarEntry(position)->SpellOrAction = spell_id;
+            charmInfo->SetActionBar(position,spell_id,ActiveStates(act_state));
         }
     }
 }
@@ -522,16 +536,15 @@ void WorldSession::HandlePetUnlearnOpcode(WorldPacket& recvPacket)
     {
         uint32 spell_id = itr->first;                       // Pet::removeSpell can invalidate iterator at erase NEW spell
         ++itr;
-        pet->removeSpell(spell_id);
+        pet->unlearnSpell(spell_id,false);
     }
 
     pet->SetTP(pet->getLevel() * (pet->GetLoyaltyLevel() - 1));
 
-    for(uint8 i = 0; i < 10; i++)
-    {
-        if(charmInfo->GetActionBarEntry(i)->SpellOrAction && charmInfo->GetActionBarEntry(i)->Type == ACT_ENABLED || charmInfo->GetActionBarEntry(i)->Type == ACT_DISABLED)
-            charmInfo->GetActionBarEntry(i)->SpellOrAction = 0;
-    }
+    for(int i = 0; i < MAX_UNIT_ACTION_BAR_INDEX; ++i)
+        if(UnitActionBarEntry const* ab = charmInfo->GetActionBarEntry(i))
+            if(ab->SpellOrAction && ab->IsActionBarForSpell())
+                charmInfo->SetActionBar(i,0,ACT_DISABLED);
 
     // relearn pet passives
     pet->LearnPetPassives();
@@ -585,11 +598,7 @@ void WorldSession::HandlePetSpellAutocastOpcode( WorldPacket& recvPacket )
     else
         ((Pet*)pet)->ToggleAutocast(spellid, state);
 
-    for(uint8 i = 0; i < 10; ++i)
-    {
-        if((charmInfo->GetActionBarEntry(i)->Type == ACT_ENABLED || charmInfo->GetActionBarEntry(i)->Type == ACT_DISABLED) && spellid == charmInfo->GetActionBarEntry(i)->SpellOrAction)
-            charmInfo->GetActionBarEntry(i)->Type = state ? ACT_ENABLED : ACT_DISABLED;
-    }
+    charmInfo->SetSpellAutocast(spellid,state);
 }
 
 void WorldSession::HandlePetCastSpellOpcode( WorldPacket& recvPacket )

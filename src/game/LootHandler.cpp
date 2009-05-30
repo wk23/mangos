@@ -210,13 +210,13 @@ void WorldSession::HandleLootMoneyOpcode( WorldPacket & /*recv_data*/ )
                 Player* playerGroup = itr->getSource();
                 if(!playerGroup)
                     continue;
-                if (player->GetDistance2d(playerGroup) < sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE))
+                if (player->IsWithinDist(playerGroup,sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE),false))
                     playersNear.push_back(playerGroup);
             }
 
             uint32 money_per_player = uint32((pLoot->gold)/(playersNear.size()));
 
-            for (std::vector<Player*>::iterator i = playersNear.begin(); i != playersNear.end(); ++i)
+            for (std::vector<Player*>::const_iterator i = playersNear.begin(); i != playersNear.end(); ++i)
             {
                 (*i)->ModifyMoney( money_per_player );
                 //Offset surely incorrect, but works
