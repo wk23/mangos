@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,4 +66,4 @@ void OutdoorPvPObjectiveAI::UpdateAI(const uint32 diff)
 Creature& OutdoorPvPObjectiveAI::getCreature()
 {
    return static_cast<Creature&>(*m_creature);
-}  
+}

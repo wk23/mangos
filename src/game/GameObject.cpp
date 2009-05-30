@@ -853,7 +853,7 @@ void GameObject::SwitchDoorOrButton(bool activate, bool alternative /* = false *
         SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
     else
         RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
- 
+
     if(GetGoState() == GO_STATE_READY) //if closed -> open
         SetGoState(alternative ? GO_STATE_ACTIVE_ALTERNATIVE : GO_STATE_ACTIVE);
     else //if open -> close
