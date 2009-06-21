@@ -1395,46 +1395,13 @@ void Spell::SetTargetMap(uint32 i,uint32 cur,UnitList& TagUnitMap)
         case TARGET_ALL_PARTY_AROUND_CASTER:
         case TARGET_ALL_PARTY_AROUND_CASTER_2:
         case TARGET_ALL_PARTY:
-        {
-            Player *pTarget = m_caster->GetCharmerOrOwnerPlayerOrPlayerItself();
-            Group *pGroup = pTarget ? pTarget->GetGroup() : NULL;
-
-            if(pGroup)
-            {
-                uint8 subgroup = pTarget->GetSubGroup();
-
-                for(GroupReference *itr = pGroup->GetFirstMember(); itr != NULL; itr = itr->next())
-                {
-                    Player* Target = itr->getSource();
-
-                    // IsHostileTo check duel and controlled by enemy
-                    if( Target && Target->GetSubGroup()==subgroup && !m_caster->IsHostileTo(Target) )
-                    {
-                        if( m_caster->IsWithinDistInMap(Target, radius) )
-                            TagUnitMap.push_back(Target);
-
-                        if(Pet* pet = Target->GetPet())
-                            if( m_caster->IsWithinDistInMap(pet, radius) )
-                                TagUnitMap.push_back(pet);
-                    }
-                }
-            }
-            else
-            {
-                Unit* ownerOrSelf = pTarget ? pTarget : m_caster->GetCharmerOrOwnerOrSelf();
-                if(ownerOrSelf==m_caster || m_caster->IsWithinDistInMap(ownerOrSelf, radius))
-                    TagUnitMap.push_back(ownerOrSelf);
-                if(Pet* pet = ownerOrSelf->GetPet())
-                    if( m_caster->IsWithinDistInMap(pet, radius) )
-                        TagUnitMap.push_back(pet);
-            }
-        }break;
+            FillRaidOrPartyTargets(TagUnitMap,m_caster,radius,false,true,true);
+            break;
         case TARGET_RANDOM_RAID_MEMBER:
-        {
             if (m_caster->GetTypeId() == TYPEID_PLAYER)
                 if(Player* target = ((Player*)m_caster)->GetNextRandomRaidMember(radius))
                     TagUnitMap.push_back(target);
-        }break;
+            break;
         case TARGET_SINGLE_FRIEND:
         case TARGET_SINGLE_FRIEND_2:
         {
@@ -3700,7 +3667,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                 float fx = m_caster->GetPositionX() + dis * cos(m_caster->GetOrientation());
                 float fy = m_caster->GetPositionY() + dis * sin(m_caster->GetOrientation());
                 // teleport a bit above terrain level to avoid falling below it
-                float fz = MapManager::Instance().GetBaseMap(m_caster->GetMapId())->GetHeight(fx,fy,m_caster->GetPositionZ(),true);
+                float fz = m_caster->GetBaseMap()->GetHeight(fx,fy,m_caster->GetPositionZ(),true);
                 if(fz <= INVALID_HEIGHT)                    // note: this also will prevent use effect in instances without vmaps height enabled
                     return SPELL_FAILED_TRY_AGAIN;
 
@@ -4990,4 +4957,48 @@ void Spell::FillAreaTargets( UnitList& TagUnitMap, float x, float y, float radiu
     CellLock<GridReadGuard> cell_lock(cell, p);
     cell_lock->Visit(cell_lock, world_notifier, *m_caster->GetMap());
     cell_lock->Visit(cell_lock, grid_notifier, *m_caster->GetMap());
+}
+
+void Spell::FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* target, float radius, bool raid, bool withPets, bool withcaster )
+{
+    Player *pTarget = target->GetCharmerOrOwnerPlayerOrPlayerItself();
+    Group *pGroup = pTarget ? pTarget->GetGroup() : NULL;
+
+    if (pGroup)
+    {
+        uint8 subgroup = pTarget->GetSubGroup();
+
+        for(GroupReference *itr = pGroup->GetFirstMember(); itr != NULL; itr = itr->next())
+        {
+            Player* Target = itr->getSource();
+
+            // IsHostileTo check duel and controlled by enemy
+            if (Target && (raid || subgroup==Target->GetSubGroup())
+                && !m_caster->IsHostileTo(Target))
+            {
+                if (Target==m_caster && withcaster ||
+                    Target!=m_caster && m_caster->IsWithinDistInMap(Target, radius))
+                    TagUnitMap.push_back(Target);
+
+                if (withPets)
+                    if (Pet* pet = Target->GetPet())
+                        if (pet==m_caster && withcaster ||
+                            pet!=m_caster && m_caster->IsWithinDistInMap(pet, radius))
+                            TagUnitMap.push_back(pet);
+            }
+        }
+    }
+    else
+    {
+        Unit* ownerOrSelf = pTarget ? pTarget : target->GetCharmerOrOwnerOrSelf();
+        if (ownerOrSelf==m_caster && withcaster ||
+            ownerOrSelf!=m_caster && m_caster->IsWithinDistInMap(ownerOrSelf, radius))
+            TagUnitMap.push_back(ownerOrSelf);
+
+        if (withPets)
+            if (Pet* pet = ownerOrSelf->GetPet())
+                if (pet==m_caster && withcaster ||
+                    pet!=m_caster && m_caster->IsWithinDistInMap(pet, radius))
+                    TagUnitMap.push_back(pet);
+    }
 }
