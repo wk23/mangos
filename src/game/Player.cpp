@@ -424,9 +424,6 @@ Player::Player (WorldSession *session): Unit(), m_reputationMgr(this)
     m_summon_y = 0.0f;
     m_summon_z = 0.0f;
 
-    //Default movement to run mode
-    m_unit_movement_flags = 0;
-
     m_miniPet = 0;
     m_bgAfkReportedTimer = 0;
     m_contestedPvPTimer = 0;
@@ -1562,7 +1559,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     }
 
     // reset movement flags at teleport, because player will continue move with these flags after teleport
-    SetUnitMovementFlags(0);
+    m_movementInfo.SetMovementFlags(MOVEMENTFLAG_NONE);
 
     if ((GetMapId() == mapid) && (!m_transport))
     {
@@ -2404,7 +2401,7 @@ void Player::InitStatsForLevel(bool reapplyMods)
     RemoveFlag( UNIT_FIELD_FLAGS,
         UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_NOT_ATTACKABLE_1 |
         UNIT_FLAG_PET_IN_COMBAT  | UNIT_FLAG_SILENCED     | UNIT_FLAG_PACIFIED         |
-        UNIT_FLAG_DISABLE_ROTATE | UNIT_FLAG_IN_COMBAT    | UNIT_FLAG_DISARMED         |
+        UNIT_FLAG_STUNNED        | UNIT_FLAG_IN_COMBAT    | UNIT_FLAG_DISARMED         |
         UNIT_FLAG_CONFUSED       | UNIT_FLAG_FLEEING      | UNIT_FLAG_NOT_SELECTABLE   |
         UNIT_FLAG_SKINNABLE      | UNIT_FLAG_MOUNT        | UNIT_FLAG_TAXI_FLIGHT      );
     SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE );   // must be set
@@ -13576,7 +13573,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     //speed collect rest bonus in offline, in logout, in tavern, city (section/in hour)
     float bubble1 = 0.125;
 
-    if((int32)fields[16].GetUInt32() > 0)
+    if(time_diff > 0)
     {
         float bubble = fields[17].GetUInt32() > 0
             ? bubble1*sWorld.getRate(RATE_REST_OFFLINE_IN_TAVERN_OR_CITY)
@@ -14778,7 +14775,7 @@ void Player::SaveToDB()
     RemoveStandFlags(UNIT_STAND_FLAGS_ALL);                 // stand flags?
     SetByteValue(UNIT_FIELD_BYTES_2, 3, 0);                 // shapeshift
     SetByteValue(UNIT_FIELD_BYTES_1, 3, 0);                 // stand flags?
-    RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
+    RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED);
     SetDisplayId(GetNativeDisplayId());
 
     bool inworld = IsInWorld();
@@ -17337,7 +17334,7 @@ void Player::SendInitialPacketsBeforeAddToMap()
 
     // set fly flag if in fly form or taxi flight to prevent visually drop at ground in showup moment
     if(HasAuraType(SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED) || isInFlight())
-        AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+        m_movementInfo.AddMovementFlag(MOVEMENTFLAG_FLYING2);
 }
 
 void Player::SendInitialPacketsAfterAddToMap()
@@ -18730,4 +18727,24 @@ void Player::RemoveAtLoginFlag( AtLoginFlags f, bool in_db_also /*= false*/ )
 
     if(in_db_also)
         CharacterDatabase.PExecute("UPDATE characters set at_login = at_login & ~ %u WHERE guid ='%u'", uint32(f), GetGUIDLow());
+}
+
+void Player::BuildTeleportAckMsg( WorldPacket *data, float x, float y, float z, float ang ) const
+{
+    data->Initialize(MSG_MOVE_TELEPORT_ACK, 41);
+    data->append(GetPackGUID());
+    *data << uint32(0);                                     // this value increments every time
+    *data << uint32(m_movementInfo.GetMovementFlags());     // movement flags
+    *data << uint8(0);                                      // 2.3.0
+    *data << uint32(getMSTime());                           // time
+    *data << x;
+    *data << y;
+    *data << z;
+    *data << ang;
+    *data << uint32(0);
+}
+
+bool Player::HasMovementFlag( MovementFlags f ) const
+{
+    return m_movementInfo.HasMovementFlag(f);
 }

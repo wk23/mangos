@@ -2976,9 +2976,9 @@ void Aura::HandleModPossessPet(bool apply, bool Real)
         return;
 
     if(apply)
-        m_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNKNOWN5);
+        pet->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_24);
     else
-        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNKNOWN5);
+        pet->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_24);
 
     ((Player*)caster)->SetFarSightGUID(apply ? m_target->GetGUID() : 0);
 }
@@ -3123,7 +3123,7 @@ void Aura::HandleFeignDeath(bool apply, bool Real)
         m_target->SendMessageToSet(&data,true);
         */
                                                             // blizz like 2.0.x
-        m_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNKNOWN6);
+        m_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);
                                                             // blizz like 2.0.x
         m_target->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
                                                             // blizz like 2.0.x
@@ -3147,7 +3147,7 @@ void Aura::HandleFeignDeath(bool apply, bool Real)
         m_target->SendMessageToSet(&data,true);
         */
                                                             // blizz like 2.0.x
-        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNKNOWN6);
+        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_UNK_29);
                                                             // blizz like 2.0.x
         m_target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
                                                             // blizz like 2.0.x
@@ -3197,16 +3197,16 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
         m_target->addUnitState(UNIT_STAT_STUNNED);
         m_target->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
-        m_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
+        m_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED);
         m_target->CastStop(m_target->GetGUID() == GetCasterGUID() ? GetId() : 0);
 
         // Creature specific
         if(m_target->GetTypeId() != TYPEID_PLAYER)
-            ((Creature*)m_target)->StopMoving();
+            m_target->StopMoving();
         else
         {
-            m_target->SetUnitMovementFlags(0);              // Clear movement flags
-            m_target->SetStandState(UNIT_STAND_STATE_STAND);
+            ((Player*)m_target)->m_movementInfo.SetMovementFlags(MOVEMENTFLAG_NONE);
+            m_target->SetStandState(UNIT_STAND_STATE_STAND);// in 1.5 client
         }
 
         WorldPacket data(SMSG_FORCE_MOVE_ROOT, 8);
@@ -3237,7 +3237,7 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             return;
 
         m_target->clearUnitState(UNIT_STAT_STUNNED);
-        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
+        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED);
 
         if(!m_target->hasUnitState(UNIT_STAT_ROOT))         // prevent allow move if have also root effect
         {
@@ -3488,10 +3488,10 @@ void Aura::HandleAuraModRoot(bool apply, bool Real)
             m_target->SendMessageToSet(&data, true);
 
             //Clear unit movement flags
-            m_target->SetUnitMovementFlags(0);
+            ((Player*)m_target)->m_movementInfo.SetMovementFlags(MOVEMENTFLAG_NONE);
         }
         else
-            ((Creature *)m_target)->StopMoving();
+            m_target->StopMoving();
     }
     else
     {
@@ -3991,11 +3991,22 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
     m_isPeriodic = apply;
     m_isTrigger = apply;
 
-    // Curse of the Plaguebringer
-    if (!apply && m_spellProto->Id == 29213 && m_removeMode!=AURA_REMOVE_BY_DISPEL)
+    if (!apply)
     {
-        // Cast Wrath of the Plaguebringer if not dispelled
-        m_target->CastSpell(m_target, 29214, true, 0, this);
+        switch(m_spellProto->Id)
+        {
+            case 29213:                                     // Curse of the Plaguebringer
+                if (m_removeMode != AURA_REMOVE_BY_DISPEL)
+                    // Cast Wrath of the Plaguebringer if not dispelled
+                    m_target->CastSpell(m_target, 29214, true, 0, this);
+                return;
+            case 42783:                                     //Wrath of the Astrom...
+                if (m_removeMode == AURA_REMOVE_BY_DEFAULT && GetEffIndex() + 1 < 3)
+                    m_target->CastSpell(m_target, m_spellProto->CalculateSimpleValue(GetEffIndex()+1), true);
+                return;
+            default:
+                break;
+        }
     }
 }
 
