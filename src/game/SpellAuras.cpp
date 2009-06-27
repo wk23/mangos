@@ -3293,10 +3293,10 @@ void Aura::HandleModStealth(bool apply, bool Real)
             if(BattleGround *bg = ((Player*)pTarget)->GetBattleGround())
                 bg->EventPlayerDroppedFlag((Player*)pTarget);
 
-		if(Real && m_target->GetTypeId()==TYPEID_PLAYER)
+        if(Real && m_target->GetTypeId()==TYPEID_PLAYER)
         {
             // remove player from the objective's active player count at stealth
-            if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+            if(OutdoorPvP *pvp = ((Player*)m_target)->GetOutdoorPvP())
                 pvp->HandlePlayerActivityChanged((Player*)m_target);
         }
 
@@ -3361,12 +3361,9 @@ void Aura::HandleModStealth(bool apply, bool Real)
                 else
                     pTarget->SetVisibility(VISIBILITY_ON);
 
-				if(pTarget->GetTypeId() == TYPEID_PLAYER)
-                {
+                if(pTarget->GetTypeId() == TYPEID_PLAYER)
                     if(OutdoorPvP * pvp = ((Player*)pTarget)->GetOutdoorPvP())
                         pvp->HandlePlayerActivityChanged((Player*)pTarget);
-                    pTarget->SendUpdateToPlayer((Player*)pTarget);
-                }
             }
 
             // apply delayed talent bonus remover at last stealth aura remove
@@ -3434,12 +3431,8 @@ void Aura::HandleInvisibility(bool apply, bool Real)
                 if(!m_target->HasAuraType(SPELL_AURA_MOD_STEALTH))
                     m_target->SetVisibility(VISIBILITY_ON);
                 if(m_target->GetTypeId() == TYPEID_PLAYER)
-                {
-                    if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                    if(OutdoorPvP *pvp = ((Player*)m_target)->GetOutdoorPvP())
                         pvp->HandlePlayerActivityChanged((Player*)m_target);
-
-                    m_target->SendUpdateToPlayer((Player*)m_target);
-                }
             }
         }
     }
