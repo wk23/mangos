@@ -1247,6 +1247,7 @@ void ObjectMgr::LoadGameobjects()
             continue;
         }
         data.go_state       = GOState(go_state);
+        data.ArtKit         = 0;
 
         data.spawnMask      = fields[14].GetUInt8();
         data.phaseMask      = fields[15].GetUInt16();
