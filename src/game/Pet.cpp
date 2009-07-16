@@ -175,8 +175,19 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
         return false;
     }
 
-    uint32 pet_number = fields[0].GetUInt32();
+    PetType pet_type = PetType(fields[22].GetUInt8());
+    if(pet_type==HUNTER_PET)
+    {
+        CreatureInfo const* creatureInfo = objmgr.GetCreatureTemplate(petentry);
+        if(!creatureInfo || !creatureInfo->isTameable())
+        {
+            delete result;
+            return false;
+        }
+    }
 
+    uint32 pet_number = fields[0].GetUInt32();
+    
     if (current && owner->IsPetNeedBeTemporaryUnsummoned())
     {
         owner->SetTemporaryUnsummonedPetNumber(pet_number);
@@ -205,7 +216,7 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
         return false;
     }
 
-    setPetType(PetType(fields[22].GetUInt8()));
+    setPetType(pet_type);
     setFaction(owner->getFaction());
     SetUInt32Value(UNIT_CREATED_BY_SPELL, summon_spell_id);
 
@@ -1000,16 +1011,19 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
     return true;
 }
 
-bool Pet::InitStatsForLevel(uint32 petlevel)
+bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
 {
     CreatureInfo const *cinfo = GetCreatureInfo();
     assert(cinfo);
 
-    Unit* owner = GetOwner();
     if(!owner)
     {
-        sLog.outError("attempt to summon pet (Entry %u) without owner! Attempt terminated.", cinfo->Entry);
-        return false;
+        owner = GetOwner();
+        if(!owner)
+        {
+            sLog.outError("attempt to summon pet (Entry %u) without owner! Attempt terminated.", cinfo->Entry);
+            return false;
+        }
     }
 
     uint32 creature_ID = (getPetType() == HUNTER_PET) ? 1 : cinfo->Entry;

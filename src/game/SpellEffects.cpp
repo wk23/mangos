@@ -1183,21 +1183,19 @@ void Spell::EffectDummy(uint32 i)
                         return;
 
                     // immediately finishes the cooldown on Frost spells
-                    const PlayerSpellMap& sp_list = ((Player *)m_caster)->GetSpellMap();
-                    for (PlayerSpellMap::const_iterator itr = sp_list.begin(); itr != sp_list.end(); ++itr)
+                    const SpellCooldowns& cm = ((Player *)m_caster)->GetSpellCooldownMap();
+                    for (SpellCooldowns::const_iterator itr = cm.begin(); itr != cm.end();)
                     {
-                        if (itr->second->state == PLAYERSPELL_REMOVED)
-                            continue;
-
-                        uint32 classspell = itr->first;
-                        SpellEntry const *spellInfo = sSpellStore.LookupEntry(classspell);
+                        SpellEntry const *spellInfo = sSpellStore.LookupEntry(itr->first);
 
                         if( spellInfo->SpellFamilyName == SPELLFAMILY_MAGE &&
                             (GetSpellSchoolMask(spellInfo) & SPELL_SCHOOL_MASK_FROST) &&
                             spellInfo->Id != 11958 && GetSpellRecoveryTime(spellInfo) > 0 )
                         {
-                            ((Player*)m_caster)->RemoveSpellCooldown(classspell, true);
+                            ((Player*)m_caster)->RemoveSpellCooldown((itr++)->first, true);
                         }
+                        else
+                            ++itr;
                     }
                     return;
                 }
@@ -1423,14 +1421,15 @@ void Spell::EffectDummy(uint32 i)
                         return;
 
                     //immediately finishes the cooldown for hunter abilities
-                    const PlayerSpellMap& sp_list = ((Player *)m_caster)->GetSpellMap();
-                    for (PlayerSpellMap::const_iterator itr = sp_list.begin(); itr != sp_list.end(); ++itr)
+                    const SpellCooldowns& cm = ((Player*)m_caster)->GetSpellCooldownMap();
+                    for (SpellCooldowns::const_iterator itr = cm.begin(); itr != cm.end();)
                     {
-                        uint32 classspell = itr->first;
-                        SpellEntry const *spellInfo = sSpellStore.LookupEntry(classspell);
+                        SpellEntry const *spellInfo = sSpellStore.LookupEntry(itr->first);
 
                         if (spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && spellInfo->Id != 23989 && GetSpellRecoveryTime(spellInfo) > 0 )
-                            ((Player*)m_caster)->RemoveSpellCooldown(classspell,true);
+                            ((Player*)m_caster)->RemoveSpellCooldown((itr++)->first,true);
+                        else
+                            ++itr;
                     }
                     return;
                 }
@@ -2851,7 +2850,7 @@ void Spell::EffectOpenLock(uint32 effIndex)
         // these objects must have been spawned by outdoorpvp!
         else if(gameObjTarget->GetGOInfo()->type == GAMEOBJECT_TYPE_GOOBER && sOutdoorPvPMgr.HandleOpenGo(player, gameObjTarget->GetGUID()))
             return;
-        lockId = gameObjTarget->GetLockId();
+        lockId = goInfo->GetLockId();
         guid = gameObjTarget->GetGUID();
     }
     else if(itemTarget)
@@ -3121,7 +3120,7 @@ void Spell::EffectSummon(uint32 i)
 
     if(!spawnCreature->IsPositionValid())
     {
-        sLog.outError("ERROR: Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError("Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
             spawnCreature->GetGUIDLow(), spawnCreature->GetEntry(), spawnCreature->GetPositionX(), spawnCreature->GetPositionY());
         delete spawnCreature;
         return;
@@ -3145,7 +3144,7 @@ void Spell::EffectSummon(uint32 i)
     spawnCreature->SetCreatorGUID(m_caster->GetGUID());
     spawnCreature->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
 
-    spawnCreature->InitStatsForLevel(level);
+    spawnCreature->InitStatsForLevel(level, m_caster);
 
     spawnCreature->GetCharmInfo()->SetPetNumber(pet_number, false);
 
@@ -3554,7 +3553,7 @@ void Spell::EffectSummonGuardian(uint32 i)
 
         if(!spawnCreature->IsPositionValid())
         {
-            sLog.outError("ERROR: Pet (guidlow %d, entry %d) not created base at creature. Suggested coordinates isn't valid (X: %f Y: %f)",
+            sLog.outError("Pet (guidlow %d, entry %d) not created base at creature. Suggested coordinates isn't valid (X: %f Y: %f)",
                 spawnCreature->GetGUIDLow(), spawnCreature->GetEntry(), spawnCreature->GetPositionX(), spawnCreature->GetPositionY());
             delete spawnCreature;
             return;
@@ -3573,7 +3572,7 @@ void Spell::EffectSummonGuardian(uint32 i)
         spawnCreature->SetCreatorGUID(m_caster->GetGUID());
         spawnCreature->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
 
-        spawnCreature->InitStatsForLevel(level);
+        spawnCreature->InitStatsForLevel(level, m_caster);
         spawnCreature->GetCharmInfo()->SetPetNumber(pet_number, false);
 
         spawnCreature->AIM_Initialize();
@@ -3949,7 +3948,7 @@ void Spell::EffectSummonPet(uint32 i)
 
     if(!NewSummon->IsPositionValid())
     {
-        sLog.outError("ERROR: Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError("Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
             NewSummon->GetGUIDLow(), NewSummon->GetEntry(), NewSummon->GetPositionX(), NewSummon->GetPositionY());
         delete NewSummon;
         return;
@@ -3988,7 +3987,7 @@ void Spell::EffectSummonPet(uint32 i)
     if(m_caster->IsPvP())
         NewSummon->SetPvP(true);
 
-    NewSummon->InitStatsForLevel(petlevel);
+    NewSummon->InitStatsForLevel(petlevel, m_caster);
     NewSummon->InitPetCreateSpells();
 
     if(NewSummon->getPetType()==SUMMON_PET)
@@ -4443,7 +4442,7 @@ void Spell::EffectSummonObjectWild(uint32 i)
         }
     }
 
-    if(uint32 linkedEntry = pGameObj->GetLinkedGameObjectEntry())
+    if(uint32 linkedEntry = pGameObj->GetGOInfo()->GetLinkedGameObjectEntry())
     {
         GameObject* linkedGO = new GameObject;
         if(linkedGO->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), linkedEntry, map,
@@ -5604,7 +5603,7 @@ void Spell::EffectSummonCritter(uint32 i)
 
     if(!critter->IsPositionValid())
     {
-        sLog.outError("ERROR: Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
+        sLog.outError("Pet (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",
             critter->GetGUIDLow(), critter->GetEntry(), critter->GetPositionX(), critter->GetPositionY());
         delete critter;
         return;
@@ -5939,7 +5938,7 @@ void Spell::EffectTransmitted(uint32 effIndex)
     data << uint64(pGameObj->GetGUID());
     m_caster->SendMessageToSet(&data,true);
 
-    if(uint32 linkedEntry = pGameObj->GetLinkedGameObjectEntry())
+    if(uint32 linkedEntry = pGameObj->GetGOInfo()->GetLinkedGameObjectEntry())
     {
         GameObject* linkedGO = new GameObject;
         if(linkedGO->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), linkedEntry, cMap,
