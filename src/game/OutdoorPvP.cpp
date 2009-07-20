@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2005-2008 MaNGOS <http://www.mangosproject.org/>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #include "OutdoorPvP.h"
 #include "OutdoorPvPMgr.h"
 #include "ObjectAccessor.h"
@@ -8,10 +26,10 @@
 #include "Group.h"
 #include "WorldPacket.h"
 
-OutdoorPvPObjective::OutdoorPvPObjective(OutdoorPvP * pvp)
+    OutdoorPvPObjective::OutdoorPvPObjective(OutdoorPvP * pvp)
 : m_PvP(pvp), m_AllianceActivePlayerCount(0), m_HordeActivePlayerCount(0),
-m_ShiftTimer(0), m_ShiftPhase(0), m_ShiftMaxPhase(0), m_OldPhase(0),
-m_State(0), m_OldState(0), m_CapturePoint(0), m_NeutralValue(0), m_ShiftMaxCaptureSpeed(0), m_CapturePointCreature(0)
+    m_ShiftTimer(0), m_ShiftPhase(0), m_ShiftMaxPhase(0), m_OldPhase(0),
+    m_State(0), m_OldState(0), m_CapturePoint(0), m_NeutralValue(0), m_ShiftMaxCaptureSpeed(0), m_CapturePointCreature(0)
 {
 }
 
@@ -544,15 +562,15 @@ void OutdoorPvPObjective::SendObjectiveComplete(uint32 id,uint64 guid)
     uint32 controlling_faction;
     switch(m_State)
     {
-    case OBJECTIVESTATE_ALLIANCE:
-        controlling_faction = ALLIANCE;
-        break;
-    case OBJECTIVESTATE_HORDE:
-        controlling_faction = HORDE;
-        break;
-    default:
-        return;
-        break;
+        case OBJECTIVESTATE_ALLIANCE:
+            controlling_faction = ALLIANCE;
+            break;
+        case OBJECTIVESTATE_HORDE:
+            controlling_faction = HORDE;
+            break;
+        default:
+            return;
+            break;
     }
 
     // send to all players present in the area
