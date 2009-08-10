@@ -91,7 +91,9 @@ pkgdata_DATA = \
 	051_8158_01_mangos_playercreateinfo_action.sql \
 	052_8072_01_characters_characters.sql \
 	052_8072_02_characters_characters.sql \
-	053_8190_01_mangos_creature_template.sql \  
+	053_8190_01_mangos_creature_template.sql \
+	054_7439_01_mangos_mangos_string.sql \
+	055_8332_01_realmd_realmcharacters.sql \
 	README
 
 ## Additional files to include when running 'make dist'
@@ -162,5 +164,7 @@ EXTRA_DIST = \
 	051_8158_01_mangos_playercreateinfo_action.sql \
 	052_8072_01_characters_characters.sql \
 	052_8072_02_characters_characters.sql \
-	053_8190_01_mangos_creature_template.sql \  
+	053_8190_01_mangos_creature_template.sql \
+	054_7439_01_mangos_mangos_string.sql \
+	055_8332_01_realmd_realmcharacters.sql \
 	README

@@ -149,6 +149,9 @@ ObjectMgr::~ObjectMgr()
     for (GuildMap::iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
         delete itr->second;
 
+    for (ArenaTeamMap::iterator itr = mArenaTeamMap.begin(); itr != mArenaTeamMap.end(); ++itr)
+        delete itr->second;
+
     for (CacheVendorItemMap::iterator itr = m_mCacheVendorItemMap.begin(); itr != m_mCacheVendorItemMap.end(); ++itr)
         itr->second.Clear();
 
@@ -494,7 +497,7 @@ void ObjectMgr::LoadCreatureTemplates()
 
         // used later for scale
         CreatureDisplayInfoEntry const* displayScaleEntry = NULL;
-        
+
         if (cInfo->DisplayID_A[0])
         {
             CreatureDisplayInfoEntry const* displayEntry = sCreatureDisplayInfoStore.LookupEntry(cInfo->DisplayID_A[0]);
@@ -6430,7 +6433,7 @@ uint8 ObjectMgr::CheckPlayerName( const std::string& name, bool create )
     uint32 strictMask = sWorld.getConfig(CONFIG_STRICT_PLAYER_NAMES);
     if(!isValidString(wname,strictMask,false,create))
         return CHAR_NAME_MIXED_LANGUAGES;
-    
+
     return CHAR_NAME_SUCCESS;
 }
 

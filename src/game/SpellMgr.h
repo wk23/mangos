@@ -37,8 +37,6 @@ class Player;
 class Spell;
 struct SpellModifier;
 
-extern SQLStorage sSpellThreatStore;
-
 // only used in code
 enum SpellCategories
 {
@@ -69,13 +67,15 @@ enum SpellFamilyNames
 };
 
 //Some SpellFamilyFlags
-#define SPELLFAMILYFLAG_ROGUE_VANISH            UI64LIT(0x000000800)
-#define SPELLFAMILYFLAG_ROGUE_STEALTH           UI64LIT(0x000400000)
-#define SPELLFAMILYFLAG_ROGUE_BACKSTAB          UI64LIT(0x000800004)
-#define SPELLFAMILYFLAG_ROGUE_SAP               UI64LIT(0x000000080)
-#define SPELLFAMILYFLAG_ROGUE_FEINT             UI64LIT(0x008000000)
-#define SPELLFAMILYFLAG_ROGUE_KIDNEYSHOT        UI64LIT(0x000200000)
-#define SPELLFAMILYFLAG_ROGUE__FINISHING_MOVE   UI64LIT(0x9003E0000)
+#define SPELLFAMILYFLAG_ROGUE_VANISH            UI64LIT(0x0000000000000800)
+#define SPELLFAMILYFLAG_ROGUE_STEALTH           UI64LIT(0x0000000000400000)
+#define SPELLFAMILYFLAG_ROGUE_BACKSTAB          UI64LIT(0x0000000000800004)
+#define SPELLFAMILYFLAG_ROGUE_SAP               UI64LIT(0x0000000000000080)
+#define SPELLFAMILYFLAG_ROGUE_FEINT             UI64LIT(0x0000000008000000)
+#define SPELLFAMILYFLAG_ROGUE_KIDNEYSHOT        UI64LIT(0x0000000000200000)
+#define SPELLFAMILYFLAG_ROGUE__FINISHING_MOVE   UI64LIT(0x00000009003E0000)
+
+#define SPELLFAMILYFLAG_PALADIN_SEALS           UI64LIT(0x000004000A000200)
 
 // Spell clasification
 enum SpellSpecific
@@ -112,7 +112,7 @@ int32 GetSpellMaxDuration(SpellEntry const *spellInfo);
 
 inline bool IsSpellHaveEffect(SpellEntry const *spellInfo, SpellEffects effect)
 {
-    for(int i= 0; i < 3; ++i)
+    for(int i = 0; i < 3; ++i)
         if(SpellEffects(spellInfo->Effect[i])==effect)
             return true;
     return false;
@@ -120,10 +120,18 @@ inline bool IsSpellHaveEffect(SpellEntry const *spellInfo, SpellEffects effect)
 
 inline bool IsSpellHaveAura(SpellEntry const *spellInfo, AuraType aura)
 {
-    for(int i= 0; i < 3; ++i)
+    for(int i = 0; i < 3; ++i)
         if(AuraType(spellInfo->EffectApplyAuraName[i])==aura)
             return true;
     return false;
+}
+
+inline bool IsSpellLastAuraEffect(SpellEntry const *spellInfo, int effecIdx)
+{
+    for(int i = effecIdx+1; i < 3; ++i)
+        if(spellInfo->EffectApplyAuraName[i])
+            return false;
+    return true;
 }
 
 bool IsNoStackAuraDueToAura(uint32 spellId_1, uint32 effIndex_1, uint32 spellId_2, uint32 effIndex_2);
@@ -132,7 +140,7 @@ inline bool IsSealSpell(SpellEntry const *spellInfo)
 {
     //Collection of all the seal family flags. No other paladin spell has any of those.
     return spellInfo->SpellFamilyName == SPELLFAMILY_PALADIN &&
-        ( spellInfo->SpellFamilyFlags & UI64LIT(0x4000A000200));
+        ( spellInfo->SpellFamilyFlags & SPELLFAMILYFLAG_PALADIN_SEALS );
 }
 
 inline bool IsElementalShield(SpellEntry const *spellInfo)
@@ -162,6 +170,44 @@ bool IsPositiveTarget(uint32 targetA, uint32 targetB);
 
 bool IsSingleTargetSpell(SpellEntry const *spellInfo);
 bool IsSingleTargetSpells(SpellEntry const *spellInfo1, SpellEntry const *spellInfo2);
+
+inline bool IsCasterSourceTarget(uint32 target)
+{
+    switch (target )
+    {
+        case TARGET_SELF:
+        case TARGET_PET:
+        case TARGET_ALL_PARTY_AROUND_CASTER:
+        case TARGET_IN_FRONT_OF_CASTER:
+        case TARGET_MASTER:
+        case TARGET_MINION:
+        case TARGET_ALL_PARTY:
+        case TARGET_ALL_PARTY_AROUND_CASTER_2:
+        case TARGET_SELF_FISHING:
+        case TARGET_TOTEM_EARTH:
+        case TARGET_TOTEM_WATER:
+        case TARGET_TOTEM_AIR:
+        case TARGET_TOTEM_FIRE:
+        case TARGET_SUMMON:
+        case TARGET_AREAEFFECT_CUSTOM_2:
+        case TARGET_RANDOM_RAID_MEMBER:
+        case TARGET_SELF2:
+        case TARGET_NONCOMBAT_PET:
+            return true;
+        default:
+            break;
+    }
+    return false;
+}
+
+inline bool IsSpellWithCasterSourceTargetsOnly(SpellEntry const* spellInfo)
+{
+    for(int i = 0; i < 3; ++i)
+        if(uint32 target = spellInfo->EffectImplicitTargetA[i])
+            if(!IsCasterSourceTarget(target))
+                return false;
+    return true;
+}
 
 inline bool IsAreaEffectTarget( Targets target )
 {
@@ -250,6 +296,17 @@ inline uint32 GetSpellMechanicMask(SpellEntry const* spellInfo, int32 effect)
     return mask;
 }
 
+inline uint32 GetAllSpellMechanicMask(SpellEntry const* spellInfo)
+{
+    uint32 mask = 0;
+    if (spellInfo->Mechanic)
+        mask |= 1<<spellInfo->Mechanic;
+    for (int i=0; i< 3; ++i)
+        if (spellInfo->EffectMechanic[i])
+            mask |= 1<<spellInfo->EffectMechanic[i];
+    return mask;
+}
+
 inline Mechanics GetEffectMechanic(SpellEntry const* spellInfo, int32 effect)
 {
     if (spellInfo->EffectMechanic[effect])
@@ -335,6 +392,7 @@ typedef UNORDERED_MAP<uint32, SpellProcEventEntry> SpellProcEventMap;
 #define ELIXIR_SHATTRATH_MASK 0x8
 
 typedef std::map<uint32, uint8> SpellElixirMap;
+typedef std::map<uint32, uint16> SpellThreatMap;
 
 // Spell script target related declarations (accessed using SpellMgr functions)
 enum SpellTargetType
@@ -536,6 +594,15 @@ class SpellMgr
                 return SPELL_GUARDIAN_ELIXIR;
             else
                 return SPELL_NORMAL;
+        }
+
+        uint16 GetSpellThreat(uint32 spellid) const
+        {
+            SpellThreatMap::const_iterator itr = mSpellThreatMap.find(spellid);
+            if(itr==mSpellThreatMap.end())
+                return 0;
+
+            return itr->second;
         }
 
         // Spell proc events
@@ -751,6 +818,7 @@ class SpellMgr
         SpellTargetPositionMap mSpellTargetPositions;
         SpellAffectMap     mSpellAffectMap;
         SpellElixirMap     mSpellElixirs;
+        SpellThreatMap     mSpellThreatMap;
         SpellProcEventMap  mSpellProcEventMap;
         SkillLineAbilityMap mSkillLineAbilityMap;
         SpellPetAuraMap     mSpellPetAuraMap;

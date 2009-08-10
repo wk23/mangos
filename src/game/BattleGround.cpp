@@ -96,14 +96,11 @@ BattleGround::~BattleGround()
     // (this is done automatically in mapmanager update, when the instance is reset after the reset time)
     int size = m_BgCreatures.size();
     for(int i = 0; i < size; ++i)
-    {
         DelCreature(i);
-    }
+
     size = m_BgObjects.size();
     for(int i = 0; i < size; ++i)
-    {
         DelObject(i);
-    }
 
     // delete creature and go respawn times
     WorldDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'",GetInstanceID());
@@ -118,6 +115,9 @@ BattleGround::~BattleGround()
             ((BattleGroundMap*)map)->SetUnload();
     // remove from bg free slot queue
     this->RemoveFromBGFreeSlotQueue();
+
+    for(BattleGroundScoreMap::const_iterator itr = m_PlayerScores.begin(); itr != m_PlayerScores.end(); ++itr)
+        delete itr->second;
 }
 
 void BattleGround::Update(uint32 diff)
@@ -198,10 +198,12 @@ void BattleGround::Update(uint32 diff)
                         sh = plr->GetMap()->GetCreature(itr->first);
                         // only for visual effect
                         if (sh)
-                            sh->CastSpell(sh, SPELL_SPIRIT_HEAL, true);   // Spirit Heal, effect 117
+                            // Spirit Heal, effect 117
+                            sh->CastSpell(sh, SPELL_SPIRIT_HEAL, true);
                     }
 
-                    plr->CastSpell(plr, SPELL_RESURRECTION_VISUAL, true);   // Resurrection visual
+                    // Resurrection visual
+                    plr->CastSpell(plr, SPELL_RESURRECTION_VISUAL, true);
                     m_ResurrectQueue.push_back(*itr2);
                 }
                 (itr->second).clear();
@@ -764,7 +766,7 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         participant = true;
     }
 
-    std::map<uint64, BattleGroundScore*>::iterator itr2 = m_PlayerScores.find(guid);
+    BattleGroundScoreMap::iterator itr2 = m_PlayerScores.find(guid);
     if(itr2 != m_PlayerScores.end())
     {
         delete itr2->second;                                // delete player's score
@@ -907,6 +909,9 @@ void BattleGround::Reset()
     m_InBGFreeSlotQueue = false;
 
     m_Players.clear();
+
+    for(BattleGroundScoreMap::const_iterator itr = m_PlayerScores.begin(); itr != m_PlayerScores.end(); ++itr)
+        delete itr->second;
     m_PlayerScores.clear();
 
     // reset BGSubclass
@@ -1078,7 +1083,7 @@ bool BattleGround::HasFreeSlots() const
 void BattleGround::UpdatePlayerScore(Player *Source, uint32 type, uint32 value)
 {
     //this procedure is called from virtual function implemented in bg subclass
-    std::map<uint64, BattleGroundScore*>::const_iterator itr = m_PlayerScores.find(Source->GetGUID());
+    BattleGroundScoreMap::const_iterator itr = m_PlayerScores.find(Source->GetGUID());
 
     if(itr == m_PlayerScores.end())                         // player not found...
         return;
@@ -1125,12 +1130,6 @@ void BattleGround::AddPlayerToResurrectQueue(uint64 npc_guid, uint64 player_guid
         return;
 
     plr->CastSpell(plr, SPELL_WAITING_FOR_RESURRECT, true);
-    SpellEntry const *spellInfo = sSpellStore.LookupEntry( SPELL_WAITING_FOR_RESURRECT );
-    if(spellInfo)
-    {
-        Aura *Aur = CreateAura(spellInfo, 0, NULL, plr);
-        plr->AddAura(Aur);
-    }
 }
 
 void BattleGround::RemovePlayerFromResurrectQueue(uint64 player_guid)
