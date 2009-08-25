@@ -168,8 +168,6 @@ struct ActionButton
 
 typedef std::map<uint8,ActionButton> ActionButtonList;
 
-typedef std::pair<uint16, uint8> CreateSpellPair;
-
 struct PlayerCreateInfoItem
 {
     PlayerCreateInfoItem(uint32 id, uint32 amount) : item_id(id), item_amount(amount) {}
@@ -201,7 +199,7 @@ struct PlayerLevelInfo
     uint8 stats[MAX_STATS];
 };
 
-typedef std::list<CreateSpellPair> PlayerCreateInfoSpells;
+typedef std::list<uint32> PlayerCreateInfoSpells;
 
 struct PlayerCreateInfoAction
 {
@@ -1126,7 +1124,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         void IncompleteQuest( uint32 quest_id );
         void RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver, bool announce = true );
         void FailQuest( uint32 quest_id );
-        void FailTimedQuest( uint32 quest_id );
         bool SatisfyQuestSkillOrClass( Quest const* qInfo, bool msg );
         bool SatisfyQuestLevel( Quest const* qInfo, bool msg );
         bool SatisfyQuestLog( bool msg );
@@ -1363,6 +1360,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void learnDefaultSpells(bool loading = false);
         void learnQuestRewardedSpells();
         void learnQuestRewardedSpells(Quest const* quest);
+        void learnSpellHighRank(uint32 spellid);
 
         uint32 GetFreeTalentPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS1); }
         void SetFreeTalentPoints(uint32 points) { SetUInt32Value(PLAYER_CHARACTER_POINTS1,points); }

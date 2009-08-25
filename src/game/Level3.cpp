@@ -963,27 +963,12 @@ bool ChatHandler::HandleUnLearnCommand(const char* args)
         return false;
 
     // number or [name] Shift-click form |color|Hspell:spell_id|h[name]|h|r
-    uint32 min_id = extractSpellIdFromLink((char*)args);
-    if(!min_id)
+    uint32 spell_id = extractSpellIdFromLink((char*)args);
+    if(!spell_id)
         return false;
 
-    // number or [name] Shift-click form |color|Hspell:spell_id|h[name]|h|r
-    char* tail = strtok(NULL,"");
-
-    uint32 max_id = extractSpellIdFromLink(tail);
-
-    if (!max_id)
-    {
-        // number or [name] Shift-click form |color|Hspell:spell_id|h[name]|h|r
-        max_id =  min_id+1;
-    }
-    else
-    {
-        if (max_id < min_id)
-            std::swap(min_id,max_id);
-
-        max_id=max_id+1;
-    }
+    char const* allStr = strtok(NULL," ");
+    bool allRanks = allStr ? (strncmp(allStr, "all", strlen(allStr)) == 0) : false;
 
     Player* target = getSelectedPlayer();
     if(!target)
@@ -993,13 +978,13 @@ bool ChatHandler::HandleUnLearnCommand(const char* args)
         return false;
     }
 
-    for(uint32 spell=min_id;spell<max_id;spell++)
-    {
-        if (target->HasSpell(spell))
-            target->removeSpell(spell);
-        else
-            SendSysMessage(LANG_FORGET_SPELL);
-    }
+    if(allRanks)
+        spell_id = spellmgr.GetFirstSpellInChain (spell_id);
+
+    if (target->HasSpell(spell_id))
+        target->removeSpell(spell_id);
+    else
+        SendSysMessage(LANG_FORGET_SPELL);
 
     return true;
 }
@@ -1757,16 +1742,6 @@ bool ChatHandler::HandleLearnAllMySpellsCommand(const char* /*args*/)
     return true;
 }
 
-static void learnAllHighRanks(Player* player, uint32 spellid)
-{
-    SpellChainMapNext const& nextMap = spellmgr.GetSpellChainNext();
-    for(SpellChainMapNext::const_iterator itr = nextMap.lower_bound(spellid); itr != nextMap.upper_bound(spellid); ++itr)
-    {
-        player->learnSpell(itr->second);
-        learnAllHighRanks(player,itr->second);
-    }
-}
-
 bool ChatHandler::HandleLearnAllMyTalentsCommand(const char* /*args*/)
 {
     Player* player = m_session->GetPlayer();
@@ -1804,11 +1779,8 @@ bool ChatHandler::HandleLearnAllMyTalentsCommand(const char* /*args*/)
         if(!spellInfo || !SpellMgr::IsSpellValid(spellInfo,m_session->GetPlayer(),false))
             continue;
 
-        // learn highest rank of talent
-        player->learnSpell(spellid);
-
-        // and learn all non-talent spell ranks (recursive by tree)
-        learnAllHighRanks(player,spellid);
+        // learn highest rank of talent and learn all non-talent spell ranks (recursive by tree)
+        player->learnSpellHighRank(spellid);
     }
 
     SendSysMessage(LANG_COMMAND_LEARN_CLASS_TALENTS);
@@ -1854,15 +1826,8 @@ bool ChatHandler::HandleLearnCommand(const char* args)
     if(!spell || !sSpellStore.LookupEntry(spell))
         return false;
 
-    if (targetPlayer->HasSpell(spell))
-    {
-        if(targetPlayer == m_session->GetPlayer())
-            SendSysMessage(LANG_YOU_KNOWN_SPELL);
-        else
-            PSendSysMessage(LANG_TARGET_KNOWN_SPELL,GetNameLink(targetPlayer).c_str());
-        SetSentErrorMessage(true);
-        return false;
-    }
+    char const* allStr = strtok(NULL," ");
+    bool allRanks = allStr ? (strncmp(allStr, "all", strlen(allStr)) == 0) : false;
 
     SpellEntry const* spellInfo = sSpellStore.LookupEntry(spell);
     if(!spellInfo || !SpellMgr::IsSpellValid(spellInfo,m_session->GetPlayer()))
@@ -1872,7 +1837,20 @@ bool ChatHandler::HandleLearnCommand(const char* args)
         return false;
     }
 
-    targetPlayer->learnSpell(spell);
+    if (!allRanks && targetPlayer->HasSpell(spell))
+    {
+        if(targetPlayer == m_session->GetPlayer())
+            SendSysMessage(LANG_YOU_KNOWN_SPELL);
+        else
+            PSendSysMessage(LANG_TARGET_KNOWN_SPELL,targetPlayer->GetName());
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if(allRanks)
+        targetPlayer->learnSpellHighRank(spell);
+    else
+        targetPlayer->learnSpell(spell);
 
     return true;
 }
@@ -2786,7 +2764,7 @@ bool ChatHandler::HandleLookupQuestCommand(const char* args)
                         }
 
                         if (m_session)
-                            PSendSysMessage(LANG_QUEST_LIST_CHAT,qinfo->GetQuestId(),qinfo->GetQuestId(),title.c_str(),statusStr);
+                            PSendSysMessage(LANG_QUEST_LIST_CHAT,qinfo->GetQuestId(),qinfo->GetQuestId(),qinfo->GetQuestLevel(),title.c_str(),statusStr);
                         else
                             PSendSysMessage(LANG_QUEST_LIST_CONSOLE,qinfo->GetQuestId(),title.c_str(),statusStr);
                         ++counter;
@@ -2820,7 +2798,7 @@ bool ChatHandler::HandleLookupQuestCommand(const char* args)
             }
 
             if (m_session)
-                PSendSysMessage(LANG_QUEST_LIST_CHAT,qinfo->GetQuestId(),qinfo->GetQuestId(),title.c_str(),statusStr);
+                PSendSysMessage(LANG_QUEST_LIST_CHAT,qinfo->GetQuestId(),qinfo->GetQuestId(),qinfo->GetQuestLevel(),title.c_str(),statusStr);
             else
                 PSendSysMessage(LANG_QUEST_LIST_CONSOLE,qinfo->GetQuestId(),title.c_str(),statusStr);
 
@@ -4501,7 +4479,7 @@ bool ChatHandler::HandleQuestAdd(const char* args)
     }
 
     // .addquest #entry'
-    // number or [name] Shift-click form |color|Hquest:quest_id|h[name]|h|r
+    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
     char* cId = extractKeyFromLink((char*)args,"Hquest");
     if(!cId)
         return false;
@@ -4555,7 +4533,7 @@ bool ChatHandler::HandleQuestRemove(const char* args)
     }
 
     // .removequest #entry'
-    // number or [name] Shift-click form |color|Hquest:quest_id|h[name]|h|r
+    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
     char* cId = extractKeyFromLink((char*)args,"Hquest");
     if(!cId)
         return false;
@@ -4605,7 +4583,7 @@ bool ChatHandler::HandleQuestComplete(const char* args)
     }
 
     // .quest complete #entry
-    // number or [name] Shift-click form |color|Hquest:quest_id|h[name]|h|r
+    // number or [name] Shift-click form |color|Hquest:quest_id:quest_level|h[name]|h|r
     char* cId = extractKeyFromLink((char*)args,"Hquest");
     if(!cId)
         return false;

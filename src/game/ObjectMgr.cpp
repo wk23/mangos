@@ -419,7 +419,7 @@ void ObjectMgr::LoadCreatureTemplates()
             CreatureInfo const* heroicInfo = GetCreatureTemplate(cInfo->HeroicEntry);
             if (!heroicInfo)
             {
-                sLog.outErrorDb("Creature (Entry: %u) have `heroic_entry`=%u but creature entry %u not exist.",cInfo->HeroicEntry,cInfo->HeroicEntry);
+                sLog.outErrorDb("Creature (Entry: %u) have `heroic_entry`=%u but creature entry %u not exist.", i, cInfo->HeroicEntry, cInfo->HeroicEntry);
                 continue;
             }
 
@@ -2143,8 +2143,8 @@ void ObjectMgr::LoadPlayerInfo()
 
     // Load playercreate spells
     {
-        //                                                0     1      2      3
-        QueryResult *result = WorldDatabase.Query("SELECT race, class, Spell, Active FROM playercreateinfo_spell");
+        //                                                0     1      2
+        QueryResult *result = WorldDatabase.Query("SELECT race, class, Spell FROM playercreateinfo_spell");
 
         uint32 count = 0;
 
@@ -2179,7 +2179,7 @@ void ObjectMgr::LoadPlayerInfo()
                 }
 
                 PlayerInfo* pInfo = &playerInfo[current_race][current_class];
-                pInfo->spell.push_back(CreateSpellPair(fields[2].GetUInt32(), fields[3].GetUInt8()));
+                pInfo->spell.push_back(fields[2].GetUInt32());
 
                 bar.step();
                 ++count;
@@ -7571,7 +7571,7 @@ void ObjectMgr::CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids)
                 case SCRIPT_COMMAND_TALK:
                 {
                     if(!GetMangosStringLocale (itrM->second.dataint))
-                        sLog.outErrorDb( "Table `db_script_string` not has string id  %u used db script (ID: %s)", itrM->second.dataint, itrMM->first);
+                        sLog.outErrorDb( "Table `db_script_string` not has string id  %u used db script (ID: %u)", itrM->second.dataint, itrMM->first);
 
                     if(ids.count(itrM->second.dataint))
                         ids.erase(itrM->second.dataint);

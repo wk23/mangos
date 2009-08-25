@@ -1066,8 +1066,8 @@ void Player::Update( uint32 p_time )
             if( q_status.m_timer <= p_time )
             {
                 uint32 quest_id  = *iter;
-                ++iter;                                     // current iter will be removed in FailTimedQuest
-                FailTimedQuest( quest_id );
+                ++iter;                                     // current iter will be removed in FailQuest
+                FailQuest(quest_id);
             }
             else
             {
@@ -2878,8 +2878,8 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
     {
         if(!itr2->second.autoLearned)
         {
-            if(loading)                                     // at spells loading, no output, but allow save
-                addSpell(itr2->second.spell,true,true,loading);
+            if(loading || !itr2->second.active)             // at spells loading, no output, but allow save
+                addSpell(itr2->second.spell,itr2->second.active,true,loading);
             else                                            // at normal learning
                 learnSpell(itr2->second.spell);
         }
@@ -6190,7 +6190,7 @@ void Player::_ApplyItemMods(Item *item, uint8 slot,bool apply)
 
 void Player::_ApplyItemBonuses(ItemPrototype const *proto,uint8 slot,bool apply)
 {
-    if(slot >= INVENTORY_SLOT_BAG_END || !proto)
+    if (slot >= INVENTORY_SLOT_BAG_END || !proto)
         return;
 
     for (int i = 0; i < MAX_ITEM_PROTO_STATS; ++i)
@@ -12154,41 +12154,30 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
     }
 }
 
-void Player::FailQuest( uint32 quest_id )
+void Player::FailQuest(uint32 questId)
 {
-    if( quest_id )
+    if (Quest const* pQuest = objmgr.GetQuestTemplate(questId))
     {
-        IncompleteQuest( quest_id );
+        SetQuestStatus(questId, QUEST_STATUS_FAILED);
 
-        uint16 log_slot = FindQuestSlot( quest_id );
-        if( log_slot < MAX_QUEST_LOG_SIZE)
+        uint16 log_slot = FindQuestSlot(questId);
+
+        if (log_slot < MAX_QUEST_LOG_SIZE)
         {
-            SetQuestSlotTimer(log_slot, 1 );
-            SetQuestSlotState(log_slot,QUEST_STATE_FAIL);
+            SetQuestSlotTimer(log_slot, 1);
+            SetQuestSlotState(log_slot, QUEST_STATE_FAIL);
         }
-        SendQuestFailed( quest_id );
-    }
-}
 
-void Player::FailTimedQuest( uint32 quest_id )
-{
-    if( quest_id )
-    {
-        QuestStatusData& q_status = mQuestStatus[quest_id];
-
-        q_status.m_timer = 0;
-        if (q_status.uState != QUEST_NEW)
-            q_status.uState = QUEST_CHANGED;
-
-        IncompleteQuest( quest_id );
-
-        uint16 log_slot = FindQuestSlot( quest_id );
-        if( log_slot < MAX_QUEST_LOG_SIZE)
+        if (pQuest->HasFlag(QUEST_MANGOS_FLAGS_TIMED))
         {
-            SetQuestSlotTimer(log_slot, 1 );
-            SetQuestSlotState(log_slot,QUEST_STATE_FAIL);
+            QuestStatusData& q_status = mQuestStatus[questId];
+
+            q_status.m_timer = 0;
+
+            SendQuestTimerFailed(questId);
         }
-        SendQuestTimerFailed( quest_id );
+        else
+            SendQuestFailed(questId);
     }
 }
 
@@ -12637,21 +12626,22 @@ bool Player::CanShareQuest(uint32 quest_id) const
     return false;
 }
 
-void Player::SetQuestStatus( uint32 quest_id, QuestStatus status )
+void Player::SetQuestStatus(uint32 quest_id, QuestStatus status)
 {
-    Quest const* qInfo = objmgr.GetQuestTemplate(quest_id);
-    if( qInfo )
+    if (Quest const* qInfo = objmgr.GetQuestTemplate(quest_id))
     {
-        if( status == QUEST_STATUS_NONE || status == QUEST_STATUS_INCOMPLETE || status == QUEST_STATUS_COMPLETE )
+        if (status == QUEST_STATUS_NONE || status == QUEST_STATUS_INCOMPLETE || status == QUEST_STATUS_COMPLETE || status == QUEST_STATUS_FAILED)
         {
-            if( qInfo->HasFlag( QUEST_MANGOS_FLAGS_TIMED ) )
+            if (qInfo->HasFlag(QUEST_MANGOS_FLAGS_TIMED))
                 m_timedquests.erase(qInfo->GetQuestId());
         }
 
         QuestStatusData& q_status = mQuestStatus[quest_id];
 
         q_status.m_status = status;
-        if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
+
+        if (q_status.uState != QUEST_NEW)
+            q_status.uState = QUEST_CHANGED;
     }
 
     UpdateForQuestsGO();
@@ -14389,15 +14379,19 @@ void Player::_LoadQuestStatus(QueryResult *result)
                 questStatusData.uState = QUEST_UNCHANGED;
 
                 // add to quest log
-                if( slot < MAX_QUEST_LOG_SIZE &&
-                    ( questStatusData.m_status == QUEST_STATUS_INCOMPLETE ||
-                    questStatusData.m_status == QUEST_STATUS_COMPLETE &&
-                    (!questStatusData.m_rewarded || pQuest->IsDaily()) ) )
+                if (slot < MAX_QUEST_LOG_SIZE &&
+                    ((questStatusData.m_status == QUEST_STATUS_INCOMPLETE ||
+                    questStatusData.m_status == QUEST_STATUS_COMPLETE ||
+                    questStatusData.m_status == QUEST_STATUS_FAILED) &&
+                    (!questStatusData.m_rewarded || pQuest->IsDaily())))
                 {
                     SetQuestSlot(slot, quest_id, quest_time);
 
-                    if(questStatusData.m_status == QUEST_STATUS_COMPLETE)
+                    if (questStatusData.m_status == QUEST_STATUS_COMPLETE)
                         SetQuestSlotState(slot, QUEST_STATE_COMPLETE);
+
+                    if (questStatusData.m_status == QUEST_STATUS_FAILED)
+                        SetQuestSlotState(slot, QUEST_STATE_FAIL);
 
                     for(uint8 idx = 0; idx < QUEST_OBJECTIVES_COUNT; ++idx)
                         if(questStatusData.m_creatureOrGOcount[idx])
@@ -16277,13 +16271,15 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
         if( m_ShapeShiftFormSpellId && m_form != FORM_BATTLESTANCE && m_form != FORM_BERSERKERSTANCE && m_form != FORM_DEFENSIVESTANCE && m_form != FORM_SHADOW )
             RemoveAurasDueToSpell(m_ShapeShiftFormSpellId);
 
-        if(m_currentSpells[CURRENT_GENERIC_SPELL] && m_currentSpells[CURRENT_GENERIC_SPELL]->m_spellInfo->Id != spellid)
-            InterruptSpell(CURRENT_GENERIC_SPELL,false);
+        if (Spell* spell = GetCurrentSpell(CURRENT_GENERIC_SPELL))
+            if (spell->m_spellInfo->Id != spellid)
+                InterruptSpell(CURRENT_GENERIC_SPELL,false);
 
         InterruptSpell(CURRENT_AUTOREPEAT_SPELL,false);
 
-        if(m_currentSpells[CURRENT_CHANNELED_SPELL] && m_currentSpells[CURRENT_CHANNELED_SPELL]->m_spellInfo->Id != spellid)
-            InterruptSpell(CURRENT_CHANNELED_SPELL,true);
+        if (Spell* spell = GetCurrentSpell(CURRENT_CHANNELED_SPELL))
+            if (spell->m_spellInfo->Id != spellid)
+                InterruptSpell(CURRENT_CHANNELED_SPELL,true);
     }
 
     uint32 sourcenode = nodes[0];
@@ -17521,18 +17517,14 @@ void Player::learnDefaultSpells(bool loading)
 {
     // learn default race/class spells
     PlayerInfo const *info = objmgr.GetPlayerInfo(getRace(),getClass());
-    PlayerCreateInfoSpells::const_iterator spell_itr;
-    for (spell_itr = info->spell.begin(); spell_itr!=info->spell.end(); ++spell_itr)
+    for (PlayerCreateInfoSpells::const_iterator itr = info->spell.begin(); itr!=info->spell.end(); ++itr)
     {
-        uint32 tspell = spell_itr->first;
-        if (tspell)
-        {
-            sLog.outDebug("PLAYER: Adding initial spell, id = %u",tspell);
-            if(loading || !spell_itr->second)               // not care about passive spells or loading case
-                addSpell(tspell,spell_itr->second);
-            else                                            // but send in normal spell in game learn case
-                learnSpell(tspell);
-        }
+        uint32 tspell = *itr;
+        sLog.outDebug("PLAYER (Class: %u Race: %u): Adding initial spell, id = %u",uint32(getClass()),uint32(getRace()), tspell);
+        if(loading)                                         // will send in INITIAL_SPELLS in list anyway
+            addSpell(tspell,true);
+        else                                                // but send in normal spell in game learn case
+            learnSpell(tspell);
     }
 }
 
@@ -18014,11 +18006,9 @@ void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
 
     // currently casted spells can be dependent from item
     for (uint32 i = 0; i < CURRENT_MAX_SPELL; ++i)
-    {
-        if( m_currentSpells[i] && m_currentSpells[i]->getState()!=SPELL_STATE_DELAYED &&
-            !HasItemFitToSpellReqirements(m_currentSpells[i]->m_spellInfo,pItem) )
-            InterruptSpell(i);
-    }
+        if (Spell* spell = GetCurrentSpell(CurrentSpellTypes(i)))
+            if (spell->getState()!=SPELL_STATE_DELAYED && !HasItemFitToSpellReqirements(spell->m_spellInfo,pItem) )
+                InterruptSpell(CurrentSpellTypes(i));
 }
 
 uint32 Player::GetResurrectionSpellId()
@@ -18832,3 +18822,13 @@ bool Player::HasMovementFlag( MovementFlags f ) const
 {
     return m_movementInfo.HasMovementFlag(f);
 }
+
+void Player::learnSpellHighRank(uint32 spellid)
+{
+    learnSpell(spellid);
+
+    SpellChainMapNext const& nextMap = spellmgr.GetSpellChainNext();
+    for(SpellChainMapNext::const_iterator itr = nextMap.lower_bound(spellid); itr != nextMap.upper_bound(spellid); ++itr)
+        learnSpellHighRank(itr->second);
+}
+

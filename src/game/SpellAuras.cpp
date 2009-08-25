@@ -2026,6 +2026,21 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         bg->RemovePlayerFromResurrectQueue(m_target->GetGUID());
                 return;
             }
+            case 36730:                                     // Flame Strike
+            {
+                m_target->CastSpell(m_target, 36731, true, NULL, this);
+                return;
+            }
+            case 44191:                                     // Flame Strike
+            {
+                if (m_target->GetMap()->IsDungeon())
+                {
+                    uint32 spellId = m_target->GetMap()->IsHeroic() ? 46163 : 44190;
+
+                    m_target->CastSpell(m_target, spellId, true, NULL, this);
+                }
+                return;
+            }
             case 45934:                                     // Dark Fiend
             {
                 // Kill target if dispelled
@@ -2117,6 +2132,21 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             owner->CastSpell(owner, 19704, true);
                         else
                             ((Player*)owner)->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT, true);
+                    }
+                    return;
+                }
+                //Dragonmaw Illusion
+                case 40214 :
+                {
+                    if(apply)
+                    {
+                        m_target->CastSpell(m_target, 40216, true);
+                        m_target->CastSpell(m_target, 42016, true);
+                    }
+                    else
+                    {
+                        m_target->RemoveAurasDueToSpell(40216);
+                        m_target->RemoveAurasDueToSpell(42016);
                     }
                     return;
                 }
@@ -2389,6 +2419,10 @@ void Aura::HandleAuraFeatherFall(bool apply, bool Real)
     data.append(m_target->GetPackGUID());
     data << uint32(0);
     m_target->SendMessageToSet(&data, true);
+
+    // start fall from current height
+    if(!apply && m_target->GetTypeId() == TYPEID_PLAYER)
+        ((Player*)m_target)->SetFallInformation(0, m_target->GetPositionZ());
 }
 
 void Aura::HandleAuraHover(bool apply, bool Real)
@@ -2521,10 +2555,12 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             {
                 SpellEntry const* aurSpellInfo = (*iter)->GetSpellProto();
 
+                uint32 aurMechMask = GetAllSpellMechanicMask(aurSpellInfo);
+
                 // If spell that caused this aura has Croud Control or Daze effect
-                if((GetAllSpellMechanicMask(aurSpellInfo) & MECHANIC_NOT_REMOVED_BY_SHAPESHIFT) ||
-                    // some Daze spells have these parameters instead of MECHANIC_DAZE
-                    (aurSpellInfo->SpellIconID == 15 && aurSpellInfo->Dispel == 0))
+                if((aurMechMask & MECHANIC_NOT_REMOVED_BY_SHAPESHIFT) ||
+                    // some Daze spells have these parameters instead of MECHANIC_DAZE (skip snare spells)
+                    aurSpellInfo->SpellIconID == 15 && aurSpellInfo->Dispel == 0 && (aurMechMask & (1 << MECHANIC_SNARE))==0)
                 {
                     ++iter;
                     continue;
@@ -3194,8 +3230,8 @@ void Aura::HandleFeignDeath(bool apply, bool Real)
         m_target->CombatStop();
 
         // prevent interrupt message
-        if(m_caster_guid==m_target->GetGUID() && m_target->m_currentSpells[CURRENT_GENERIC_SPELL])
-            m_target->m_currentSpells[CURRENT_GENERIC_SPELL]->finish();
+        if (m_caster_guid==m_target->GetGUID())
+            m_target->FinishSpell(CURRENT_GENERIC_SPELL,false);
         m_target->InterruptNonMeleeSpells(true);
         m_target->getHostilRefManager().deleteReferences();
     }
@@ -3580,9 +3616,11 @@ void Aura::HandleAuraModSilence(bool apply, bool Real)
     {
         m_target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SILENCED);
         // Stop cast only spells vs PreventionType == SPELL_PREVENTION_TYPE_SILENCE
-        for (uint32 i = CURRENT_MELEE_SPELL; i < CURRENT_MAX_SPELL;i++)
-            if (m_target->m_currentSpells[i] && m_target->m_currentSpells[i]->m_spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
-                m_target->InterruptSpell(i,false);          // Stop spells on prepare or casting state
+        for (uint32 i = CURRENT_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
+            if (Spell* spell = m_target->GetCurrentSpell(CurrentSpellTypes(i)))
+                if(spell->m_spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
+                    // Stop spells on prepare or casting state
+                    m_target->InterruptSpell(CurrentSpellTypes(i), false);
 
         switch (GetId())
         {
@@ -5208,58 +5246,62 @@ void Aura::HandleModPowerCost(bool apply, bool Real)
 
 void Aura::HandleShapeshiftBoosts(bool apply)
 {
-    uint32 spellId = 0;
+    uint32 spellId1 = 0;
     uint32 spellId2 = 0;
     uint32 HotWSpellId = 0;
 
-    switch(GetModifier()->m_miscvalue)
+    uint32 form = GetModifier()->m_miscvalue;
+
+    switch(form)
     {
         case FORM_CAT:
-            spellId = 3025;
+            spellId1 = 3025;
             HotWSpellId = 24900;
             break;
         case FORM_TREE:
-            spellId = 5420;
+            spellId1 = 5420;
+            spellId2 = 34123;
             break;
         case FORM_TRAVEL:
-            spellId = 5419;
+            spellId1 = 5419;
             break;
         case FORM_AQUA:
-            spellId = 5421;
+            spellId1 = 5421;
             break;
         case FORM_BEAR:
-            spellId = 1178;
+            spellId1 = 1178;
             spellId2 = 21178;
             HotWSpellId = 24899;
             break;
         case FORM_DIREBEAR:
-            spellId = 9635;
+            spellId1 = 9635;
             spellId2 = 21178;
             HotWSpellId = 24899;
             break;
         case FORM_BATTLESTANCE:
-            spellId = 21156;
+            spellId1 = 21156;
             break;
         case FORM_DEFENSIVESTANCE:
-            spellId = 7376;
+            spellId1 = 7376;
             break;
         case FORM_BERSERKERSTANCE:
-            spellId = 7381;
+            spellId1 = 7381;
             break;
         case FORM_MOONKIN:
-            spellId = 24905;
+            spellId1 = 24905;
             // aura from effect trigger spell
             spellId2 = 24907;
             break;
         case FORM_FLIGHT:
-            spellId = 33948;
+            spellId1 = 33948;
+            spellId2 = 34764;
             break;
         case FORM_FLIGHT_EPIC:
-            spellId  = 40122;
+            spellId1 = 40122;
             spellId2 = 40121;
             break;
         case FORM_SPIRITOFREDEMPTION:
-            spellId  = 27792;
+            spellId1 = 27792;
             spellId2 = 27795;                               // must be second, this important at aura remove to prevent to early iterator invalidation.
             break;
         case FORM_GHOSTWOLF:
@@ -5269,38 +5311,36 @@ void Aura::HandleShapeshiftBoosts(bool apply)
         case FORM_STEALTH:
         case FORM_CREATURECAT:
         case FORM_CREATUREBEAR:
-            spellId = 0;
+            spellId1 = 0;
             break;
     }
 
-    uint32 form = GetModifier()->m_miscvalue-1;
-
     if(apply)
     {
-        if (spellId) m_target->CastSpell(m_target, spellId, true, NULL, this );
+        if (spellId1) m_target->CastSpell(m_target, spellId1, true, NULL, this );
         if (spellId2) m_target->CastSpell(m_target, spellId2, true, NULL, this);
 
-        if(m_target->GetTypeId() == TYPEID_PLAYER)
+        if (m_target->GetTypeId() == TYPEID_PLAYER)
         {
             const PlayerSpellMap& sp_list = ((Player *)m_target)->GetSpellMap();
             for (PlayerSpellMap::const_iterator itr = sp_list.begin(); itr != sp_list.end(); ++itr)
             {
-                if(itr->second->state == PLAYERSPELL_REMOVED) continue;
-                if(itr->first==spellId || itr->first==spellId2) continue;
+                if (itr->second->state == PLAYERSPELL_REMOVED) continue;
+                if (itr->first==spellId1 || itr->first==spellId2) continue;
                 SpellEntry const *spellInfo = sSpellStore.LookupEntry(itr->first);
                 if (!spellInfo || !(spellInfo->Attributes & (SPELL_ATTR_PASSIVE | (1<<7))))
                     continue;
-                if (spellInfo->Stances & (1<<form))
+                if (spellInfo->Stances & (1<<(form-1)))
                     m_target->CastSpell(m_target, itr->first, true, NULL, this);
             }
             //LotP
             if (((Player*)m_target)->HasSpell(17007))
             {
                 SpellEntry const *spellInfo = sSpellStore.LookupEntry(24932);
-                if (spellInfo && spellInfo->Stances & (1<<form))
+                if (spellInfo && spellInfo->Stances & (1<<(form-1)))
                     m_target->CastSpell(m_target, 24932, true, NULL, this);
             }
-            // HotW
+            // Heart of the Wild
             if (HotWSpellId)
             {
                 Unit::AuraList const& mModTotalStatPct = m_target->GetAurasByType(SPELL_AURA_MOD_TOTAL_STAT_PERCENTAGE);
@@ -5321,7 +5361,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
     }
     else
     {
-        m_target->RemoveAurasDueToSpell(spellId);
+        m_target->RemoveAurasDueToSpell(spellId1);
         m_target->RemoveAurasDueToSpell(spellId2);
 
         Unit::AuraMap& tAuras = m_target->GetAuras();
@@ -5338,9 +5378,6 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             }
         }
     }
-
-    /*double healthPercentage = (double)m_target->GetHealth() / (double)m_target->GetMaxHealth();
-    m_target->SetHealth(uint32(ceil((double)m_target->GetMaxHealth() * healthPercentage)));*/
 }
 
 void Aura::HandleSpellSpecificBoosts(bool apply)
@@ -5392,15 +5429,18 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
             return;
     }
 
+    // prevent aura deletion, specially in multi-boost case
+    SetInUse(true);
+
     if (apply)
     {
         if (spellId1)
             m_target->CastSpell(m_target, spellId1, true, NULL, this);
-        if (spellId2)
+        if (spellId2 && !IsDeleted())
             m_target->CastSpell(m_target, spellId2, true, NULL, this);
-        if (spellId3)
+        if (spellId3 && !IsDeleted())
             m_target->CastSpell(m_target, spellId3, true, NULL, this);
-        if (spellId4)
+        if (spellId4 && !IsDeleted())
             m_target->CastSpell(m_target, spellId4, true, NULL, this);
     }
     else
@@ -5414,6 +5454,8 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
         if (spellId4)
             m_target->RemoveAurasByCasterSpell(spellId4, GetCasterGUID());
     }
+
+    SetInUse(false);
 }
 
 void Aura::HandleAuraEmpathy(bool apply, bool /*Real*/)
@@ -5893,13 +5935,10 @@ void Aura::PeriodicTick()
 
             pCaster->ProcDamageAndSpell(m_target, PROC_FLAG_PERIODIC_TICK, PROC_FLAG_TAKE_DAMAGE, new_damage, GetSpellSchoolMask(GetSpellProto()), GetSpellProto());
             if (!m_target->isAlive() && pCaster->IsNonMeleeSpellCasted(false))
-            {
                 for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
-                {
-                    if (pCaster->m_currentSpells[i] && pCaster->m_currentSpells[i]->m_spellInfo->Id == GetId())
-                        pCaster->m_currentSpells[i]->cancel();
-                }
-            }
+                    if (Spell* spell = pCaster->GetCurrentSpell(CurrentSpellTypes(i)))
+                        if (spell->m_spellInfo->Id == GetId())
+                            spell->cancel();
 
 
             if(Player *modOwner = pCaster->GetSpellModOwner())
@@ -5964,15 +6003,8 @@ void Aura::PeriodicTick()
                     pCaster->RemoveAurasDueToSpell(GetId());
 
                     // finish current generic/channeling spells, don't affect autorepeat
-                    if(pCaster->m_currentSpells[CURRENT_GENERIC_SPELL])
-                    {
-                        pCaster->m_currentSpells[CURRENT_GENERIC_SPELL]->finish();
-                    }
-                    if(pCaster->m_currentSpells[CURRENT_CHANNELED_SPELL])
-                    {
-                        pCaster->m_currentSpells[CURRENT_CHANNELED_SPELL]->SendChannelUpdate(0);
-                        pCaster->m_currentSpells[CURRENT_CHANNELED_SPELL]->finish();
-                    }
+                    pCaster->FinishSpell(CURRENT_GENERIC_SPELL);
+                    pCaster->FinishSpell(CURRENT_CHANNELED_SPELL);
                 }
                 else
                 {
