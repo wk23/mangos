@@ -2609,6 +2609,7 @@ enum MailResponseResult
 enum SavedTimerTypes
 {
     SAVED_TIMER_ARENA_DISTRIBUTION = 1,
+    SAVED_TIMER_NEXT_DAILY_RESET   = 2,
 };
 
 #endif
