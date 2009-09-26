@@ -117,7 +117,7 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
         {
             WorldPacket data(SMSG_GROUP_JOINED_BATTLEGROUND, 4);
             data << uint32(0xFFFFFFFE);
-            _player->GetSession()->SendPacket(&data);
+            _player->SendDirectMessage(&data);
             return;
         }
         // check if already in queue
@@ -160,9 +160,9 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
             WorldPacket data;
                                                             // send status packet (in queue)
             sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, queueSlot, STATUS_WAIT_QUEUE, avgTime, 0, ginfo->ArenaType);
-            member->GetSession()->SendPacket(&data);
+            member->SendDirectMessage(&data);
             sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, bgTypeId);
-            member->GetSession()->SendPacket(&data);
+            member->SendDirectMessage(&data);
             sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddPlayer(member, ginfo);
             sLog.outDebug("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,member->GetGUIDLow(), member->GetName());
         }
@@ -404,7 +404,7 @@ void WorldSession::HandleBattleFieldPortOpcode( WorldPacket &recv_data )
                 //send bg command result to show nice message
                 WorldPacket data2(SMSG_GROUP_JOINED_BATTLEGROUND, 4);
                 data2 << uint32(0xFFFFFFFE);
-                _player->GetSession()->SendPacket(&data2);
+                _player->SendDirectMessage(&data2);
                 action = 0;
                 sLog.outDebug("Battleground: player %s (%u) has a deserter debuff, do not port him to battleground!", _player->GetName(), _player->GetGUIDLow());
             }
@@ -439,7 +439,7 @@ void WorldSession::HandleBattleFieldPortOpcode( WorldPacket &recv_data )
                 }
 
                 sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, queueSlot, STATUS_IN_PROGRESS, 0, bg->GetStartTime(), bg->GetArenaType());
-                _player->GetSession()->SendPacket(&data);
+                _player->SendDirectMessage(&data);
                 // remove battleground queue status from BGmgr
                 sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].RemovePlayer(_player->GetGUID(), false);
                 // this is still needed here if battleground "jumping" shouldn't add deserter debuff
@@ -736,9 +736,9 @@ void WorldSession::HandleBattlemasterJoinArena( WorldPacket & recv_data )
             WorldPacket data;
             // send status packet (in queue)
             sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, queueSlot, STATUS_WAIT_QUEUE, avgTime, 0, arenatype);
-            member->GetSession()->SendPacket(&data);
+            member->SendDirectMessage(&data);
             sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, bgTypeId);
-            member->GetSession()->SendPacket(&data);
+            member->SendDirectMessage(&data);
             sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddPlayer(member, ginfo);
             sLog.outDebug("Battleground: player joined queue for arena as group bg queue type %u bg type %u: GUID %u, NAME %s",bgQueueTypeId,bgTypeId,member->GetGUIDLow(), member->GetName());
         }

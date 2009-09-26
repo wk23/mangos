@@ -461,7 +461,7 @@ void ArenaTeam::BroadcastPacket(WorldPacket *packet)
     {
         Player *player = objmgr.GetPlayer(itr->guid);
         if(player)
-            player->GetSession()->SendPacket(packet);
+            player->SendDirectMessage(packet);
     }
 }
 
