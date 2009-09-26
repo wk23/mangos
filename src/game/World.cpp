@@ -92,6 +92,7 @@ World::World()
     m_resultQueue = NULL;
     m_NextDailyQuestReset = 0;
     m_scheduledScripts = 0;
+    m_NextUpdateHonorFieldsTime = 0;
 
     m_defaultDbcLocale = LOCALE_enUS;
     m_availableDbcLocaleMask = 0;
@@ -1481,6 +1482,9 @@ void World::SetInitialWorldSettings()
     sLog.outString("Calculate next daily quest reset time..." );
     InitDailyQuestResetTime();
 
+    sLog.outString("Calculate next update honor fields time..." );
+    InitUpdateHonorFieldsTime();
+
     sLog.outString("Starting objects Pooling system..." );
     poolhandler.Initialize();
 
@@ -1552,6 +1556,13 @@ void World::Update(uint32 diff)
     {
         ResetDailyQuests();
         m_NextDailyQuestReset += DAY;
+    }
+
+    /// Handle update honor fields time
+    if(m_gameTime > m_NextUpdateHonorFieldsTime)
+    {
+        UpdateHonorFields();
+        m_NextUpdateHonorFieldsTime += DAY;
     }
 
     /// <ul><li> Handle auctions when the timer has passed
@@ -2082,6 +2093,24 @@ void World::_UpdateRealmCharCount(QueryResult *resultCharCount, uint32 accountId
         loginDatabase.PExecute("DELETE FROM realmcharacters WHERE acctid= '%d' AND realmid = '%d'", accountId, realmID);
         loginDatabase.PExecute("INSERT INTO realmcharacters (numchars, acctid, realmid) VALUES (%u, %u, %u)", charCount, accountId, realmID);
     }
+}
+
+void World::InitUpdateHonorFieldsTime()
+{
+    tm localTm = *localtime(&GetGameTime());
+    localTm.tm_hour = 0;
+    localTm.tm_min  = 0;
+    localTm.tm_sec  = 0;
+    time_t m_NextUpdateHonorFieldsTime = mktime(&localTm)+DAY; // gets updated 0:00 on next day
+}
+
+void World::UpdateHonorFields()
+{
+    //updates the honorfield for all online players
+    for(SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+        if(itr->second->GetPlayer())
+            itr->second->GetPlayer()->UpdateHonorFields(m_NextUpdateHonorFieldsTime-(1+DAY));
+                //-(1+DAY) to update this day
 }
 
 void World::InitDailyQuestResetTime()

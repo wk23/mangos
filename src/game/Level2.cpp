@@ -3667,7 +3667,7 @@ bool ChatHandler::HandleHonorUpdateCommand(const char* /*args*/)
     if (HasLowerSecurity(target, 0))
         return false;
 
-    target->UpdateHonorFields();
+    target->UpdateHonorFields(0);
     return true;
 }
 

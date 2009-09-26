@@ -1846,7 +1846,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /***                  PVP SYSTEM                       ***/
         /*********************************************************/
         void UpdateArenaFields();
-        void UpdateHonorFields();
+        void UpdateHonorFields(time_t lastupdate);
         bool RewardHonor(Unit *pVictim, uint32 groupsize, float honor = -1);
         uint32 GetHonorPoints() { return GetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY); }
         uint32 GetArenaPoints() { return GetUInt32Value(PLAYER_FIELD_ARENA_CURRENCY); }
@@ -2309,8 +2309,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         /*********************************************************/
         /***                  HONOR SYSTEM                     ***/
         /*********************************************************/
-        time_t m_lastHonorUpdateTime;
-
         void outDebugValues() const;
         uint64 m_lootGuid;
 

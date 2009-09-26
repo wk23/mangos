@@ -522,6 +522,8 @@ class World
         void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
         char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
 
+        time_t GetNextUpdateHonorFieldsTime() { return m_NextUpdateHonorFieldsTime; }
+
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -529,6 +531,9 @@ class World
 
         void InitDailyQuestResetTime();
         void ResetDailyQuests();
+
+        void InitUpdateHonorFieldsTime();
+        void UpdateHonorFields();
     private:
         static volatile bool m_stopEvent;
         static uint8 m_ExitCode;
@@ -577,6 +582,9 @@ class World
 
         // next daily quests reset time
         time_t m_NextDailyQuestReset;
+
+        // next update honor fields time
+        time_t m_NextUpdateHonorFieldsTime;
 
         //Player Queue
         Queue m_QueuedPlayer;
