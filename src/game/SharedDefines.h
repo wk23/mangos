@@ -2606,4 +2606,9 @@ enum MailResponseResult
     MAIL_ERR_ITEM_HAS_EXPIRED          = 21,
 };
 
+enum SavedTimerTypes
+{
+    SAVED_TIMER_ARENA_DISTRIBUTION = 1,
+};
+
 #endif
