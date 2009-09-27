@@ -24,6 +24,7 @@
 #include "ObjectAccessor.h"
 #include "Player.h"
 #include "Chat.h"
+#include "Timer.h"
 
 void WorldSession::SendGMTicketGetTicket(uint32 status, char const* text)
 {

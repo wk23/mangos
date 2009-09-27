@@ -36,6 +36,7 @@
 #include "AchievementMgr.h"
 #include "ReputationMgr.h"
 #include "BattleGround.h"
+#include "Timer.h"
 
 #include<string>
 #include<vector>

@@ -26,6 +26,7 @@
 #include "LootMgr.h"
 #include "Database/DatabaseEnv.h"
 #include "Cell.h"
+#include "Timer.h"
 
 #include <list>
 

@@ -35,6 +35,7 @@
 #include "InstanceData.h"
 #include "BattleGround.h"
 #include "Util.h"
+#include "Timer.h"
 
 GameObject::GameObject() : WorldObject()
 {

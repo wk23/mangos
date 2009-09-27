@@ -40,6 +40,7 @@
 #include <fstream>
 #include <map>
 #include "GlobalEvents.h"
+#include "Timer.h"
 
 #include "TargetedMovementGenerator.h"                      // for HandleNpcUnFollowCommand
 

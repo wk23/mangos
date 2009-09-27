@@ -37,6 +37,7 @@
 #include "Util.h"
 #include "ArenaTeam.h"
 #include "Language.h"
+#include "Timer.h"
 
 class LoginQueryHolder : public SqlQueryHolder
 {

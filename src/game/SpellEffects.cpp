@@ -54,6 +54,7 @@
 #include "ScriptCalls.h"
 #include "SkillDiscovery.h"
 #include "Formulas.h"
+#include "Timer.h"
 
 pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
 {

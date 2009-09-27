@@ -25,6 +25,7 @@
 #include "Log.h"
 #include "MapManager.h"
 #include "Policies/SingletonImp.h"
+#include "Timer.h"
 
 INSTANTIATE_SINGLETON_1(GameEventMgr);
 

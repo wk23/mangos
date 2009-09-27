@@ -45,6 +45,7 @@
 #include "GridNotifiersImpl.h"
 #include "Vehicle.h"
 #include "CellImpl.h"
+#include "Timer.h"
 
 #define NULL_AURA_SLOT 0xFF
 

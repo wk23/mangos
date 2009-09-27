@@ -39,6 +39,7 @@
 #include "BattleGround.h"
 #include "Pet.h"
 #include "SocialMgr.h"
+#include "Timer.h"
 
 void WorldSession::HandleRepopRequestOpcode( WorldPacket & recv_data )
 {

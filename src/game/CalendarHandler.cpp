@@ -23,6 +23,7 @@
 #include "WorldSession.h"
 #include "Opcodes.h"
 #include "InstanceSaveMgr.h"
+#include "Timer.h"
 
 void WorldSession::HandleCalendarGetCalendar(WorldPacket &recv_data)
 {

@@ -28,6 +28,7 @@
 #include "CreatureAI.h"
 #include "Util.h"
 #include "Pet.h"
+#include "Timer.h"
 
 void WorldSession::HandlePetAction( WorldPacket & recv_data )
 {

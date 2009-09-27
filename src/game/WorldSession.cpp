@@ -37,6 +37,7 @@
 #include "MapManager.h"
 #include "SocialMgr.h"
 #include "zlib/zlib.h"
+#include "Timer.h"
 
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, AccountTypes sec, uint8 expansion, time_t mute_time, LocaleConstant locale) :

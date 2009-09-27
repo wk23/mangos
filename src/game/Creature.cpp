@@ -41,6 +41,7 @@
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
+#include "Timer.h"
 
 // apply implementation of the singletons
 #include "Policies/SingletonImp.h"

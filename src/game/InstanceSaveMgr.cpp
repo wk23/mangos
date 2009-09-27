@@ -37,6 +37,7 @@
 #include "Group.h"
 #include "InstanceData.h"
 #include "ProgressBar.h"
+#include "Timer.h"
 
 INSTANTIATE_SINGLETON_1( InstanceSaveManager );
 

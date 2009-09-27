@@ -23,6 +23,7 @@
 #include "Database/DatabaseEnv.h"
 #include "GridDefines.h"
 #include "LootMgr.h"
+#include "Timer.h"
 
 enum CorpseType
 {

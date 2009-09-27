@@ -42,6 +42,7 @@
 #include "SpellAuras.h"
 #include "Util.h"
 #include "WaypointManager.h"
+#include "Timer.h"
 
 INSTANTIATE_SINGLETON_1(ObjectMgr);
 

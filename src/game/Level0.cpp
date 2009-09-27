@@ -29,6 +29,7 @@
 #include "revision.h"
 #include "revision_nr.h"
 #include "Util.h"
+#include "Timer.h"
 
 bool ChatHandler::HandleHelpCommand(const char* args)
 {

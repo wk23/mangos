@@ -62,6 +62,7 @@
 #include "WaypointManager.h"
 #include "GMTicketMgr.h"
 #include "Util.h"
+#include "Timer.h"
 
 INSTANTIATE_SINGLETON_1( World );
 

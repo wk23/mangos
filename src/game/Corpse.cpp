@@ -24,6 +24,7 @@
 #include "Database/DatabaseEnv.h"
 #include "Opcodes.h"
 #include "GossipDef.h"
+#include "Timer.h"
 
 Corpse::Corpse(CorpseType type) : WorldObject()
 {

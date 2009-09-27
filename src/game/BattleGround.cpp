@@ -32,6 +32,7 @@
 #include "Util.h"
 #include "Formulas.h"
 #include "GridNotifiersImpl.h"
+#include "Timer.h"
 
 namespace MaNGOS
 {

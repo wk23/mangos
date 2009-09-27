@@ -28,6 +28,7 @@
 #include "Unit.h"
 #include "Language.h"
 #include "DBCStores.h"
+#include "Timer.h"
 
 enum MailShowFlags
 {

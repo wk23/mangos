@@ -22,6 +22,7 @@
 #include "Policies/Singleton.h"
 #include "Database/DatabaseEnv.h"
 #include "Util.h"
+#include "Timer.h"
 #include <map>
 
 class GMTicket

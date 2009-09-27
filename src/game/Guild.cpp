@@ -28,6 +28,7 @@
 #include "Util.h"
 #include "Language.h"
 #include "World.h"
+#include "Timer.h"
 
 Guild::Guild()
 {

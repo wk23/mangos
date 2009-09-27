@@ -58,6 +58,7 @@
 #include "Spell.h"
 #include "SocialMgr.h"
 #include "AchievementMgr.h"
+#include "Timer.h"
 
 #include <cmath>
 

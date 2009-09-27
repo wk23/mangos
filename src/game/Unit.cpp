@@ -45,6 +45,7 @@
 #include "Path.h"
 #include "Traveller.h"
 #include "VMapFactory.h"
+#include "Timer.h"
 
 #include <math.h>
 

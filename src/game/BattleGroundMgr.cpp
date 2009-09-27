@@ -41,6 +41,7 @@
 #include "World.h"
 #include "WorldPacket.h"
 #include "ProgressBar.h"
+#include "Timer.h"
 
 #include "Policies/SingletonImp.h"
 
