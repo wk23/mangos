@@ -501,7 +501,7 @@ AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntry(uint32 factionTem
 
 void AuctionHouseObject::Update()
 {
-    time_t curTime = sWorld.GetGameTime();
+    time_t curTime = sGameTime.GetGameTime();
     ///- Handle expired auctions
     AuctionEntryMap::iterator next;
     for (AuctionEntryMap::iterator itr = AuctionsMap.begin(); itr != AuctionsMap.end();itr = next)

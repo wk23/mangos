@@ -93,4 +93,25 @@ struct TimeTrackerSmall
     int32 i_expiryTime;
 };
 
+/// when we need time(NULL) precision is often not necessary - so we will cache the current time(NULL)
+/// in m_gameTime and then just access a normal variable instead of doing expensive
+/// systemcalls for time(NULL)
+class GameTime
+{
+    public:
+        /// When server started?
+        time_t const& GetStartTime() const { return m_startTime; }
+        /// What time is it?
+        time_t const& GetGameTime() const { return m_gameTime; }
+        /// Uptime (in secs)
+        uint32 GetUptime() const { return uint32(m_gameTime - m_startTime); }
+
+        void SetGameTime(void) { m_gameTime  = time(NULL); }
+        void SetStartTime(void){ m_startTime = time(NULL); }
+    protected:
+        time_t m_gameTime;
+        time_t m_startTime;
+}
+#define sGameTime MaNGOS::Singleton<GameTime>::Instance()
+
 #endif

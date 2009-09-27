@@ -89,7 +89,7 @@ bool ChatHandler::HandleServerInfoCommand(const char* /*args*/)
     uint32 queuedClientsNum = sWorld.GetQueuedSessionCount();
     uint32 maxActiveClientsNum = sWorld.GetMaxActiveSessionCount();
     uint32 maxQueuedClientsNum = sWorld.GetMaxQueuedSessionCount();
-    std::string str = secsToTimeString(sWorld.GetUptime());
+    std::string str = secsToTimeString(sGameTime.GetUptime());
 
     char const* full;
     if(m_session)

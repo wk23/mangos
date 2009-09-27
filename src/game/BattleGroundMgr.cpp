@@ -1203,10 +1203,10 @@ void BattleGroundMgr::Update(uint32 diff)
     {
         if (m_AutoDistributionTimeChecker < diff)
         {
-            if (sWorld.GetGameTime() > m_NextAutoDistributionTime)
+            if (sGameTime.GetGameTime() > m_NextAutoDistributionTime)
             {
                 DistributeArenaPoints();
-                m_NextAutoDistributionTime = time_t(sWorld.GetGameTime() + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS));
+                m_NextAutoDistributionTime = time_t(sGameTime.GetGameTime() + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS));
                 CharacterDatabase.PExecute("UPDATE saved_timer SET Timer = "I64FMTD" WHERE TimerType=%i", uint64(m_NextAutoDistributionTime), SAVED_TIMER_ARENA_DISTRIBUTION);
             }
             m_AutoDistributionTimeChecker = 600000; // check 10 minutes
@@ -1772,7 +1772,7 @@ void BattleGroundMgr::InitAutomaticArenaPointDistribution()
         if (!result)
         {
             sLog.outDebug("Battleground: Next arena point distribution time not found in SavedTimer, reseting it now.");
-            m_NextAutoDistributionTime = time_t(sWorld.GetGameTime() + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS));
+            m_NextAutoDistributionTime = time_t(sGameTime.GetGameTime() + BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY * sWorld.getConfig(CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS));
             CharacterDatabase.PExecute("INSERT INTO saved_timer (TimerType, Timer) VALUES (%i,"I64FMTD")",uint64(m_NextAutoDistributionTime));
         }
         else

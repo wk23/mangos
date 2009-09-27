@@ -1745,7 +1745,7 @@ void Pet::InitTalentForLevel()
 
 uint32 Pet::resetTalentsCost() const
 {
-    uint32 days = (sWorld.GetGameTime() - m_resetTalentsTime)/DAY;
+    uint32 days = (sGameTime.GetGameTime() - m_resetTalentsTime)/DAY;
 
     // The first time reset costs 10 silver; after 1 day cost is reset to 10 silver
     if(m_resetTalentsCost < 10*SILVER || days > 0)

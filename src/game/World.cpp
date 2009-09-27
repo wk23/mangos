@@ -85,8 +85,8 @@ World::World()
     m_allowMovement = true;
     m_ShutdownMask = 0;
     m_ShutdownTimer = 0;
-    m_gameTime=time(NULL);
-    m_startTime=m_gameTime;
+    sGameTime.SetGameTime();
+    sGameTime.SetStartTime();
     m_maxActiveSessionCount = 0;
     m_maxQueuedSessionCount = 0;
     m_resultQueue = NULL;
@@ -1427,8 +1427,8 @@ void World::SetInitialWorldSettings()
 
     ///- Initialize game time and timers
     sLog.outString( "DEBUG:: Initialize game time and timers" );
-    m_gameTime = time(NULL);
-    m_startTime=m_gameTime;
+    sGameTime.SetGameTime();
+    sGameTime.SetStartTime();
 
     tm local;
     time_t curr;
@@ -1453,7 +1453,7 @@ void World::SetInitialWorldSettings()
     //to set mailtimer to return mails every day between 4 and 5 am
     //mailtimer is increased when updating auctions
     //one second is 1000 -(tested on win system)
-    mail_timer = ((((localtime( &m_gameTime )->tm_hour + 20) % 24)* HOUR * IN_MILISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
+    mail_timer = ((((localtime( &sGameTime.GetGameTime() )->tm_hour + 20) % 24)* HOUR * IN_MILISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
                                                             //1440
     mail_timer_expires = ( (DAY * IN_MILISECONDS) / (m_timers[WUPDATE_AUCTIONS].GetInterval()));
     sLog.outDebug("Mail timer set to: %u, mail return is called every %u minutes", mail_timer, mail_timer_expires);
@@ -1552,14 +1552,14 @@ void World::Update(uint32 diff)
     _UpdateGameTime();
 
     /// Handle daily quests reset time
-    if(m_gameTime > m_NextDailyQuestReset)
+    if (sGameTime.GetGameTime() > m_NextDailyQuestReset)
     {
         m_NextDailyQuestReset += DAY; //must be done before function call cause function will update db-timer too
         ResetDailyQuests();
     }
 
     /// Handle update honor fields time
-    if(m_gameTime > m_NextUpdateHonorFieldsTime)
+    if (sGameTime.GetGameTime() > m_NextUpdateHonorFieldsTime)
     {
         UpdateHonorFields();
         m_NextUpdateHonorFieldsTime += DAY;
@@ -1614,11 +1614,10 @@ void World::Update(uint32 diff)
     /// <li> Update uptime table
     if (m_timers[WUPDATE_UPTIME].Passed())
     {
-        uint32 tmpDiff = (m_gameTime - m_startTime);
         uint32 maxClientsNum = GetMaxActiveSessionCount();
 
         m_timers[WUPDATE_UPTIME].Reset();
-        loginDatabase.PExecute("UPDATE uptime SET uptime = %u, maxplayers = %u WHERE realmid = %u AND starttime = " UI64FMTD, tmpDiff, maxClientsNum, realmID, uint64(m_startTime));
+        loginDatabase.PExecute("UPDATE uptime SET uptime = %u, maxplayers = %u WHERE realmid = %u AND starttime = " UI64FMTD, sGameTime.GetUptime(), maxClientsNum, realmID, uint64(m_startTime));
     }
 
     /// <li> Handle all other objects
@@ -1910,8 +1909,8 @@ void World::_UpdateGameTime()
 {
     ///- update the time
     time_t thisTime = time(NULL);
-    uint32 elapsed = uint32(thisTime - m_gameTime);
-    m_gameTime = thisTime;
+    uint32 elapsed = uint32(thisTime - sGameTime.GetGameTime());
+    sGameTime.SetGameTime();
 
     ///- if there is a shutdown timer
     if(!m_stopEvent && m_ShutdownTimer > 0 && elapsed > 0)
@@ -2097,7 +2096,7 @@ void World::_UpdateRealmCharCount(QueryResult *resultCharCount, uint32 accountId
 
 void World::InitUpdateHonorFieldsTime()
 {
-    tm localTm = *localtime(&GetGameTime());
+    tm localTm = *localtime(&sGameTime.GetGameTime());
     localTm.tm_hour = 0;
     localTm.tm_min  = 0;
     localTm.tm_sec  = 0;
@@ -2117,14 +2116,14 @@ void World::InitDailyQuestResetTime()
 {
     // client built-in time for reset is 6:00 AM
     // FIX ME: client not show day start time
-    tm localTm = *localtime(&GetGameTime());
+    tm localTm = *localtime(&sGameTime.GetGameTime());
     localTm.tm_hour = 6;
     localTm.tm_min  = 0;
     localTm.tm_sec  = 0;
 
     // current day reset time
     m_NextDailyQuestReset = mktime(&localTm);
-    if(m_NextDailyQuestReset < GetGameTime()) //next reset-time can't be in the past
+    if(m_NextDailyQuestReset < sGameTime.GetGameTime()) //next reset-time can't be in the past
         m_NextDailyQuestReset+=DAY;
 
     // look in the database if we need to reset daily quests
@@ -2142,7 +2141,7 @@ void World::InitDailyQuestResetTime()
     else
     {
         Field *fields = result->Fetch();
-        if(GetGameTime() > (time_t)fields[0].GetUInt64()) //if current time is greater then db-next saved time -> reset
+        if (sGameTime.GetGameTime() > (time_t)fields[0].GetUInt64()) //if current time is greater then db-next saved time -> reset
             ResetDailyQuests(); //updates the saved_timer field too
         delete result;
     }
