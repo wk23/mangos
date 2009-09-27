@@ -3740,7 +3740,7 @@ bool ChatHandler::HandleNpcInfoCommand(const char* /*args*/)
     uint32 Entry = target->GetEntry();
     CreatureInfo const* cInfo = target->GetCreatureInfo();
 
-    int32 curRespawnDelay = target->GetRespawnTimeEx()-time(NULL);
+    int32 curRespawnDelay = target->GetRespawnTimeEx()-sGameTime.GetGameTime();
     if(curRespawnDelay < 0)
         curRespawnDelay = 0;
     std::string curRespawnDelayStr = secsToTimeString(curRespawnDelay,true);
@@ -5078,7 +5078,7 @@ bool ChatHandler::HandleBanInfoHelper(uint32 accountid, char const* accountname)
 
         time_t unbandate = time_t(fields[3].GetUInt64());
         bool active = false;
-        if(fields[2].GetBool() && (fields[1].GetUInt64() == (uint64)0 ||unbandate >= time(NULL)) )
+        if(fields[2].GetBool() && (fields[1].GetUInt64() == (uint64)0 ||unbandate >= sGameTime.GetGameTime()) )
             active = true;
         bool permanent = (fields[1].GetUInt64() == (uint64)0);
         std::string bantime = permanent?GetMangosString(LANG_BANINFO_INFINITE):secsToTimeString(fields[1].GetUInt64(), true);
@@ -5934,7 +5934,7 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
         for(Player::BoundInstancesMap::const_iterator itr = binds.begin(); itr != binds.end(); ++itr)
         {
             InstanceSave *save = itr->second.save;
-            std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
+            std::string timeleft = GetTimeString(save->GetResetTime() - sGameTime.GetGameTime());
             PSendSysMessage("map: %d inst: %d perm: %s diff: %s canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no",  save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
             counter++;
         }
@@ -5950,7 +5950,7 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
             for(Group::BoundInstancesMap::const_iterator itr = binds.begin(); itr != binds.end(); ++itr)
             {
                 InstanceSave *save = itr->second.save;
-                std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
+                std::string timeleft = GetTimeString(save->GetResetTime() - sGameTime.GetGameTime());
                 PSendSysMessage("map: %d inst: %d perm: %s diff: %s canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no",  save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
                 counter++;
             }
@@ -5980,7 +5980,7 @@ bool ChatHandler::HandleInstanceUnbindCommand(const char* args)
                 if(itr->first != player->GetMapId())
                 {
                     InstanceSave *save = itr->second.save;
-                    std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
+                    std::string timeleft = GetTimeString(save->GetResetTime() - sGameTime.GetGameTime());
                     PSendSysMessage("unbinding map: %d inst: %d perm: %s diff: %s canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no",  save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
                     player->UnbindInstance(itr, i);
                     counter++;

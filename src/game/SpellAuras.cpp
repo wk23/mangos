@@ -369,7 +369,7 @@ m_isRemovedOnShapeLost(true), m_in_use(0), m_deleted(false)
 
     m_isSingleTargetAura = IsSingleTargetSpell(m_spellProto);
 
-    m_applyTime = time(NULL);
+    m_applyTime = sGameTime.GetGameTime();
 
     int32 damage;
     if(!caster)
@@ -3494,7 +3494,7 @@ void Aura::HandleModCharm(bool apply, bool Real)
                     //just to enable stat window
                     charmInfo->SetPetNumber(objmgr.GeneratePetNumber(), true);
                     //if charmed two demons the same session, the 2nd gets the 1st one's name
-                    m_target->SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, time(NULL));
+                    m_target->SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, sGameTime.GetGameTime());
                 }
             }
         }

@@ -46,7 +46,7 @@ void WorldSession::SendGMTicketGetTicket(uint32 status, char const* text)
 void WorldSession::HandleGMTicketGetTicketOpcode( WorldPacket & /*recv_data*/ )
 {
     WorldPacket data( SMSG_QUERY_TIME_RESPONSE, 4+4 );
-    data << (uint32)time(NULL);
+    data << (uint32)sGameTime.GetGameTime();
     data << (uint32)0;
     SendPacket( &data );
 
@@ -105,7 +105,7 @@ void WorldSession::HandleGMTicketCreateOpcode( WorldPacket & recv_data )
     ticketmgr.Create(_player->GetGUIDLow(), ticketText.c_str());
 
     WorldPacket data( SMSG_QUERY_TIME_RESPONSE, 4+4 );
-    data << (uint32)time(NULL);
+    data << (uint32)sGameTime.GetGameTime();
     data << (uint32)0;
     SendPacket( &data );
 

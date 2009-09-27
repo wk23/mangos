@@ -1089,7 +1089,7 @@ void World::LoadConfigSettings(bool reload)
 void World::SetInitialWorldSettings()
 {
     ///- Initialize the random number generator
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)sGameTime.GetGameTime());
 
     ///- Initialize config settings
     LoadConfigSettings();
@@ -1908,7 +1908,7 @@ bool World::RemoveBanAccount(BanMode mode, std::string nameOrIP)
 void World::_UpdateGameTime()
 {
     ///- update the time
-    time_t thisTime = time(NULL);
+    time_t thisTime = sGameTime.GetGameTime();
     uint32 elapsed = uint32(thisTime - sGameTime.GetGameTime());
     sGameTime.SetGameTime();
 

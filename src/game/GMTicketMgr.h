@@ -49,7 +49,7 @@ class GMTicket
         void SetText(const char* text)
         {
             m_text = text ? text : "";
-            m_lastUpdate = time(NULL);
+            m_lastUpdate = sGameTime.GetGameTime();
 
             std::string escapedString = m_text;
             CharacterDatabase.escape_string(escapedString);
@@ -113,7 +113,7 @@ class GMTicketMgr
 
         void Create(uint32 guid, const char* text)
         {
-            GMTicket t = GMTicket(guid, text, time(NULL));
+            GMTicket t = GMTicket(guid, text, sGameTime.GetGameTime());
             t.SaveToDB();
             m_GMTicketMap[guid] = t;
         }

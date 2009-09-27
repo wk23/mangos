@@ -142,7 +142,7 @@ void WorldSession::HandleNameQueryOpcode( WorldPacket & recv_data )
 void WorldSession::HandleQueryTimeOpcode( WorldPacket & /*recv_data*/ )
 {
     WorldPacket data( SMSG_QUERY_TIME_RESPONSE, 4+4 );
-    data << (uint32)time(NULL);
+    data << (uint32)sGameTime.GetGameTime();
     data << (uint32)0;
     SendPacket( &data );
 }

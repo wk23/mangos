@@ -98,13 +98,13 @@ void WorldSession::SendPacket(WorldPacket const* packet)
     static uint64 sendPacketCount = 0;
     static uint64 sendPacketBytes = 0;
 
-    static time_t firstTime = time(NULL);
+    static time_t firstTime = sGameTime.GetGameTime();
     static time_t lastTime = firstTime;                     // next 60 secs start time
 
     static uint64 sendLastPacketCount = 0;
     static uint64 sendLastPacketBytes = 0;
 
-    time_t cur_time = time(NULL);
+    time_t cur_time = sGameTime.GetGameTime();
 
     if((cur_time - lastTime) < 60)
     {
@@ -270,7 +270,7 @@ bool WorldSession::Update(uint32 /*diff*/)
     }
 
     ///- If necessary, log the player out
-    time_t currTime = time(NULL);
+    time_t currTime = sGameTime.GetGameTime();
     if (!m_Socket || (ShouldLogOut(currTime) && !m_playerLoading))
         LogoutPlayer(true);
 
@@ -648,7 +648,7 @@ void WorldSession::SetAccountData(AccountDataType type, time_t time_, std::strin
 void WorldSession::SendAccountDataTimes()
 {
     WorldPacket data( SMSG_ACCOUNT_DATA_TIMES, 4+1+8*4 );   // changed in WotLK
-    data << uint32(time(NULL));                             // unix time of something
+    data << uint32(sGameTime.GetGameTime());                             // unix time of something
     data << uint8(1);
     for(int i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
         data << uint32(m_accountData[i].Time);              // also unix time

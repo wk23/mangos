@@ -139,7 +139,7 @@ void WorldSession::HandleMoveWorldportAckOpcode()
 
     if((mEntry->IsRaid() || (mEntry->IsNonRaidDungeon() && mEntry->SupportsHeroicMode() && GetPlayer()->IsHeroic())) && mInstance)
     {
-        uint32 timeleft = sInstanceSaveManager.GetResetTimeFor(GetPlayer()->GetMapId()) - time(NULL);
+        uint32 timeleft = sInstanceSaveManager.GetResetTimeFor(GetPlayer()->GetMapId()) - sGameTime.GetGameTime();
         GetPlayer()->SendInstanceResetWarning(GetPlayer()->GetMapId(), GetPlayer()->GetDifficulty(), timeleft);
     }
 

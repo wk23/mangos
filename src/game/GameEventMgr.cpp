@@ -31,7 +31,7 @@ INSTANTIATE_SINGLETON_1(GameEventMgr);
 bool GameEventMgr::CheckOneGameEvent(uint16 entry) const
 {
     // Get the event information
-    time_t currenttime = time(NULL);
+    time_t currenttime = sGameTime.GetGameTime();
     if( mGameEvent[entry].start < currenttime && currenttime < mGameEvent[entry].end &&
         ((currenttime - mGameEvent[entry].start) % (mGameEvent[entry].occurence * MINUTE)) < (mGameEvent[entry].length * MINUTE) )
         return true;
@@ -41,7 +41,7 @@ bool GameEventMgr::CheckOneGameEvent(uint16 entry) const
 
 uint32 GameEventMgr::NextCheck(uint16 entry) const
 {
-    time_t currenttime = time(NULL);
+    time_t currenttime = sGameTime.GetGameTime();
 
     // outdated event: we return max
     if (currenttime > mGameEvent[entry].end)
@@ -71,7 +71,7 @@ void GameEventMgr::StartEvent( uint16 event_id, bool overwrite )
     ApplyNewEvent(event_id);
     if(overwrite)
     {
-        mGameEvent[event_id].start = time(NULL);
+        mGameEvent[event_id].start = sGameTime.GetGameTime();
         if(mGameEvent[event_id].end <= mGameEvent[event_id].start)
             mGameEvent[event_id].end = mGameEvent[event_id].start+mGameEvent[event_id].length;
     }
@@ -83,7 +83,7 @@ void GameEventMgr::StopEvent( uint16 event_id, bool overwrite )
     UnApplyEvent(event_id);
     if(overwrite)
     {
-        mGameEvent[event_id].start = time(NULL) - mGameEvent[event_id].length * MINUTE;
+        mGameEvent[event_id].start = sGameTime.GetGameTime() - mGameEvent[event_id].length * MINUTE;
         if(mGameEvent[event_id].end <= mGameEvent[event_id].start)
             mGameEvent[event_id].end = mGameEvent[event_id].start+mGameEvent[event_id].length;
     }

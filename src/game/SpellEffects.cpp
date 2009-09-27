@@ -897,7 +897,7 @@ void Spell::EffectDummy(uint32 i)
                         return;
                     }
 
-                    pGameObj->SetRespawnTime(creatureTarget->GetRespawnTime()-time(NULL));
+                    pGameObj->SetRespawnTime(creatureTarget->GetRespawnTime()-sGameTime.GetGameTime());
                     pGameObj->SetOwnerGUID(m_caster->GetGUID() );
                     pGameObj->SetUInt32Value(GAMEOBJECT_LEVEL, m_caster->getLevel() );
                     pGameObj->SetSpellId(m_spellInfo->Id);
@@ -4345,7 +4345,7 @@ void Spell::EffectSummonPet(uint32 i)
     NewSummon->setFaction(faction);
     NewSummon->SetUInt32Value(UNIT_FIELD_BYTES_0, 2048);
     NewSummon->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
-    NewSummon->SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, time(NULL));
+    NewSummon->SetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP, sGameTime.GetGameTime());
     NewSummon->SetUInt32Value(UNIT_FIELD_PETEXPERIENCE, 0);
     NewSummon->SetUInt32Value(UNIT_FIELD_PETNEXTLEVELEXP, 1000);
     NewSummon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);

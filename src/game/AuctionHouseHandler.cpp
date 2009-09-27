@@ -248,7 +248,7 @@ void WorldSession::HandleAuctionSellItem( WorldPacket & recv_data )
     AH->bidder = 0;
     AH->bid = 0;
     AH->buyout = buyout;
-    AH->expire_time = time(NULL) + auction_time;
+    AH->expire_time = sGameTime.GetGameTime() + auction_time;
     AH->deposit = deposit;
     AH->auctionHouseEntry = auctionHouseEntry;
 
