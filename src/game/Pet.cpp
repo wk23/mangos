@@ -407,38 +407,32 @@ void Pet::SavePetToDB(PetSaveMode mode)
     if (!pOwner)
         return;
 
-    // not save pet as current if another pet temporary unsummoned
-    if (mode == PET_SAVE_AS_CURRENT && pOwner->GetTemporaryUnsummonedPetNumber() &&
-        pOwner->GetTemporaryUnsummonedPetNumber() != m_charmInfo->GetPetNumber())
-    {
-        // pet will lost anyway at restore temporary unsummoned
-        if(getPetType()==HUNTER_PET)
-            return;
-
-        // for warlock case
-        mode = PET_SAVE_NOT_IN_SLOT;
-    }
-
-    uint32 curhealth = GetHealth();
-    uint32 curmana = GetPower(POWER_MANA);
-
-    // stable and not in slot saves
-    if(mode > PET_SAVE_AS_CURRENT)
-    {
-        RemoveAllAuras();
-
-        //only alive hunter pets get auras saved, the others don't
-        if(!(getPetType() == HUNTER_PET && isAlive()))
-            m_Auras.clear();
-    }
-
-    _SaveSpells();
-    _SaveSpellCooldowns();
-    _SaveAuras();
-
     // current/stable/not_in_slot
-    if(mode >= PET_SAVE_AS_CURRENT)
+    if (mode >= PET_SAVE_AS_CURRENT)
     {
+        // not save pet as current if another pet temporary unsummoned
+        if (mode == PET_SAVE_AS_CURRENT && pOwner->GetTemporaryUnsummonedPetNumber() &&
+            pOwner->GetTemporaryUnsummonedPetNumber() != m_charmInfo->GetPetNumber())
+        {
+            // pet will lost anyway at restore temporary unsummoned
+            if(getPetType()==HUNTER_PET)
+                return;
+
+            // for warlock case
+            mode = PET_SAVE_NOT_IN_SLOT;
+        }
+
+        uint32 curhealth = GetHealth();
+        uint32 curmana = GetPower(POWER_MANA);
+
+        // stable and not in slot saves
+        if (mode != PET_SAVE_AS_CURRENT)
+            RemoveAllAuras();
+
+        _SaveSpells();
+        _SaveSpellCooldowns();
+        _SaveAuras();
+
         uint32 loyalty =1;
         if(getPetType()!=HUNTER_PET)
             loyalty = GetLoyaltyLevel();
@@ -509,7 +503,7 @@ void Pet::SavePetToDB(PetSaveMode mode)
     }
     else
     {
-        RemoveAllAuras();
+        RemoveAllAuras(AURA_REMOVE_BY_DELETE);
         DeleteFromDB(m_charmInfo->GetPetNumber());
     }
 }
@@ -802,9 +796,8 @@ int32 Pet::GetTPForSpell(uint32 spellid)
 {
     uint32 basetrainp = 0;
 
-    SkillLineAbilityMap::const_iterator lower = spellmgr.GetBeginSkillLineAbilityMap(spellid);
-    SkillLineAbilityMap::const_iterator upper = spellmgr.GetEndSkillLineAbilityMap(spellid);
-    for(SkillLineAbilityMap::const_iterator _spell_idx = lower; _spell_idx != upper; ++_spell_idx)
+    SkillLineAbilityMapBounds bounds = spellmgr.GetSkillLineAbilityMapBounds(spellid);
+    for(SkillLineAbilityMap::const_iterator _spell_idx = bounds.first; _spell_idx != bounds.second; ++_spell_idx)
     {
         if(!_spell_idx->second->reqtrainpoints)
             return 0;
@@ -823,10 +816,9 @@ int32 Pet::GetTPForSpell(uint32 spellid)
 
         if(spellmgr.GetFirstSpellInChain(itr->first) == chainstart)
         {
-            SkillLineAbilityMap::const_iterator _lower = spellmgr.GetBeginSkillLineAbilityMap(itr->first);
-            SkillLineAbilityMap::const_iterator _upper = spellmgr.GetEndSkillLineAbilityMap(itr->first);
+            SkillLineAbilityMapBounds _bounds = spellmgr.GetSkillLineAbilityMapBounds(itr->first);
 
-            for(SkillLineAbilityMap::const_iterator _spell_idx2 = _lower; _spell_idx2 != _upper; ++_spell_idx2)
+            for(SkillLineAbilityMap::const_iterator _spell_idx2 = _bounds.first; _spell_idx2 != _bounds.second; ++_spell_idx2)
             {
                 if(_spell_idx2->second->reqtrainpoints > spenttrainp)
                 {
@@ -1359,9 +1351,7 @@ void Pet::_SaveSpells()
 
 void Pet::_LoadAuras(uint32 timediff)
 {
-    m_Auras.clear();
-    for (int i = 0; i < TOTAL_AURAS; ++i)
-        m_modAuras[i].clear();
+    RemoveAllAuras();
 
     // all aura related fields
     for(int i = UNIT_FIELD_AURA; i <= UNIT_FIELD_AURASTATE; ++i)
@@ -1399,10 +1389,10 @@ void Pet::_LoadAuras(uint32 timediff)
             // negative effects should continue counting down after logout
             if (remaintime != -1 && !IsPositiveEffect(spellid, effindex))
             {
-                if(remaintime  <= int32(timediff))
+                if (remaintime/IN_MILISECONDS <= int32(timediff))
                     continue;
 
-                remaintime -= timediff;
+                remaintime -= timediff*IN_MILISECONDS;
             }
 
             // prevent wrong values of remaincharges
@@ -1692,10 +1682,9 @@ void Pet::InitPetCreateSpells()
 
             addSpell(petspellid);
 
-            SkillLineAbilityMap::const_iterator lower = spellmgr.GetBeginSkillLineAbilityMap(learn_spellproto->EffectTriggerSpell[0]);
-            SkillLineAbilityMap::const_iterator upper = spellmgr.GetEndSkillLineAbilityMap(learn_spellproto->EffectTriggerSpell[0]);
+            SkillLineAbilityMapBounds bounds = spellmgr.GetSkillLineAbilityMapBounds(learn_spellproto->EffectTriggerSpell[0]);
 
-            for(SkillLineAbilityMap::const_iterator _spell_idx = lower; _spell_idx != upper; ++_spell_idx)
+            for(SkillLineAbilityMap::const_iterator _spell_idx = bounds.first; _spell_idx != bounds.second; ++_spell_idx)
             {
                 usedtrainpoints += _spell_idx->second->reqtrainpoints;
                 break;

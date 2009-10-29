@@ -30,15 +30,14 @@
 #include "Group.h"
 #include "ObjectMgr.h"
 #include "WorldPacket.h"
-#include "Util.h"
+#include "Formulas.h"
 
 BattleGround::BattleGround()
 {
     m_TypeID            = BattleGroundTypeId(0);
     m_InstanceID        = 0;
-    m_Status            = 0;
+    m_Status            = STATUS_NONE;
     m_EndTime           = 0;
-    m_LastResurrectTime = 0;
     m_Queue_type        = MAX_BATTLEGROUND_QUEUES;
     m_InvitedAlliance   = 0;
     m_InvitedHorde      = 0;
@@ -61,6 +60,7 @@ BattleGround::BattleGround()
     m_MinPlayers        = 0;
 
     m_MapId             = 0;
+    m_Map               = NULL;
 
     m_TeamStartLocX[BG_TEAM_ALLIANCE]   = 0;
     m_TeamStartLocX[BG_TEAM_HORDE]      = 0;
@@ -86,6 +86,9 @@ BattleGround::BattleGround()
     m_PlayersCount[BG_TEAM_ALLIANCE]    = 0;
     m_PlayersCount[BG_TEAM_HORDE]       = 0;
 
+    m_TeamScores[BG_TEAM_ALLIANCE]      = 0;
+    m_TeamScores[BG_TEAM_HORDE]         = 0;
+
     m_PrematureCountDown = false;
     m_PrematureCountDown = 0;
 }
@@ -94,11 +97,8 @@ BattleGround::~BattleGround()
 {
     // remove objects and creatures
     // (this is done automatically in mapmanager update, when the instance is reset after the reset time)
-    int size = m_BgCreatures.size();
-    for(int i = 0; i < size; ++i)
-        DelCreature(i);
 
-    size = m_BgObjects.size();
+    int size = m_BgObjects.size();
     for(int i = 0; i < size; ++i)
         DelObject(i);
 
@@ -109,10 +109,11 @@ BattleGround::~BattleGround()
     CharacterDatabase.PExecute("DELETE FROM instance WHERE id = '%u'",GetInstanceID());
     // remove from battlegrounds
     sBattleGroundMgr.RemoveBattleGround(GetInstanceID());
+
     // unload map
-    if(Map * map = MapManager::Instance().FindMap(GetMapId(), GetInstanceID()))
-        if(map->IsBattleGroundOrArena())
-            ((BattleGroundMap*)map)->SetUnload();
+    // map can be null at bg destruction
+    if (m_Map)
+        m_Map->SetUnload();
     // remove from bg free slot queue
     this->RemoveFromBGFreeSlotQueue();
 
@@ -122,7 +123,7 @@ BattleGround::~BattleGround()
 
 void BattleGround::Update(uint32 diff)
 {
-    if(!GetPlayersSize() && !GetRemovedPlayersSize() && !GetReviveQueueSize())
+    if (!GetPlayersSize() && !GetRemovedPlayersSize())
         //BG is empty
         return;
 
@@ -151,9 +152,6 @@ void BattleGround::Update(uint32 diff)
                     else
                         RemovePlayerAtLeave(itr->first, false, false);
                     break;
-                case 2:                                     // revive queue
-                    RemovePlayerFromResurrectQueue(itr->first);
-                    break;
                 default:
                     sLog.outError("BattleGround: Unknown remove player case!");
             }
@@ -179,56 +177,9 @@ void BattleGround::Update(uint32 diff)
         }
     }*/
 
-    m_LastResurrectTime += diff;
-    if (m_LastResurrectTime >= RESURRECTION_INTERVAL)
-    {
-        if(GetReviveQueueSize())
-        {
-            for(std::map<uint64, std::vector<uint64> >::iterator itr = m_ReviveQueue.begin(); itr != m_ReviveQueue.end(); ++itr)
-            {
-                Creature *sh = NULL;
-                for(std::vector<uint64>::const_iterator itr2 = (itr->second).begin(); itr2 != (itr->second).end(); ++itr2)
-                {
-                    Player *plr = objmgr.GetPlayer(*itr2);
-                    if(!plr)
-                        continue;
-
-                    if (!sh && plr->IsInWorld())
-                    {
-                        sh = plr->GetMap()->GetCreature(itr->first);
-                        // only for visual effect
-                        if (sh)
-                            // Spirit Heal, effect 117
-                            sh->CastSpell(sh, SPELL_SPIRIT_HEAL, true);
-                    }
-
-                    // Resurrection visual
-                    plr->CastSpell(plr, SPELL_RESURRECTION_VISUAL, true);
-                    m_ResurrectQueue.push_back(*itr2);
-                }
-                (itr->second).clear();
-            }
-
-            m_ReviveQueue.clear();
-            m_LastResurrectTime = 0;
-        }
-        else
-            // queue is clear and time passed, just update last resurrection time
-            m_LastResurrectTime = 0;
-    }
-    else if (m_LastResurrectTime > 500)    // Resurrect players only half a second later, to see spirit heal effect on NPC
-    {
-        for(std::vector<uint64>::const_iterator itr = m_ResurrectQueue.begin(); itr != m_ResurrectQueue.end(); ++itr)
-        {
-            Player *plr = objmgr.GetPlayer(*itr);
-            if(!plr)
-                continue;
-            plr->ResurrectPlayer(1.0f);
-            plr->CastSpell(plr, SPELL_SPIRIT_HEAL_MANA, true);
-            ObjectAccessor::Instance().ConvertCorpseForPlayer(*itr);
-        }
-        m_ResurrectQueue.clear();
-    }
+    /*********************************************************/
+    /***           BATTLEGROUND BALLANCE SYSTEM            ***/
+    /*********************************************************/
 
     // if less then minimum players are in on one side, then start premature finish timer
     if(GetStatus() == STATUS_IN_PROGRESS && !isArena() && sBattleGroundMgr.GetPrematureFinishTime() && (GetPlayersCountByTeam(ALLIANCE) < GetMinPlayersPerTeam() || GetPlayersCountByTeam(HORDE) < GetMinPlayersPerTeam()))
@@ -253,11 +204,29 @@ void BattleGround::Update(uint32 diff)
                 SendMessageToAll(LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING);
             m_PrematureCountDownTimer = newtime;
         }
+
     }
     else if (m_PrematureCountDown)
         m_PrematureCountDown = false;
 
-    if(GetStatus() == STATUS_WAIT_LEAVE)
+    /*********************************************************/
+    /***           ARENA BUFF OBJECT SPAWNING              ***/
+    /*********************************************************/
+    if (isArena() && !m_ArenaBuffSpawned)
+    {
+        // 60 seconds after start the buffobjects in arena should get spawned
+        if (m_StartTime > START_DELAY1 + ARENA_SPAWN_BUFF_OBJECTS)
+        {
+            SpawnEvent(ARENA_BUFF_EVENT, 0, true);
+            m_ArenaBuffSpawned = true;
+        }
+    }
+
+    /*********************************************************/
+    /***           BATTLEGROUND ENDING SYSTEM              ***/
+    /*********************************************************/
+
+    if (GetStatus() == STATUS_WAIT_LEAVE)
     {
         // remove all players from battleground after 2 minutes
         m_EndTime += diff;
@@ -525,6 +494,12 @@ void BattleGround::EndBattleGround(uint32 winner)
             plr->ResurrectPlayer(1.0f);
             plr->SpawnCorpseBones();
         }
+        else
+        {
+            //needed cause else in av some creatures will kill the players at the end
+            plr->CombatStop();
+            plr->getHostileRefManager().deleteReferences();
+        }
 
         uint32 team = itr->second.Team;
         if(!team) team = plr->GetTeam();
@@ -583,6 +558,12 @@ void BattleGround::EndBattleGround(uint32 winner)
         ChatHandler(Source).FillMessageData(&data, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, Source->GetGUID(), winmsg);
         SendPacketToAll(&data);
     }
+}
+
+uint32 BattleGround::GetBonusHonorFromKill(uint32 kills) const
+{
+    //variable kills means how many honorable kills you scored (so we need kills * honor_for_one_kill)
+    return MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills);
 }
 
 uint32 BattleGround::GetBattlemasterEntry() const
@@ -773,8 +754,6 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         m_PlayerScores.erase(itr2);
     }
 
-    RemovePlayerFromResurrectQueue(guid);
-
     Player *plr = objmgr.GetPlayer(guid);
 
     // should remove spirit of redemption
@@ -895,11 +874,18 @@ void BattleGround::Reset()
     SetStatus(STATUS_WAIT_QUEUE);
     SetStartTime(0);
     SetEndTime(0);
-    SetLastResurrectTime(0);
     SetArenaType(0);
     SetRated(false);
 
     m_Events = 0;
+
+    // door-event2 is always 0
+    m_ActiveEvents[BG_EVENT_DOOR] = 0;
+    if (isArena())
+    {
+        m_ActiveEvents[ARENA_BUFF_EVENT] = BG_EVENT_NONE;
+        m_ArenaBuffSpawned = false;
+    }
 
     if (m_InvitedAlliance > 0 || m_InvitedHorde > 0)
         sLog.outError("BattleGround system: bad counter, m_InvitedAlliance: %d, m_InvitedHorde: %d", m_InvitedAlliance, m_InvitedHorde);
@@ -922,12 +908,14 @@ void BattleGround::StartBattleGround()
 {
     ///this method should spawn spirit guides and so on
     SetStartTime(0);
-
-    SetLastResurrectTime(0);
 }
 
 void BattleGround::AddPlayer(Player *plr)
 {
+    // remove afk from player
+    if (plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_AFK))
+        plr->ToggleAFK();
+
     // score struct must be created in inherited class
 
     uint64 guid = plr->GetGUID();
@@ -1121,50 +1109,13 @@ void BattleGround::UpdatePlayerScore(Player *Source, uint32 type, uint32 value)
     }
 }
 
-void BattleGround::AddPlayerToResurrectQueue(uint64 npc_guid, uint64 player_guid)
-{
-    m_ReviveQueue[npc_guid].push_back(player_guid);
-
-    Player *plr = objmgr.GetPlayer(player_guid);
-    if(!plr)
-        return;
-
-    plr->CastSpell(plr, SPELL_WAITING_FOR_RESURRECT, true);
-}
-
-void BattleGround::RemovePlayerFromResurrectQueue(uint64 player_guid)
-{
-    for(std::map<uint64, std::vector<uint64> >::iterator itr = m_ReviveQueue.begin(); itr != m_ReviveQueue.end(); ++itr)
-    {
-        for(std::vector<uint64>::iterator itr2 =(itr->second).begin(); itr2 != (itr->second).end(); ++itr2)
-        {
-            if(*itr2 == player_guid)
-            {
-                (itr->second).erase(itr2);
-
-                Player *plr = objmgr.GetPlayer(player_guid);
-                if(!plr)
-                    return;
-
-                plr->RemoveAurasDueToSpell(SPELL_WAITING_FOR_RESURRECT);
-
-                return;
-            }
-        }
-    }
-}
-
 bool BattleGround::AddObject(uint32 type, uint32 entry, float x, float y, float z, float o, float rotation0, float rotation1, float rotation2, float rotation3, uint32 respawnTime)
 {
-    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
-    if(!map)
-        return false;
-
     // must be created this way, adding to godatamap would add it to the base map of the instance
     // and when loading it (in go::LoadFromDB()), a new guid would be assigned to the object, and a new object would be created
     // so we must create it specific for this instance
     GameObject * go = new GameObject;
-    if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),entry, map,x,y,z,o,rotation0,rotation1,rotation2,rotation3,100,GO_STATE_READY))
+    if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),entry, GetBgMap(),x,y,z,o,rotation0,rotation1,rotation2,rotation3,100,GO_STATE_READY))
     {
         sLog.outErrorDb("Gameobject template %u not found in database! BattleGround not created!", entry);
         sLog.outError("Cannot create gameobject template %u! BattleGround not created!", entry);
@@ -1201,10 +1152,10 @@ bool BattleGround::AddObject(uint32 type, uint32 entry, float x, float y, float 
 
 //some doors aren't despawned so we cannot handle their closing in gameobject::update()
 //it would be nice to correctly implement GO_ACTIVATED state and open/close doors in gameobject code
-void BattleGround::DoorClose(uint32 type)
+void BattleGround::DoorClose(uint64 const& guid)
 {
-    GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-    if(obj)
+    GameObject *obj = GetBgMap()->GetGameObject(guid);
+    if (obj)
     {
         //if doors are open, close it
         if (obj->getLootState() == GO_ACTIVATED && obj->GetGoState() != GO_STATE_READY)
@@ -1220,10 +1171,10 @@ void BattleGround::DoorClose(uint32 type)
     }
 }
 
-void BattleGround::DoorOpen(uint32 type)
+void BattleGround::DoorOpen(uint64 const& guid)
 {
-    GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-    if(obj)
+    GameObject *obj = GetBgMap()->GetGameObject(guid);
+    if (obj)
     {
         //change state to be sure they will be opened
         obj->SetLootState(GO_READY);
@@ -1235,162 +1186,157 @@ void BattleGround::DoorOpen(uint32 type)
     }
 }
 
-void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
+void BattleGround::OnObjectDBLoad(Creature* creature)
 {
-    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
-    if(!map)
+    const BattleGroundEventIdx eventId = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
+    if (eventId.event1 == BG_EVENT_NONE)
         return;
-    if( respawntime == 0 )
+    m_EventObjects[MAKE_PAIR32(eventId.event1, eventId.event2)].creatures.push_back(creature->GetGUID());
+    if (!IsActiveEvent(eventId.event1, eventId.event2))
+        SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
+}
+
+uint64 BattleGround::GetSingleCreatureGuid(uint8 event1, uint8 event2)
+{
+    BGCreatures::const_iterator itr = m_EventObjects[MAKE_PAIR32(event1, event2)].creatures.begin();
+    if (itr != m_EventObjects[MAKE_PAIR32(event1, event2)].creatures.end())
+        return *itr;
+    return 0;
+}
+
+void BattleGround::OnObjectDBLoad(GameObject* obj)
+{
+    const BattleGroundEventIdx eventId = sBattleGroundMgr.GetGameObjectEventIndex(obj->GetDBTableGUIDLow());
+    if (eventId.event1 == BG_EVENT_NONE)
+        return;
+    m_EventObjects[MAKE_PAIR32(eventId.event1, eventId.event2)].gameobjects.push_back(obj->GetGUID());
+    if (!IsActiveEvent(eventId.event1, eventId.event2))
     {
-        GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-        if(obj)
-        {
-            //we need to change state from GO_JUST_DEACTIVATED to GO_READY in case battleground is starting again
-            if( obj->getLootState() == GO_JUST_DEACTIVATED )
-                obj->SetLootState(GO_READY);
-            obj->SetRespawnTime(0);
-            map->Add(obj);
-        }
+        SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
     }
     else
     {
-        GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-        if(obj)
-        {
-            map->Add(obj);
-            obj->SetRespawnTime(respawntime);
-            obj->SetLootState(GO_JUST_DEACTIVATED);
-        }
+        // it's possible, that doors aren't spawned anymore (wsg)
+        if (GetStatus() >= STATUS_IN_PROGRESS && IsDoor(eventId.event1, eventId.event2))
+            DoorOpen(obj->GetGUID());
     }
 }
 
-Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, float x, float y, float z, float o, uint32 respawntime)
+bool BattleGround::IsDoor(uint8 event1, uint8 event2)
 {
-    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
-    if(!map)
-        return NULL;
-
-    Creature* pCreature = new Creature;
-    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT), map, entry, teamval))
+    if (event1 == BG_EVENT_DOOR)
     {
-        sLog.outError("Can't create creature entry: %u",entry);
-        delete pCreature;
-        return NULL;
-    }
-
-    pCreature->Relocate(x, y, z, o);
-
-    if(!pCreature->IsPositionValid())
-    {
-        sLog.outError("Creature (guidlow %d, entry %d) not added to battleground. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
-        delete pCreature;
-        return NULL;
-    }
-
-    pCreature->AIM_Initialize();
-
-    //pCreature->SetDungeonDifficulty(0);
-
-    map->Add(pCreature);
-    m_BgCreatures[type] = pCreature->GetGUID();
-
-    return  pCreature;
-}
-/*
-void BattleGround::SpawnBGCreature(uint32 type, uint32 respawntime)
-{
-    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceId());
-    if(!map)
-        return false;
-
-    if(respawntime == 0)
-    {
-        Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
-        if(obj)
+        if (event2 > 0)
         {
-            //obj->Respawn();                               // bugged
-            obj->SetRespawnTime(0);
-            objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
-            map->Add(obj);
+            sLog.outError("BattleGround too high event2 for event1:%i", event1);
+            return false;
         }
-    }
-    else
-    {
-        Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
-        if(obj)
-        {
-            obj->setDeathState(DEAD);
-            obj->SetRespawnTime(respawntime);
-            map->Add(obj);
-        }
-    }
-}
-*/
-bool BattleGround::DelCreature(uint32 type)
-{
-    if(!m_BgCreatures[type])
         return true;
-
-    Creature *cr = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
-    if(!cr)
-    {
-        sLog.outError("Can't find creature guid: %u",GUID_LOPART(m_BgCreatures[type]));
-        return false;
     }
-    cr->AddObjectToRemoveList();
-    m_BgCreatures[type] = 0;
-    return true;
+    return false;
+}
+
+void BattleGround::OpenDoorEvent(uint8 event1, uint8 event2 /*=0*/)
+{
+    if (!IsDoor(event1, event2))
+    {
+        sLog.outError("BattleGround:OpenDoorEvent this is no door event1:%u event2:%u", event1, event2);
+        return;
+    }
+    if (!IsActiveEvent(event1, event2))                 // maybe already despawned (eye)
+    {
+        sLog.outError("BattleGround:OpenDoorEvent this event isn't active event1:%u event2:%u", event1, event2);
+        return;
+    }
+    BGObjects::const_iterator itr = m_EventObjects[MAKE_PAIR32(event1, event2)].gameobjects.begin();
+    for(; itr != m_EventObjects[MAKE_PAIR32(event1, event2)].gameobjects.end(); ++itr)
+        DoorOpen(*itr);
+}
+
+void BattleGround::SpawnEvent(uint8 event1, uint8 event2, bool spawn)
+{
+    // stop if we want to spawn something which was already spawned
+    // or despawn something which was already despawned
+    if (event2 == BG_EVENT_NONE || (spawn && m_ActiveEvents[event1] == event2)
+        || (!spawn && m_ActiveEvents[event1] != event2))
+        return;
+
+    if (spawn)
+    {
+        // if event gets spawned, the current active event mus get despawned
+        SpawnEvent(event1, m_ActiveEvents[event1], false);
+        m_ActiveEvents[event1] = event2;                    // set this event to active
+    }
+    else
+        m_ActiveEvents[event1] = BG_EVENT_NONE;             // no event active if event2 gets despawned
+
+    BGCreatures::const_iterator itr = m_EventObjects[MAKE_PAIR32(event1, event2)].creatures.begin();
+    for(; itr != m_EventObjects[MAKE_PAIR32(event1, event2)].creatures.end(); ++itr)
+        SpawnBGCreature(*itr, (spawn) ? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+    BGObjects::const_iterator itr2 = m_EventObjects[MAKE_PAIR32(event1, event2)].gameobjects.begin();
+    for(; itr2 != m_EventObjects[MAKE_PAIR32(event1, event2)].gameobjects.end(); ++itr2)
+        SpawnBGObject(*itr2, (spawn) ? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+}
+
+void BattleGround::SpawnBGObject(uint64 const& guid, uint32 respawntime)
+{
+    Map* map = GetBgMap();
+
+    GameObject *obj = map->GetGameObject(guid);
+    if(!obj)
+        return;
+    if (respawntime == 0)
+    {
+        //we need to change state from GO_JUST_DEACTIVATED to GO_READY in case battleground is starting again
+        if (obj->getLootState() == GO_JUST_DEACTIVATED)
+            obj->SetLootState(GO_READY);
+        obj->SetRespawnTime(0);
+        map->Add(obj);
+    }
+    else
+    {
+        map->Add(obj);
+        obj->SetRespawnTime(respawntime);
+        obj->SetLootState(GO_JUST_DEACTIVATED);
+    }
+}
+
+void BattleGround::SpawnBGCreature(uint64 const& guid, uint32 respawntime)
+{
+    Map* map = GetBgMap();
+
+    Creature* obj = map->GetCreature(guid);
+    if (!obj)
+        return;
+    if (respawntime == 0)
+    {
+        obj->Respawn();
+        map->Add(obj);
+    }
+    else
+    {
+        map->Add(obj);
+        obj->setDeathState(JUST_DIED);
+        obj->SetRespawnDelay(respawntime);
+        obj->RemoveCorpse();
+    }
 }
 
 bool BattleGround::DelObject(uint32 type)
 {
-    if(!m_BgObjects[type])
+    if (!m_BgObjects[type])
         return true;
 
-    GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-    if(!obj)
+    GameObject *obj = GetBgMap()->GetGameObject(m_BgObjects[type]);
+    if (!obj)
     {
         sLog.outError("Can't find gobject guid: %u",GUID_LOPART(m_BgObjects[type]));
         return false;
     }
+
     obj->SetRespawnTime(0);                                 // not save respawn time
     obj->Delete();
     m_BgObjects[type] = 0;
-    return true;
-}
-
-bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team)
-{
-    uint32 entry = 0;
-
-    if(team == ALLIANCE)
-        entry = 13116;
-    else
-        entry = 13117;
-
-    Creature* pCreature = AddCreature(entry,type,team,x,y,z,o);
-    if(!pCreature)
-    {
-        sLog.outError("Can't create Spirit guide. BattleGround not created!");
-        EndNow();
-        return false;
-    }
-
-    pCreature->setDeathState(DEAD);
-
-    pCreature->SetUInt64Value(UNIT_FIELD_CHANNEL_OBJECT, pCreature->GetGUID());
-    // aura
-    pCreature->SetUInt32Value(UNIT_FIELD_AURA, SPELL_SPIRIT_HEAL_CHANNEL);
-    pCreature->SetUInt32Value(UNIT_FIELD_AURAFLAGS, 0x00000009);
-    pCreature->SetUInt32Value(UNIT_FIELD_AURALEVELS, 0x0000003C);
-    pCreature->SetUInt32Value(UNIT_FIELD_AURAAPPLICATIONS, 0x000000FF);
-    // casting visual effect
-    pCreature->SetUInt32Value(UNIT_CHANNEL_SPELL, SPELL_SPIRIT_HEAL_CHANNEL);
-    // correct cast speed
-    pCreature->SetFloatValue(UNIT_MOD_CAST_SPEED, 1.0f);
-
-    //pCreature->CastSpell(pCreature, SPELL_SPIRIT_HEAL_CHANNEL, true);
-
     return true;
 }
 
@@ -1407,6 +1353,57 @@ void BattleGround::SendMessageToAll(int32 entry)
     WorldPacket data;
     ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, 0, text, NULL);
     SendPacketToAll(&data);
+}
+
+// following functions are partially backported, (only the function call) from master
+void BattleGround::SendMessageToAll(int32 entry, ChatMsg type, Player const* /*source*/)
+{
+    char const* text = GetMangosString(entry);
+    WorldPacket data;
+    ChatHandler::FillMessageData(&data, NULL, type, LANG_UNIVERSAL, NULL, 0, text, NULL);
+    SendPacketToAll(&data);
+}
+
+void BattleGround::SendYellToAll(int32 entry, uint32 language, uint64 const& guid)
+{
+    Creature* source = GetBgMap()->GetCreature(guid);
+    if(!source)
+        return;
+    char buf[256];
+    sprintf(buf, GetMangosString(entry));
+    for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
+    {
+        WorldPacket data(SMSG_MESSAGECHAT, 200);
+        Player *plr = objmgr.GetPlayer(itr->first);
+        if(!plr)
+        {
+            sLog.outError("BattleGround: Player " UI64FMTD " not found!", itr->first);
+            continue;
+        }
+        source->BuildMonsterChat(&data, CHAT_MSG_MONSTER_YELL, buf, language, source->GetName(), itr->first);
+        plr->GetSession()->SendPacket(&data);
+    }
+}
+
+void BattleGround::SendYell2ToAll(int32 entry, uint32 language, uint64 const& guid, int32 arg1, int32 arg2)
+{
+    Creature* source = GetBgMap()->GetCreature(guid);
+    if(!source)
+        return;
+    char buf[256];
+    sprintf(buf, GetMangosString(entry), GetMangosString(arg1), GetMangosString(arg2));
+    for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
+    {
+        WorldPacket data(SMSG_MESSAGECHAT, 200);
+        Player *plr = objmgr.GetPlayer(itr->first);
+        if(!plr)
+        {
+            sLog.outError("BattleGround: Player " UI64FMTD " not found!", itr->first);
+            continue;
+        }
+        source->BuildMonsterChat(&data, CHAT_MSG_MONSTER_YELL, buf, language, source->GetName(), itr->first);
+        plr->GetSession()->SendPacket(&data);
+    }
 }
 
 void BattleGround::EndNow()
@@ -1432,11 +1429,20 @@ buffs are in their positions when battleground starts
 */
 void BattleGround::HandleTriggerBuff(uint64 const& go_guid)
 {
-    GameObject *obj = HashMapHolder<GameObject>::Find(go_guid);
-    if(!obj || obj->GetGoType() != GAMEOBJECT_TYPE_TRAP || !obj->isSpawned())
+    GameObject *obj = GetBgMap()->GetGameObject(go_guid);
+    if (!obj || obj->GetGoType() != GAMEOBJECT_TYPE_TRAP || !obj->isSpawned())
         return;
 
-    //change buff type, when buff is used:
+    // static buffs are already handled just by database and don't need
+    // battleground code
+    if (!m_BuffChange)
+    {
+        obj->SetLootState(GO_JUST_DEACTIVATED);             // can be despawned or destroyed
+        return;
+    }
+
+    // change buff type, when buff is used:
+    // TODO this can be done when poolsystem works for instances
     int32 index = m_BgObjects.size() - 1;
     while (index >= 0 && m_BgObjects[index] != go_guid)
         index--;
@@ -1449,26 +1455,26 @@ void BattleGround::HandleTriggerBuff(uint64 const& go_guid)
     //randomly select new buff
     uint8 buff = urand(0, 2);
     uint32 entry = obj->GetEntry();
-    if( m_BuffChange && entry != Buff_Entries[buff] )
+    if (m_BuffChange && entry != Buff_Entries[buff])
     {
         //despawn current buff
-        SpawnBGObject(index, RESPAWN_ONE_DAY);
+        SpawnBGObject(m_BgObjects[index], RESPAWN_ONE_DAY);
         //set index for new one
         for (uint8 currBuffTypeIndex = 0; currBuffTypeIndex < 3; ++currBuffTypeIndex)
-            if( entry == Buff_Entries[currBuffTypeIndex] )
+        {
+            if (entry == Buff_Entries[currBuffTypeIndex])
             {
                 index -= currBuffTypeIndex;
                 index += buff;
             }
+        }
     }
 
-    SpawnBGObject(index, BUFF_RESPAWN_TIME);
+    SpawnBGObject(m_BgObjects[index], BUFF_RESPAWN_TIME);
 }
 
 void BattleGround::HandleKillPlayer( Player *player, Player *killer )
 {
-    //keep in mind that for arena this will have to be changed a bit
-
     // add +1 deaths
     UpdatePlayerScore(player, SCORE_DEATHS, 1);
 
@@ -1525,4 +1531,9 @@ void BattleGround::SetBgRaid( uint32 TeamID, Group *bg_raid )
     if(old_raid) old_raid->SetBattlegroundGroup(NULL);
     if(bg_raid) bg_raid->SetBattlegroundGroup(this);
     old_raid = bg_raid;
+}
+
+WorldSafeLocsEntry const* BattleGround::GetClosestGraveYard( Player* player )
+{
+    return objmgr.GetClosestGraveYard( player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetMapId(), player->GetTeam() );
 }

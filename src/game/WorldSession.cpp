@@ -68,11 +68,9 @@ WorldSession::~WorldSession()
     }
 
     ///- empty incoming packet queue
-    while(!_recvQueue.empty())
-    {
-        WorldPacket *packet = _recvQueue.next ();
+    WorldPacket* packet;
+    while(_recvQueue.next(packet))
         delete packet;
-    }
 }
 
 void WorldSession::SizeError(WorldPacket const& packet, uint32 size) const
@@ -162,10 +160,9 @@ bool WorldSession::Update(uint32 /*diff*/)
 {
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// not proccess packets if socket already closed
-    while (!_recvQueue.empty() && m_Socket && !m_Socket->IsClosed ())
+    WorldPacket* packet;
+    while (_recvQueue.next(packet) && m_Socket && !m_Socket->IsClosed ())
     {
-        WorldPacket *packet = _recvQueue.next();
-
         /*#if 1
         sLog.outError( "MOEP: %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
@@ -200,6 +197,19 @@ bool WorldSession::Update(uint32 /*diff*/)
                         }
                         // lag can cause STATUS_LOGGEDIN opcodes to arrive after the player started a transfer
                         break;
+                    case STATUS_LOGGEDIN_OR_RECENTLY_LOGGOUT:
+                        if(!_player && !m_playerRecentlyLogout)
+                        {
+                            LogUnexpectedOpcode(packet, "the player has not logged in yet and not recently logout");
+                        }
+                        else
+                        {
+                            // not expected _player or must checked in packet hanlder
+                            (this->*opHandle.handler)(*packet);
+                            if (sLog.IsOutDebug() && packet->rpos() < packet->wpos())
+                                LogUnprocessedTail(packet);
+                        }
+                        break;
                     case STATUS_TRANSFER:
                         if(!_player)
                             LogUnexpectedOpcode(packet, "the player has not logged in yet");
@@ -220,7 +230,11 @@ bool WorldSession::Update(uint32 /*diff*/)
                             break;
                         }
 
-                        m_playerRecentlyLogout = false;
+                        // single from authed time opcodes send in to after logout time
+                        // and before other STATUS_LOGGEDIN_OR_RECENTLY_LOGGOUT opcodes.
+                        if (packet->GetOpcode() != CMSG_SET_ACTIVE_VOICE_CHANNEL)
+                            m_playerRecentlyLogout = false;
+
                         (this->*opHandle.handler)(*packet);
                         if (sLog.IsOutDebug() && packet->rpos() < packet->wpos())
                             LogUnprocessedTail(packet);
@@ -283,14 +297,14 @@ void WorldSession::LogoutPlayer(bool Save)
         //FIXME: logout must be delayed in case lost connection with client in time of combat
         if (_player->GetDeathTimer())
         {
-            _player->getHostilRefManager().deleteReferences();
+            _player->getHostileRefManager().deleteReferences();
             _player->BuildPlayerRepop();
             _player->RepopAtGraveyard();
         }
         else if (!_player->getAttackers().empty())
         {
             _player->CombatStop();
-            _player->getHostilRefManager().setOnlineOfflineState(false);
+            _player->getHostileRefManager().setOnlineOfflineState(false);
             _player->RemoveAllAurasOnDeath();
 
             // build set of player who attack _player or who have pet attacking of _player
@@ -356,13 +370,13 @@ void WorldSession::LogoutPlayer(bool Save)
         ///- Reset the online field in the account table
         // no point resetting online in character table here as Player::SaveToDB() will set it to 1 since player has not been removed from world at this stage
         //No SQL injection as AccountID is uint32
-        loginDatabase.PExecute("UPDATE account SET online = 0 WHERE id = '%u'", GetAccountId());
+        loginDatabase.PExecute("UPDATE account SET active_realm_id = 0 WHERE id = '%u'", GetAccountId());
 
         ///- If the player is in a guild, update the guild roster and broadcast a logout message to other guild members
         Guild *guild = objmgr.GetGuildById(_player->GetGuildId());
         if(guild)
         {
-            guild->LoadPlayerStatsByGuid(_player->GetGUID());
+            guild->SetMemberStats(_player->GetGUID());
             guild->UpdateLogoutTime(_player->GetGUID());
 
             WorldPacket data(SMSG_GUILD_EVENT, (1+1+12+8)); // name limited to 12 in character table.
@@ -422,7 +436,7 @@ void WorldSession::LogoutPlayer(bool Save)
         _player->CleanupsBeforeDelete();                    // do some cleanup before deleting to prevent crash at crossreferences to already deleted data
 
         delete _player;
-        _player = NULL;
+        SetPlayer(NULL);
 
         ///- Send the 'logout complete' packet to the client
         WorldPacket data( SMSG_LOGOUT_COMPLETE, 0 );

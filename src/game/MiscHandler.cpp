@@ -42,9 +42,11 @@
 #include "Pet.h"
 #include "SocialMgr.h"
 
-void WorldSession::HandleRepopRequestOpcode( WorldPacket & /*recv_data*/ )
+void WorldSession::HandleRepopRequestOpcode( WorldPacket & recv_data )
 {
     sLog.outDebug( "WORLD: Recvd CMSG_REPOP_REQUEST Message" );
+
+    recv_data.read_skip<uint8>();
 
     if(GetPlayer()->isAlive()||GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
         return;
@@ -782,9 +784,7 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
     {
         BattleGround* bg = GetPlayer()->GetBattleGround();
         if(bg)
-            if(bg->GetStatus() == STATUS_IN_PROGRESS)
-                bg->HandleAreaTrigger(GetPlayer(), Trigger_ID);
-
+            bg->HandleAreaTrigger(GetPlayer(), Trigger_ID);
         return;
     }
 
@@ -1424,13 +1424,15 @@ void WorldSession::HandleMoveSetCanFlyAckOpcode( WorldPacket & recv_data )
     sLog.outDebug("WORLD: CMSG_MOVE_SET_CAN_FLY_ACK");
     //recv_data.hexlike();
 
-    uint64 guid;
-    uint32 unk;
-    uint32 flags;
+    recv_data.read_skip<uint64>();                          // guid
+    recv_data.read_skip<uint32>();                          // unk
 
-    recv_data >> guid >> unk >> flags;
+    MovementInfo movementInfo;
+    ReadMovementInfo(recv_data, &movementInfo);
 
-    _player->m_movementInfo.SetMovementFlags(MovementFlags(flags));
+    recv_data.read_skip<uint32>();                          // unk2
+
+    _player->m_movementInfo.SetMovementFlags(movementInfo.GetMovementFlags());
 }
 
 void WorldSession::HandleRequestPetInfoOpcode( WorldPacket & /*recv_data */)

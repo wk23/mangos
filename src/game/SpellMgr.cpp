@@ -75,7 +75,7 @@ uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell)
         if(Player* modOwner = spell->GetCaster()->GetSpellModOwner())
             modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_CASTING_TIME, castTime, spell);
 
-        if( !(spellInfo->Attributes & (SPELL_ATTR_UNK4|SPELL_ATTR_UNK5)) )
+        if( !(spellInfo->Attributes & (SPELL_ATTR_UNK4|SPELL_ATTR_TRADESPELL)) )
             castTime = int32(castTime * spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
         else
         {
@@ -387,7 +387,8 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
             // some explicitly required dummy effect sets
             switch(spellId)
             {
-                case 28441: return false;                   // AB Effect 000
+                case 28441:                                 // AB Effect 000
+                    return false;
                 default:
                     break;
             }
@@ -417,6 +418,7 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                         case 38637:                         // Nether Exhaustion (red)
                         case 38638:                         // Nether Exhaustion (green)
                         case 38639:                         // Nether Exhaustion (blue)
+                        case 44689:                         // Relay Race Accept Hidden Debuff - DND
                             return false;
                         // some spells have unclear target modes for selection, so just make effect positive
                         case 27184:
@@ -710,8 +712,6 @@ void SpellMgr::LoadSpellTargetPositions()
 
         bar.step();
 
-        ++count;
-
         uint32 Spell_ID = fields[0].GetUInt32();
 
         SpellTargetPosition st;
@@ -758,6 +758,7 @@ void SpellMgr::LoadSpellTargetPositions()
         }
 
         mSpellTargetPositions[Spell_ID] = st;
+        ++count;
 
     } while( result->NextRow() );
 
@@ -1010,11 +1011,10 @@ bool SpellMgr::IsSpellProcEventCanTriggeredBy( SpellProcEventEntry const * spell
         if (!procSpell)
             return false;
 
-        SkillLineAbilityMap::const_iterator lower = spellmgr.GetBeginSkillLineAbilityMap(procSpell->Id);
-        SkillLineAbilityMap::const_iterator upper = spellmgr.GetEndSkillLineAbilityMap(procSpell->Id);
+        SkillLineAbilityMapBounds bounds = spellmgr.GetSkillLineAbilityMapBounds(procSpell->Id);
 
         bool found = false;
-        for(SkillLineAbilityMap::const_iterator _spell_idx = lower; _spell_idx != upper; ++_spell_idx)
+        for(SkillLineAbilityMap::const_iterator _spell_idx = bounds.first; _spell_idx != bounds.second; ++_spell_idx)
         {
             if(_spell_idx->second->skillId == spellProcEvent->skillId)
             {
@@ -1822,7 +1822,7 @@ void SpellMgr::LoadSpellLearnSpells()
 
     //                                                0      1        2
     QueryResult *result = WorldDatabase.Query("SELECT entry, SpellID, Active FROM spell_learn_spell");
-    if(!result)
+    if (!result)
     {
         barGoLink bar( 1 );
         bar.step();
@@ -1848,19 +1848,19 @@ void SpellMgr::LoadSpellLearnSpells()
         node.active     = fields[2].GetBool();
         node.autoLearned= false;
 
-        if(!sSpellStore.LookupEntry(spell_id))
+        if (!sSpellStore.LookupEntry(spell_id))
         {
             sLog.outErrorDb("Spell %u listed in `spell_learn_spell` does not exist",spell_id);
             continue;
         }
 
-        if(!sSpellStore.LookupEntry(node.spell))
+        if (!sSpellStore.LookupEntry(node.spell))
         {
             sLog.outErrorDb("Spell %u listed in `spell_learn_spell` learning not existed spell %u",spell_id,node.spell);
             continue;
         }
 
-        if(GetTalentSpellCost(node.spell))
+        if (GetTalentSpellCost(node.spell))
         {
             sLog.outErrorDb("Spell %u listed in `spell_learn_spell` attempt learning talent spell %u, skipped",spell_id,node.spell);
             continue;
@@ -1879,7 +1879,7 @@ void SpellMgr::LoadSpellLearnSpells()
     {
         SpellEntry const* entry = sSpellStore.LookupEntry(spell);
 
-        if(!entry)
+        if (!entry)
             continue;
 
         for(int i = 0; i < 3; ++i)
@@ -1891,7 +1891,7 @@ void SpellMgr::LoadSpellLearnSpells()
                 dbc_node.active      = true;                // all dbc based learned spells is active (show in spell book or hide by client itself)
 
                 // ignore learning not existed spells (broken/outdated/or generic learnig spell 483
-                if(!sSpellStore.LookupEntry(dbc_node.spell))
+                if (!sSpellStore.LookupEntry(dbc_node.spell))
                     continue;
 
                 // talent or passive spells or skill-step spells auto-casted and not need dependent learning,
@@ -1899,13 +1899,12 @@ void SpellMgr::LoadSpellLearnSpells()
                 // other required explicit dependent learning
                 dbc_node.autoLearned = entry->EffectImplicitTargetA[i]==TARGET_PET || GetTalentSpellCost(spell) > 0 || IsPassiveSpell(spell) || IsSpellHaveEffect(entry,SPELL_EFFECT_SKILL_STEP);
 
-                SpellLearnSpellMap::const_iterator db_node_begin = GetBeginSpellLearnSpell(spell);
-                SpellLearnSpellMap::const_iterator db_node_end   = GetEndSpellLearnSpell(spell);
+                SpellLearnSpellMapBounds db_node_bounds = GetSpellLearnSpellMapBounds(spell);
 
                 bool found = false;
-                for(SpellLearnSpellMap::const_iterator itr = db_node_begin; itr != db_node_end; ++itr)
+                for(SpellLearnSpellMap::const_iterator itr = db_node_bounds.first; itr != db_node_bounds.second; ++itr)
                 {
-                    if(itr->second.spell == dbc_node.spell)
+                    if (itr->second.spell == dbc_node.spell)
                     {
                         sLog.outErrorDb("Spell %u auto-learn spell %u in spell.dbc then the record in `spell_learn_spell` is redundant, please fix DB.",
                             spell,dbc_node.spell);
@@ -1914,7 +1913,7 @@ void SpellMgr::LoadSpellLearnSpells()
                     }
                 }
 
-                if(!found)                                  // add new spell-spell pair if not found
+                if (!found)                                 // add new spell-spell pair if not found
                 {
                     mSpellLearnSpells.insert(SpellLearnSpellMap::value_type(spell,dbc_node));
                     ++dbc_count;
@@ -2332,10 +2331,14 @@ void SpellMgr::LoadSpellAreas()
                 continue;
             }
 
-            if(spellInfo->EffectApplyAuraName[0]!=SPELL_AURA_DUMMY)
+            switch(spellInfo->EffectApplyAuraName[0])
             {
-                sLog.outErrorDb("Spell %u listed in `spell_area` have aura spell requirement (%u) without dummy aura in effect 0", spell,spellArea.auraSpell);
-                continue;
+                case SPELL_AURA_DUMMY:
+                case SPELL_AURA_GHOST:
+                    break;
+                default:
+                    sLog.outErrorDb("Spell %u listed in `spell_area` have aura spell requirement (%u) without dummy/phase/ghost aura in effect 0", spell,abs(spellArea.auraSpell));
+                    continue;
             }
 
             if(abs(spellArea.auraSpell)==spellArea.spellId)
@@ -2432,9 +2435,26 @@ SpellCastResult SpellMgr::GetSpellAllowedInLocationError(SpellEntry const *spell
     if( spellInfo->AreaId > 0 && spellInfo->AreaId != zone_id && spellInfo->AreaId != area_id )
         return SPELL_FAILED_REQUIRES_AREA;
 
+    // raid instance limitation
+    if (spellInfo->AttributesEx6 & SPELL_ATTR_EX6_NOT_IN_RAID_INSTANCE)
+    {
+        MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
+        if (!mapEntry || mapEntry->IsRaid())
+            return SPELL_FAILED_REQUIRES_AREA;
+    }
+
+    // continent limitation (virtual continent)
+    if (spellInfo->AttributesEx4 & SPELL_ATTR_EX4_CAST_ONLY_IN_OUTLAND)
+    {
+        uint32 v_map = GetVirtualMapForMapAndZone(map_id, zone_id);
+        MapEntry const* mapEntry = sMapStore.LookupEntry(v_map);
+        if(!mapEntry || mapEntry->addon < 1 || !mapEntry->IsContinent())
+            return SPELL_FAILED_REQUIRES_AREA;
+    }
+
     // DB base check (if non empty then must fit at least single for allow)
     SpellAreaMapBounds saBounds = spellmgr.GetSpellAreaMapBounds(spellInfo->Id);
-    if(saBounds.first != saBounds.second)
+    if (saBounds.first != saBounds.second)
     {
         for(SpellAreaMap::const_iterator itr = saBounds.first; itr != saBounds.second; ++itr)
         {
@@ -2445,67 +2465,77 @@ SpellCastResult SpellMgr::GetSpellAllowedInLocationError(SpellEntry const *spell
     }
 
     // bg spell checks
+
+    // do not allow spells to be cast in arenas
+    // - with SPELL_ATTR_EX4_NOT_USABLE_IN_ARENA flag
+    // - with greater than 15 min CD
+    if ((spellInfo->AttributesEx4 & SPELL_ATTR_EX4_NOT_USABLE_IN_ARENA) ||
+         (GetSpellRecoveryTime(spellInfo) > 15 * MINUTE * IN_MILISECONDS && !(spellInfo->AttributesEx4 & SPELL_ATTR_EX4_USABLE_IN_ARENA)))
+        if (player && player->InArena())
+            return SPELL_FAILED_NOT_IN_ARENA;
+
+    // Spell casted only on battleground
+    if ((spellInfo->AttributesEx3 & SPELL_ATTR_EX3_BATTLEGROUND))
+        if (!player || !player->InBattleGround())
+            return SPELL_FAILED_ONLY_BATTLEGROUNDS;
+
     switch(spellInfo->Id)
     {
+        // a trinket in alterac valley allows to teleport to the boss
+        case 22564:                                         // recall
+        case 22563:                                         // recall
+        {
+            if (!player)
+                return SPELL_FAILED_REQUIRES_AREA;
+            BattleGround* bg = player->GetBattleGround();
+            return map_id == 30 && bg
+                && bg->GetStatus() != STATUS_WAIT_JOIN ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+        }
         case 23333:                                         // Warsong Flag
         case 23335:                                         // Silverwing Flag
             return map_id == 489 && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
         case 34976:                                         // Netherstorm Flag
             return map_id == 566 && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
         case 2584:                                          // Waiting to Resurrect
+        case 42792:                                         // Recently Dropped Flag
+        case 43681:                                         // Inactive
+        {
+            return player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_ONLY_BATTLEGROUNDS;
+        }
         case 22011:                                         // Spirit Heal Channel
         case 22012:                                         // Spirit Heal
         case 24171:                                         // Resurrection Impact Visual
-        case 42792:                                         // Recently Dropped Flag
-        case 43681:                                         // Inactive
         case 44535:                                         // Spirit Heal (mana)
         {
             MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
-            if(!mapEntry)
+            if (!mapEntry)
                 return SPELL_FAILED_REQUIRES_AREA;
-
-            return mapEntry->IsBattleGround() && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+            return mapEntry->IsBattleGround()? SPELL_CAST_OK : SPELL_FAILED_ONLY_BATTLEGROUNDS;
         }
         case 44521:                                         // Preparation
         {
-            if(!player)
-                return SPELL_FAILED_REQUIRES_AREA;
-
-            MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
-            if(!mapEntry)
-                return SPELL_FAILED_REQUIRES_AREA;
-
-            if(!mapEntry->IsBattleGround())
+            if (!player)
                 return SPELL_FAILED_REQUIRES_AREA;
 
             BattleGround* bg = player->GetBattleGround();
-            return bg && bg->GetStatus()==STATUS_WAIT_JOIN ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+            return bg && bg->GetStatus()==STATUS_WAIT_JOIN ? SPELL_CAST_OK : SPELL_FAILED_ONLY_BATTLEGROUNDS;
         }
         case 32724:                                         // Gold Team (Alliance)
         case 32725:                                         // Green Team (Alliance)
         case 35774:                                         // Gold Team (Horde)
         case 35775:                                         // Green Team (Horde)
         {
-            MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
-            if(!mapEntry)
-                return SPELL_FAILED_REQUIRES_AREA;
-
-            return mapEntry->IsBattleArena() && player && player->InBattleGround() ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+            return player && player->InArena() ? SPELL_CAST_OK : SPELL_FAILED_ONLY_IN_ARENA;
         }
         case 32727:                                         // Arena Preparation
         {
-            if(!player)
+            if (!player)
                 return SPELL_FAILED_REQUIRES_AREA;
-
-            MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
-            if(!mapEntry)
-                return SPELL_FAILED_REQUIRES_AREA;
-
-            if(!mapEntry->IsBattleArena())
+            if (!player->InArena())
                 return SPELL_FAILED_REQUIRES_AREA;
 
             BattleGround* bg = player->GetBattleGround();
-            return bg && bg->GetStatus()==STATUS_WAIT_JOIN ? SPELL_CAST_OK : SPELL_FAILED_REQUIRES_AREA;
+            return bg && bg->GetStatus()==STATUS_WAIT_JOIN ? SPELL_CAST_OK : SPELL_FAILED_ONLY_IN_ARENA;
         }
     }
 
@@ -2792,13 +2822,6 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
     // Explicit Diminishing Groups
     switch(spellproto->SpellFamilyName)
     {
-        case SPELLFAMILY_MAGE:
-        {
-            // Polymorph
-            if ((spellproto->SpellFamilyFlags & UI64LIT(0x00001000000)) && spellproto->EffectApplyAuraName[0]==SPELL_AURA_MOD_CONFUSE)
-                return DIMINISHING_POLYMORPH;
-            break;
-        }
         case SPELLFAMILY_ROGUE:
         {
             // Kidney Shot
@@ -2818,9 +2841,6 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
         }
         case SPELLFAMILY_WARLOCK:
         {
-            // Death Coil
-            if (spellproto->SpellFamilyFlags & UI64LIT(0x00000080000))
-                return DIMINISHING_DEATHCOIL;
             // Fear
             if (spellproto->SpellFamilyFlags & UI64LIT(0x40840000000))
                 return DIMINISHING_WARLOCK_FEAR;
@@ -2848,30 +2868,34 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
     }
 
     // Get by mechanic
-    for (uint8 i=0;i<3;++i)
-    {
-        if (spellproto->Mechanic      == MECHANIC_STUN    || spellproto->EffectMechanic[i] == MECHANIC_STUN)
-            return triggered ? DIMINISHING_TRIGGER_STUN : DIMINISHING_CONTROL_STUN;
-        else if (spellproto->Mechanic == MECHANIC_SLEEP   || spellproto->EffectMechanic[i] == MECHANIC_SLEEP)
-            return DIMINISHING_SLEEP;
-        else if (spellproto->Mechanic == MECHANIC_ROOT    || spellproto->EffectMechanic[i] == MECHANIC_ROOT)
-            return triggered ? DIMINISHING_TRIGGER_ROOT : DIMINISHING_CONTROL_ROOT;
-        else if (spellproto->Mechanic == MECHANIC_FEAR    || spellproto->EffectMechanic[i] == MECHANIC_FEAR)
-            return DIMINISHING_FEAR;
-        else if (spellproto->Mechanic == MECHANIC_CHARM   || spellproto->EffectMechanic[i] == MECHANIC_CHARM)
-            return DIMINISHING_CHARM;
-        else if (spellproto->Mechanic == MECHANIC_SILENCE || spellproto->EffectMechanic[i] == MECHANIC_SILENCE)
-            return DIMINISHING_SILENCE;
-        else if (spellproto->Mechanic == MECHANIC_DISARM  || spellproto->EffectMechanic[i] == MECHANIC_DISARM)
-            return DIMINISHING_DISARM;
-        else if (spellproto->Mechanic == MECHANIC_FREEZE  || spellproto->EffectMechanic[i] == MECHANIC_FREEZE)
-            return DIMINISHING_FREEZE;
-        else if (spellproto->Mechanic == MECHANIC_KNOCKOUT|| spellproto->EffectMechanic[i] == MECHANIC_KNOCKOUT ||
-                 spellproto->Mechanic == MECHANIC_SAPPED  || spellproto->EffectMechanic[i] == MECHANIC_SAPPED)
-            return DIMINISHING_KNOCKOUT;
-        else if (spellproto->Mechanic == MECHANIC_BANISH  || spellproto->EffectMechanic[i] == MECHANIC_BANISH)
-            return DIMINISHING_BANISH;
-    }
+    uint32 mechanic = GetAllSpellMechanicMask(spellproto);
+    if (!mechanic)
+        return DIMINISHING_NONE;
+
+    if (mechanic & (1<<(MECHANIC_STUN-1)))
+        return triggered ? DIMINISHING_TRIGGER_STUN : DIMINISHING_CONTROL_STUN;
+    if (mechanic & (1<<(MECHANIC_SLEEP-1)))
+        return DIMINISHING_SLEEP;
+    if (mechanic & (1<<(MECHANIC_POLYMORPH-1)))
+        return DIMINISHING_POLYMORPH;
+    if (mechanic & (1<<(MECHANIC_ROOT-1)))
+        return triggered ? DIMINISHING_TRIGGER_ROOT : DIMINISHING_CONTROL_ROOT;
+    if (mechanic & (1<<(MECHANIC_FEAR-1)))
+        return DIMINISHING_FEAR;
+    if (mechanic & (1<<(MECHANIC_CHARM-1)))
+        return DIMINISHING_CHARM;
+    if (mechanic & (1<<(MECHANIC_SILENCE-1)))
+        return DIMINISHING_SILENCE;
+    if (mechanic & (1<<(MECHANIC_DISARM-1)))
+        return DIMINISHING_DISARM;
+    if (mechanic & (1<<(MECHANIC_FREEZE-1)))
+        return DIMINISHING_FREEZE;
+    if (mechanic & ((1<<(MECHANIC_KNOCKOUT-1))|(1<<(MECHANIC_SAPPED-1))))
+        return DIMINISHING_KNOCKOUT;
+    if (mechanic & (1<<(MECHANIC_BANISH-1)))
+        return DIMINISHING_BANISH;
+    if (mechanic & (1<<(MECHANIC_HORROR-1)))
+        return DIMINISHING_DEATHCOIL;
 
     return DIMINISHING_NONE;
 }

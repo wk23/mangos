@@ -25,7 +25,6 @@
 #include "Player.h"
 #include "Item.h"
 #include "UpdateData.h"
-#include "ObjectAccessor.h"
 
 void WorldSession::HandleSplitItemOpcode( WorldPacket & recv_data )
 {
@@ -562,12 +561,12 @@ void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
                     pItem->SetCount( pItem->GetCount() - count );
                     _player->ItemRemovedQuestCheck( pItem->GetEntry(), count );
                     if( _player->IsInWorld() )
-                        pItem->SendUpdateToPlayer( _player );
+                        pItem->SendCreateUpdateToPlayer( _player );
                     pItem->SetState(ITEM_CHANGED, _player);
 
                     _player->AddItemToBuyBackSlot( pNewItem );
                     if( _player->IsInWorld() )
-                        pNewItem->SendUpdateToPlayer( _player );
+                        pNewItem->SendCreateUpdateToPlayer( _player );
                 }
                 else
                 {
@@ -1243,7 +1242,7 @@ void WorldSession::HandleSocketOpcode(WorldPacket& recv_data)
         _player->ApplyEnchantment(itemTarget,EnchantmentSlot(enchant_slot),true);
 
     bool SocketBonusToBeActivated = itemTarget->GemsFitSockets();//current socketbonus state
-    if(SocketBonusActivated ^ SocketBonusToBeActivated)     //if there was a change...
+    if(SocketBonusActivated != SocketBonusToBeActivated)    //if there was a change...
     {
         _player->ApplyEnchantment(itemTarget,BONUS_ENCHANTMENT_SLOT,false);
         itemTarget->SetEnchantment(BONUS_ENCHANTMENT_SLOT, (SocketBonusToBeActivated ? itemTarget->GetProto()->socketBonus : 0), 0, 0);

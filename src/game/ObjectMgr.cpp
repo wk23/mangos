@@ -937,6 +937,24 @@ void ObjectMgr::LoadCreatures()
         int16 gameEvent     = fields[17].GetInt16();
         int16 PoolId        = fields[18].GetInt16();
 
+        MapEntry const* mapEntry = sMapStore.LookupEntry(data.mapid);
+        if(!mapEntry)
+        {
+            sLog.outErrorDb("Table `creature` have creature (GUID: %u) that spawned at not existed map (Id: %u), skipped.",guid, data.mapid );
+            continue;
+        }
+
+        if(mapEntry->IsDungeon())
+        {
+            if(data.spawnMask & ~SPAWNMASK_DUNGEON_ALL)
+                sLog.outErrorDb("Table `creature` have creature (GUID: %u) that have wrong spawn mask %u for non-raid dungeon map (Id: %u).",guid, data.spawnMask, data.mapid );
+        }
+        else
+        {
+            if(data.spawnMask & ~SPAWNMASK_CONTINENT)
+                sLog.outErrorDb("Table `creature` have creature (GUID: %u) that have wrong spawn mask %u for non-dungeon map (Id: %u).",guid, data.spawnMask, data.mapid );
+        }
+
         if(heroicCreatures.find(data.id)!=heroicCreatures.end())
         {
             sLog.outErrorDb("Table `creature` have creature (GUID: %u) that listed as heroic template in `creature_template`, skipped.",guid,data.id );
@@ -960,8 +978,7 @@ void ObjectMgr::LoadCreatures()
 
         if(cInfo->flags_extra & CREATURE_FLAG_EXTRA_INSTANCE_BIND)
         {
-            MapEntry const* map = sMapStore.LookupEntry(data.mapid);
-            if(!map || !map->IsDungeon())
+            if(!mapEntry || !mapEntry->IsDungeon())
                 sLog.outErrorDb("Table `creature` have creature (GUID: %u Entry: %u) with `creature_template`.`flags_extra` including CREATURE_FLAG_EXTRA_INSTANCE_BIND but creature are not in instance.",guid,data.id);
         }
 
@@ -1070,13 +1087,13 @@ void ObjectMgr::LoadGameobjects()
         uint32 entry        = fields[ 1].GetUInt32();
 
         GameObjectInfo const* gInfo = GetGameObjectInfo(entry);
-        if(!gInfo)
+        if (!gInfo)
         {
             sLog.outErrorDb("Table `gameobject` has gameobject (GUID: %u) with non existing gameobject entry %u, skipped.", guid, entry);
             continue;
         }
 
-        if(gInfo->displayId && !sGameObjectDisplayInfoStore.LookupEntry(gInfo->displayId))
+        if (gInfo->displayId && !sGameObjectDisplayInfoStore.LookupEntry(gInfo->displayId))
         {
             sLog.outErrorDb("Gameobject (GUID: %u Entry %u GoType: %u) have invalid displayId (%u), not loaded.",guid, entry, gInfo->type, gInfo->displayId);
             continue;
@@ -1095,6 +1112,24 @@ void ObjectMgr::LoadGameobjects()
         data.rotation2      = fields[ 9].GetFloat();
         data.rotation3      = fields[10].GetFloat();
         data.spawntimesecs  = fields[11].GetInt32();
+
+        MapEntry const* mapEntry = sMapStore.LookupEntry(data.mapid);
+        if(!mapEntry)
+        {
+            sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) that spawned at not existed map (Id: %u), skip", guid, data.id, data.mapid);
+            continue;
+        }
+
+        if(mapEntry->IsDungeon())
+        {
+            if(data.spawnMask & ~SPAWNMASK_DUNGEON_ALL)
+                sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) that have wrong spawn mask %u for dungeon map (Id: %u), skip", guid, data.id, data.spawnMask, data.mapid);
+        }
+        else
+        {
+            if(data.spawnMask & ~SPAWNMASK_CONTINENT)
+                sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) that have wrong spawn mask %u for non-dungeon map (Id: %u), skip", guid, data.id, data.spawnMask, data.mapid);
+        }
 
         if (data.spawntimesecs==0 && gInfo->IsDespawnAtAction())
         {
@@ -1115,19 +1150,19 @@ void ObjectMgr::LoadGameobjects()
         int16 gameEvent     = fields[15].GetInt16();
         int16 PoolId        = fields[16].GetInt16();
 
-        if(data.rotation2 < -1.0f || data.rotation2 > 1.0f)
+        if (data.rotation2 < -1.0f || data.rotation2 > 1.0f)
         {
             sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) with invalid rotation2 (%f) value, skip",guid,data.id,data.rotation2 );
             continue;
         }
 
-        if(data.rotation3 < -1.0f || data.rotation3 > 1.0f)
+        if (data.rotation3 < -1.0f || data.rotation3 > 1.0f)
         {
             sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) with invalid rotation3 (%f) value, skip",guid,data.id,data.rotation3 );
             continue;
         }
 
-        if(!MapManager::IsValidMapCoord(data.mapid,data.posX,data.posY,data.posZ,data.orientation))
+        if (!MapManager::IsValidMapCoord(data.mapid,data.posX,data.posY,data.posZ,data.orientation))
         {
             sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) with invalid coordinates, skip",guid,data.id );
             continue;
@@ -1806,10 +1841,8 @@ void ObjectMgr::LoadItemRequiredTarget()
                 if (pItemProto->Spells[i].SpellTrigger == ITEM_SPELLTRIGGER_ON_USE ||
                     pItemProto->Spells[i].SpellTrigger == ITEM_SPELLTRIGGER_ON_NO_DELAY_USE)
                 {
-                    SpellScriptTarget::const_iterator lower = spellmgr.GetBeginSpellScriptTarget(pSpellInfo->Id);
-                    SpellScriptTarget::const_iterator upper = spellmgr.GetEndSpellScriptTarget(pSpellInfo->Id);
-
-                    if (lower != upper)
+                    SpellScriptTargetBounds bounds = spellmgr.GetSpellScriptTargetBounds(pSpellInfo->Id);
+                    if (bounds.first != bounds.second)
                         break;
 
                     for (int j = 0; j < 3; ++j)
@@ -2596,6 +2629,11 @@ void ObjectMgr::LoadGuilds()
 
     delete result;
 
+    //delete unused LogGuid records in guild_eventlog and guild_bank_eventlog table
+    //you can comment these lines if you don't plan to change CONFIG_GUILD_EVENT_LOG_COUNT and CONFIG_GUILD_BANK_EVENT_LOG_COUNT
+    CharacterDatabase.PQuery("DELETE FROM guild_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_GUILD_EVENT_LOG_COUNT));
+    CharacterDatabase.PQuery("DELETE FROM guild_bank_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_GUILD_BANK_EVENT_LOG_COUNT));
+
     sLog.outString();
     sLog.outString( ">> Loaded %u guild definitions", count );
 }
@@ -2867,6 +2905,9 @@ void ObjectMgr::LoadQuests()
     delete result;
 
     // Post processing
+
+    std::map<uint32,uint32> usedMailTemplates;
+
     for (QuestMap::iterator iter = mQuestTemplates.begin(); iter != mQuestTemplates.end(); ++iter)
     {
         Quest * qinfo = iter->second;
@@ -3366,20 +3407,17 @@ void ObjectMgr::LoadQuests()
                     qinfo->GetQuestId(),qinfo->RewSpell,qinfo->RewSpell);
                 qinfo->RewSpell = 0;                        // no spell reward will display for this quest
             }
-
-            if(!SpellMgr::IsSpellValid(spellInfo))
+            else if(!SpellMgr::IsSpellValid(spellInfo))
             {
                 sLog.outErrorDb("Quest %u has `RewSpell` = %u but spell %u is broken, quest will not have a spell reward.",
                     qinfo->GetQuestId(),qinfo->RewSpell,qinfo->RewSpell);
                 qinfo->RewSpell = 0;                        // no spell reward will display for this quest
             }
-
-            if(GetTalentSpellCost(qinfo->RewSpell))
+            else if(GetTalentSpellCost(qinfo->RewSpell))
             {
                 sLog.outErrorDb("Quest %u has `RewSpell` = %u but spell %u is talent, quest will not have a spell reward.",
                     qinfo->GetQuestId(),qinfo->RewSpell,qinfo->RewSpell);
                 qinfo->RewSpell = 0;                        // no spell reward will display for this quest
-                continue;
             }
         }
 
@@ -3393,38 +3431,45 @@ void ObjectMgr::LoadQuests()
                     qinfo->GetQuestId(),qinfo->RewSpellCast,qinfo->RewSpellCast);
                 qinfo->RewSpellCast = 0;                    // no spell will be casted on player
             }
-
-            if(!SpellMgr::IsSpellValid(spellInfo))
+            else if(!SpellMgr::IsSpellValid(spellInfo))
             {
                 sLog.outErrorDb("Quest %u has `RewSpellCast` = %u but spell %u is broken, quest will not have a spell reward.",
                     qinfo->GetQuestId(),qinfo->RewSpellCast,qinfo->RewSpellCast);
                 qinfo->RewSpellCast = 0;                    // no spell will be casted on player
             }
-
-            if(GetTalentSpellCost(qinfo->RewSpellCast))
+            else if(GetTalentSpellCost(qinfo->RewSpellCast))
             {
                 sLog.outErrorDb("Quest %u has `RewSpell` = %u but spell %u is talent, quest will not have a spell reward.",
                     qinfo->GetQuestId(),qinfo->RewSpellCast,qinfo->RewSpellCast);
                 qinfo->RewSpellCast = 0;                    // no spell will be casted on player
-                continue;
             }
         }
 
-        if(qinfo->RewMailTemplateId)
+        if (qinfo->RewMailTemplateId)
         {
-            if(!sMailTemplateStore.LookupEntry(qinfo->RewMailTemplateId))
+            if (!sMailTemplateStore.LookupEntry(qinfo->RewMailTemplateId))
             {
                 sLog.outErrorDb("Quest %u has `RewMailTemplateId` = %u but mail template  %u does not exist, quest will not have a mail reward.",
                     qinfo->GetQuestId(),qinfo->RewMailTemplateId,qinfo->RewMailTemplateId);
                 qinfo->RewMailTemplateId = 0;               // no mail will send to player
                 qinfo->RewMailDelaySecs = 0;                // no mail will send to player
             }
+            else if (usedMailTemplates.find(qinfo->RewMailTemplateId) != usedMailTemplates.end())
+            {
+                std::map<uint32,uint32>::const_iterator used_mt_itr = usedMailTemplates.find(qinfo->RewMailTemplateId);
+                sLog.outErrorDb("Quest %u has `RewMailTemplateId` = %u but mail template  %u already used for quest %u, quest will not have a mail reward.",
+                    qinfo->GetQuestId(),qinfo->RewMailTemplateId,qinfo->RewMailTemplateId,used_mt_itr->second);
+                qinfo->RewMailTemplateId = 0;               // no mail will send to player
+                qinfo->RewMailDelaySecs = 0;                // no mail will send to player
+            }
+            else
+                usedMailTemplates[qinfo->RewMailTemplateId] = qinfo->GetQuestId();
         }
 
-        if(qinfo->NextQuestInChain)
+        if (qinfo->NextQuestInChain)
         {
             QuestMap::iterator qNextItr = mQuestTemplates.find(qinfo->NextQuestInChain);
-            if(qNextItr == mQuestTemplates.end())
+            if (qNextItr == mQuestTemplates.end())
             {
                 sLog.outErrorDb("Quest %u has `NextQuestInChain` = %u but quest %u does not exist, quest chain will not work.",
                     qinfo->GetQuestId(),qinfo->NextQuestInChain ,qinfo->NextQuestInChain );
@@ -3435,7 +3480,7 @@ void ObjectMgr::LoadQuests()
         }
 
         // fill additional data stores
-        if(qinfo->PrevQuestId)
+        if (qinfo->PrevQuestId)
         {
             if (mQuestTemplates.find(abs(qinfo->GetPrevQuestId())) == mQuestTemplates.end())
             {

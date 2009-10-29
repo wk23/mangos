@@ -70,6 +70,7 @@ bool ChatHandler::HandleReloadAllCommand(const char*)
     HandleReloadReservedNameCommand("");
     HandleReloadMangosStringCommand("");
     HandleReloadGameTeleCommand("");
+    HandleReloadBattleEventCommand("");
     return true;
 }
 
@@ -178,6 +179,7 @@ bool ChatHandler::HandleReloadConfigCommand(const char* /*args*/)
 {
     sLog.outString( "Re-Loading config settings..." );
     sWorld.LoadConfigSettings(true);
+    MapManager::Instance().InitializeVisibilityDistanceInfo();
     SendGlobalSysMessage("World config settings reloaded.");
     return true;
 }
@@ -321,12 +323,12 @@ bool ChatHandler::HandleReloadLootTemplatesProspectingCommand(const char*)
     return true;
 }
 
-bool ChatHandler::HandleReloadLootTemplatesQuestMailCommand(const char*)
+bool ChatHandler::HandleReloadLootTemplatesMailCommand(const char*)
 {
-    sLog.outString( "Re-Loading Loot Tables... (`quest_mail_loot_template`)" );
-    LoadLootTemplates_QuestMail();
-    LootTemplates_QuestMail.CheckLootRefs();
-    SendGlobalSysMessage("DB table `quest_mail_loot_template` reloaded.");
+    sLog.outString( "Re-Loading Loot Tables... (`mail_loot_template`)" );
+    LoadLootTemplates_Mail();
+    LootTemplates_Mail.CheckLootRefs();
+    SendGlobalSysMessage("DB table `mail_loot_template` reloaded.");
     return true;
 }
 
@@ -523,6 +525,14 @@ bool ChatHandler::HandleReloadItemRequiredTragetCommand(const char*)
     return true;
 }
 
+bool ChatHandler::HandleReloadBattleEventCommand(const char*)
+{
+    sLog.outString( "Re-Loading BattleGround Eventindexes..." );
+    sBattleGroundMgr.LoadBattleEventIndexes();
+    SendGlobalSysMessage("DB table `gameobject_battleground` and `creature_battleground` reloaded.");
+    return true;
+}
+
 bool ChatHandler::HandleReloadGameObjectScriptsCommand(const char* arg)
 {
     if(sWorld.IsScriptScheduled())
@@ -567,7 +577,7 @@ bool ChatHandler::HandleReloadEventAITextsCommand(const char* arg)
 {
 
     sLog.outString( "Re-Loading Texts from `creature_ai_texts`...");
-    CreatureEAI_Mgr.LoadCreatureEventAI_Texts();
+    CreatureEAI_Mgr.LoadCreatureEventAI_Texts(true);
     SendGlobalSysMessage("DB table `creature_ai_texts` reloaded.");
     return true;
 }
@@ -575,7 +585,7 @@ bool ChatHandler::HandleReloadEventAITextsCommand(const char* arg)
 bool ChatHandler::HandleReloadEventAISummonsCommand(const char* arg)
 {
     sLog.outString( "Re-Loading Summons from `creature_ai_summons`...");
-    CreatureEAI_Mgr.LoadCreatureEventAI_Summons();
+    CreatureEAI_Mgr.LoadCreatureEventAI_Summons(true);
     SendGlobalSysMessage("DB table `creature_ai_summons` reloaded.");
     return true;
 }
@@ -3039,7 +3049,7 @@ bool ChatHandler::HandleGuildCreateCommand(const char* args)
     }
 
     Guild *guild = new Guild;
-    if (!guild->create (target,guildname))
+    if (!guild->Create (target,guildname))
     {
         delete guild;
         SendSysMessage (LANG_GUILD_NOT_CREATED);
@@ -3950,30 +3960,6 @@ bool ChatHandler::HandleChangeWeather(const char* args)
 
     wth->SetWeather(WeatherType(type), grade);
 
-    return true;
-}
-
-bool ChatHandler::HandleSet32Bit(const char* args)
-{
-    if(!*args)
-        return false;
-
-    char* px = strtok((char*)args, " ");
-    char* py = strtok(NULL, " ");
-
-    if (!px || !py)
-        return false;
-
-    uint32 Opcode = (uint32)atoi(px);
-    uint32 Value = (uint32)atoi(py);
-    if (Value > 32)                                         //uint32 = 32 bits
-        return false;
-
-    sLog.outDebug(GetMangosString(LANG_SET_32BIT), Opcode, Value);
-
-    m_session->GetPlayer( )->SetUInt32Value( Opcode , 2^Value );
-
-    PSendSysMessage(LANG_SET_32BIT_FIELD, Opcode,1);
     return true;
 }
 
@@ -5535,13 +5521,7 @@ bool ChatHandler::HandleCastBackCommand(const char* args)
 
     bool triggered = (trig_str != NULL);
 
-    // update orientation at server
-    caster->SetOrientation(caster->GetAngle(m_session->GetPlayer()));
-
-    // and client
-    WorldPacket data;
-    caster->BuildHeartBeatMsg(&data);
-    caster->SendMessageToSet(&data,true);
+    caster->SetFacingToObject(m_session->GetPlayer());
 
     caster->CastSpell(m_session->GetPlayer(),spell,triggered);
 
@@ -5626,13 +5606,7 @@ bool ChatHandler::HandleCastTargetCommand(const char* args)
 
     bool triggered = (trig_str != NULL);
 
-    // update orientation at server
-    caster->SetOrientation(caster->GetAngle(m_session->GetPlayer()));
-
-    // and client
-    WorldPacket data;
-    caster->BuildHeartBeatMsg(&data);
-    caster->SendMessageToSet(&data,true);
+    caster->SetFacingToObject(m_session->GetPlayer());
 
     caster->CastSpell(caster->getVictim(),spell,triggered);
 
@@ -5727,7 +5701,14 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
         {
             InstanceSave *save = itr->second.save;
             std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
-            PSendSysMessage("map: %d inst: %d perm: %s diff: %s canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no",  save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
+            if (const MapEntry* entry = sMapStore.LookupEntry(itr->first))
+            {
+                PSendSysMessage("map: %d (%s) inst: %d perm: %s diff: %s canReset: %s TTR: %s",
+                    itr->first, entry->name[m_session->GetSessionDbcLocale()], save->GetInstanceId(), itr->second.perm ? "yes" : "no",
+                    save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
+            }
+            else
+                PSendSysMessage("bound for a nonexistant map %u", itr->first);
             counter++;
         }
     }
@@ -5743,7 +5724,15 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
             {
                 InstanceSave *save = itr->second.save;
                 std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
-                PSendSysMessage("map: %d inst: %d perm: %s diff: %s canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no",  save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
+
+                if (const MapEntry* entry = sMapStore.LookupEntry(itr->first))
+                {
+                    PSendSysMessage("map: %d (%s) inst: %d perm: %s diff: %s canReset: %s TTR: %s",
+                        itr->first, entry->name[m_session->GetSessionDbcLocale()], save->GetInstanceId(), itr->second.perm ? "yes" : "no",
+                        save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
+                }
+                else
+                    PSendSysMessage("bound for a nonexistant map %u", itr->first);
                 counter++;
             }
         }
@@ -5758,31 +5747,53 @@ bool ChatHandler::HandleInstanceUnbindCommand(const char* args)
     if(!*args)
         return false;
 
-    std::string cmd = args;
-    if(cmd == "all")
+    Player* player = getSelectedPlayer();
+    if (!player)
+        player = m_session->GetPlayer();
+    uint32 counter = 0;
+    uint32 mapid = 0;
+    bool got_map = false;
+
+    if (strncmp(args,"all",strlen(args)) != 0)
     {
-        Player* player = getSelectedPlayer();
-        if (!player) player = m_session->GetPlayer();
-        uint32 counter = 0;
-        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
+        if(!isNumeric(args[0]))
+            return false;
+
+        got_map = true;
+        mapid = atoi(args);
+    }
+
+    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
+    {
+        Player::BoundInstancesMap &binds = player->GetBoundInstances(i);
+        for(Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end();)
         {
-            Player::BoundInstancesMap &binds = player->GetBoundInstances(i);
-            for(Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end();)
+            if (got_map && mapid != itr->first)
             {
-                if(itr->first != player->GetMapId())
+                ++itr;
+                continue;
+            }
+            if (itr->first != player->GetMapId())
+            {
+                InstanceSave *save = itr->second.save;
+                std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
+                if (const MapEntry* entry = sMapStore.LookupEntry(itr->first))
                 {
-                    InstanceSave *save = itr->second.save;
-                    std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
-                    PSendSysMessage("unbinding map: %d inst: %d perm: %s diff: %s canReset: %s TTR: %s", itr->first, save->GetInstanceId(), itr->second.perm ? "yes" : "no",  save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
-                    player->UnbindInstance(itr, i);
-                    counter++;
+                    PSendSysMessage("unbinding map: %d (%s) inst: %d perm: %s diff: %s canReset: %s TTR: %s",
+                        itr->first, entry->name[m_session->GetSessionDbcLocale()], save->GetInstanceId(), itr->second.perm ? "yes" : "no",
+                        save->GetDifficulty() == DIFFICULTY_NORMAL ? "normal" : "heroic", save->CanReset() ? "yes" : "no", timeleft.c_str());
                 }
                 else
-                    ++itr;
+                    PSendSysMessage("bound for a nonexistant map %u - try to unbind anyway", itr->first);
+                player->UnbindInstance(itr, i);
+                counter++;
             }
+            else
+                ++itr;
         }
-        PSendSysMessage("instances unbound: %d", counter);
     }
+    PSendSysMessage("instances unbound: %d", counter);
+
     return true;
 }
 

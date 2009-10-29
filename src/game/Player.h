@@ -155,7 +155,7 @@ struct ActionButton
     void SetActionAndType(uint32 action, ActionButtonType type)
     {
         uint32 newData = action | (uint32(type) << 24);
-        if (newData != packedData)
+        if (newData != packedData || uState == ACTIONBUTTON_DELETED)
         {
             packedData = newData;
             if (uState != ACTIONBUTTON_NEW)
@@ -887,6 +887,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool CanInteractWithNPCs(bool alive = true) const;
         GameObject* GetGameObjectIfCanInteractWith(uint64 guid, GameobjectTypes type) const;
 
+        void UpdateVisibilityForPlayer();
+
         bool ToggleAFK();
         bool ToggleDND();
         bool isAFK() const { return HasFlag(PLAYER_FLAGS,PLAYER_FLAGS_AFK); };
@@ -1123,6 +1125,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void CompleteQuest( uint32 quest_id );
         void IncompleteQuest( uint32 quest_id );
         void RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver, bool announce = true );
+
         void FailQuest( uint32 quest_id );
         bool SatisfyQuestSkillOrClass( Quest const* qInfo, bool msg );
         bool SatisfyQuestLevel( Quest const* qInfo, bool msg );
@@ -1239,6 +1242,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool m_mailsLoaded;
         bool m_mailsUpdated;
+
+        void SendPetTameFailure(PetTameFailureReason reason);
 
         void SetBindPoint(uint64 guid);
         void SendTalentWipeConfirm(uint64 guid);
@@ -1843,7 +1848,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         void ClearAfkReports() { m_bgAfkReporter.clear(); }
 
         bool GetBGAccessByLevel(BattleGroundTypeId bgTypeId) const;
-        bool isAllowUseBattleGroundObject();
+        bool CanUseBattleGroundObject();
+        bool CanCaptureTowerPoint();
 
         /*********************************************************/
         /***               OUTDOOR PVP SYSTEM                  ***/
@@ -1866,7 +1872,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /***              ENVIROMENTAL SYSTEM                  ***/
         /*********************************************************/
 
-        void EnvironmentalDamage(EnviromentalDamage type, uint32 damage);
+        uint32 EnvironmentalDamage(EnviromentalDamage type, uint32 damage);
 
         /*********************************************************/
         /***               FLOOD FILTER SYSTEM                 ***/
@@ -1900,7 +1906,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SetClientControl(Unit* target, uint8 allowMove);
 
         uint64 GetFarSight() const { return GetUInt64Value(PLAYER_FARSIGHT); }
-        void SetFarSightGUID(uint64 guid) { SetUInt64Value(PLAYER_FARSIGHT, guid); }
+        void SetFarSightGUID(uint64 guid);
 
         // Transports
         Transport * GetTransport() const { return m_transport; }
@@ -1937,13 +1943,14 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool HaveAtClient(WorldObject const* u) { return u==this || m_clientGUIDs.find(u->GetGUID())!=m_clientGUIDs.end(); }
 
+        WorldObject const* GetViewPoint() const;
         bool IsVisibleInGridForPlayer(Player* pl) const;
         bool IsVisibleGloballyFor(Player* pl) const;
 
-        void UpdateVisibilityOf(WorldObject* target);
+        void UpdateVisibilityOf(WorldObject const* viewPoint, WorldObject* target);
 
         template<class T>
-            void UpdateVisibilityOf(T* target, UpdateData& data, UpdateDataMapType& data_updates, std::set<WorldObject*>& visibleNow);
+            void UpdateVisibilityOf(WorldObject const* viewPoint,T* target, UpdateData& data, UpdateDataMapType& data_updates, std::set<WorldObject*>& visibleNow);
 
         // Stealth detection system
         void HandleStealthedUnitsDetection();

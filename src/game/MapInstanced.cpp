@@ -32,6 +32,17 @@ MapInstanced::MapInstanced(uint32 id, time_t expiry) : Map(id, expiry, 0, 0)
     memset(&GridMapReference, 0, MAX_NUMBER_OF_GRIDS*MAX_NUMBER_OF_GRIDS*sizeof(uint16));
 }
 
+void MapInstanced::InitVisibilityDistance()
+{
+    if(m_InstancedMaps.empty())
+        return;
+    //initialize visibility distances for all instance copies
+    for (InstancedMaps::iterator i = m_InstancedMaps.begin(); i != m_InstancedMaps.end(); ++i)
+    {
+        (*i).second->InitVisibilityDistance();
+    }
+}
+
 void MapInstanced::Update(const uint32& t)
 {
     // take care of loaded GridMaps (when unused, unload it!)
@@ -149,7 +160,7 @@ Map* MapInstanced::GetInstance(const WorldObject* obj)
                 assert(NewInstanceId);
                 map = _FindMap(NewInstanceId);
                 if(!map)
-                    map = CreateBattleGround(NewInstanceId);
+                    map = CreateBattleGroundMap(NewInstanceId, player->GetBattleGround());
                 return map;
             }
 
@@ -222,15 +233,17 @@ InstanceMap* MapInstanced::CreateInstance(uint32 InstanceId, InstanceSave *save,
     return map;
 }
 
-BattleGroundMap* MapInstanced::CreateBattleGround(uint32 InstanceId)
+BattleGroundMap* MapInstanced::CreateBattleGroundMap(uint32 InstanceId, BattleGround* bg)
 {
     // load/create a map
     Guard guard(*this);
 
-    sLog.outDebug("MapInstanced::CreateBattleGround: map bg %d for %d created.", InstanceId, GetId());
+    sLog.outDebug("MapInstanced::CreateBattleGroundMap: instance:%d for map:%d and bgType:%d created.", InstanceId, GetId(), bg->GetTypeID());
 
     BattleGroundMap *map = new BattleGroundMap(GetId(), GetGridExpiry(), InstanceId);
-    assert(map->IsBattleGroundOrArena());
+    ASSERT(map->IsBattleGroundOrArena());
+    map->SetBG(bg);
+    bg->SetBgMap(map);
 
     m_InstancedMaps[InstanceId] = map;
     return map;
