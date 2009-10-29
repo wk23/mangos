@@ -96,16 +96,9 @@ bool OutdoorPvPObjectiveEP_EWT::Update(uint32 diff)
             GameObject* flag = HashMapHolder<GameObject>::Find(m_CapturePoint);
             GameObject* flag2 = HashMapHolder<GameObject>::Find(m_Objects[EP_EWT_FLAGS]);
             if(flag)
-            {
                 flag->SetGoArtKit(artkit);
-                flag->SendUpdateObjectToAllExcept(NULL);
-            }
             if(flag2)
-            {
                 flag2->SetGoArtKit(artkit);
-                flag2->SendUpdateObjectToAllExcept(NULL);
-            }
-
 
             UpdateTowerState();
 
@@ -271,15 +264,9 @@ bool OutdoorPvPObjectiveEP_NPT::Update(uint32 diff)
             GameObject* flag = HashMapHolder<GameObject>::Find(m_CapturePoint);
             GameObject* flag2 = HashMapHolder<GameObject>::Find(m_Objects[EP_NPT_FLAGS]);
             if(flag)
-            {
                 flag->SetGoArtKit(artkit);
-                flag->SendUpdateObjectToAllExcept(NULL);
-            }
             if(flag2)
-            {
                 flag2->SetGoArtKit(artkit);
-                flag2->SendUpdateObjectToAllExcept(NULL);
-            }
 
             UpdateTowerState();
 
@@ -440,15 +427,9 @@ bool OutdoorPvPObjectiveEP_CGT::Update(uint32 diff)
             GameObject* flag = HashMapHolder<GameObject>::Find(m_CapturePoint);
             GameObject* flag2 = HashMapHolder<GameObject>::Find(m_Objects[EP_CGT_FLAGS]);
             if(flag)
-            {
                 flag->SetGoArtKit(artkit);
-                flag->SendUpdateObjectToAllExcept(NULL);
-            }
             if(flag2)
-            {
                 flag2->SetGoArtKit(artkit);
-                flag2->SendUpdateObjectToAllExcept(NULL);
-            }
 
             UpdateTowerState();
 
@@ -610,15 +591,9 @@ bool OutdoorPvPObjectiveEP_PWT::Update(uint32 diff)
             GameObject* flag = HashMapHolder<GameObject>::Find(m_CapturePoint);
             GameObject* flag2 = HashMapHolder<GameObject>::Find(m_Objects[EP_PWT_FLAGS]);
             if(flag)
-            {
                 flag->SetGoArtKit(artkit);
-                flag->SendUpdateObjectToAllExcept(NULL);
-            }
             if(flag2)
-            {
                 flag2->SetGoArtKit(artkit);
-                flag2->SendUpdateObjectToAllExcept(NULL);
-            }
 
             UpdateTowerState();
 
