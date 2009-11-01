@@ -2016,6 +2016,26 @@ void Spell::EffectDummy(uint32 i)
                 m_caster->CastCustomSpell(m_caster, 45470, &bp, NULL, NULL, true);
                 return;
             }
+            // Death Grip temp fix
+            if(m_spellInfo->Id == 49576)
+            {
+                if (!unitTarget || !m_caster)
+                    return;
+                uint32 mapid = m_caster->GetMapId();
+                float x = m_caster->GetPositionX();
+                float y = m_caster->GetPositionY();
+                float z = m_caster->GetPositionZ()+1;
+                float orientation = unitTarget->GetOrientation();
+                m_caster->CastSpell(unitTarget, 49560, true, NULL); // get taunt debuff as well
+                if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    unitTarget->NearTeleportTo(x, y, z, orientation, false);
+                else
+                {
+                    m_caster->GetMap()->CreatureRelocation((Creature*)unitTarget, x, y, z, orientation);
+                    ((Creature*)unitTarget)->SendMonsterMove(x, y, z, orientation, MONSTER_MOVE_UNK12, NULL);
+                }
+                return;
+            }
             break;
     }
 
