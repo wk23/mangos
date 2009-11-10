@@ -28,6 +28,9 @@
 
 class Transport;
 
+typedef UNORDERED_MAP<uint32, BattleGroundEventIdx> CreatureMapEventIndexes;
+typedef UNORDERED_MAP<uint32, BattleGroundEventIdx> GameObjectMapEventIndexes;
+
 class MANGOS_DLL_DECL MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::ClassLevelLockable<MapManager, ACE_Thread_Mutex> >
 {
 
@@ -127,6 +130,22 @@ class MANGOS_DLL_DECL MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::
         /* statistics */
         uint32 GetNumInstances();
         uint32 GetNumPlayersInInstances();
+
+        void LoadMapEventIndexes();
+        const MapEventIdx GetCreatureEventIndex(uint32 dbTableGuidLow) const
+        {
+            CreatureMapEventIndexesMap::const_iterator itr = m_CreatureMapEventIndexMap.find(dbTableGuidLow);
+            if(itr != m_CreatureMapEventIndexMap.end())
+                return itr->second;
+            return m_CreatureMapEventIndexMap.find(-1)->second;
+        }
+        const MapEventIdx GetGameObjectEventIndex(uint32 dbTableGuidLow) const
+        {
+            GameObjectMapEventIndexesMap::const_iterator itr = m_GameObjectMapEventIndexMap.find(dbTableGuidLow);
+            if(itr != m_GameObjectMapEventIndexMap.end())
+                return itr->second;
+            return m_GameObjectMapEventIndexMap.find(-1)->second;
+        }
 
     private:
         // debugging code, should be deleted some day

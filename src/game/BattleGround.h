@@ -507,7 +507,6 @@ class BattleGround
         uint64 GetSingleCreatureGuid(uint8 event1, uint8 event2);
 
         void OpenDoorEvent(uint8 event1, uint8 event2 = 0);
-        bool IsDoor(uint8 event1, uint8 event2);
 
         void HandleTriggerBuff(uint64 const& go_guid);
 

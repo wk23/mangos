@@ -450,6 +450,38 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
 
         // DynObjects currently
         uint32 GenerateLocalLowGuid(HighGuid guidhigh);
+
+        /* event related */
+        // called when a creature gets added to map (NOTE: only triggered if
+        // a player activates the cell of the creature)
+        void OnObjectDBLoad(Creature* /*creature*/);
+        void OnObjectDBLoad(GameObject* /*obj*/);
+        // (de-)spawns creatures and gameobjects from an event
+        void SpawnEvent(uint8 event1, uint8 event2, bool spawn);
+        bool IsActiveEvent(uint8 event1, uint8 event2)
+        {
+            if (m_ActiveEvents.find(event1) == m_ActiveEvents.end())
+                return false;
+            return m_ActiveEvents[event1] == event2;
+        }
+        uint64 GetSingleCreatureGuid(uint8 event1, uint8 event2);
+
+        struct EventObjects
+        {
+            BGObjects gameobjects;
+            BGCreatures creatures;
+        };
+
+        // cause we create it dynamicly i use a map - to avoid resizing when
+        // using vector - also it contains 2*events concatenated with PAIR32
+        // this is needed to avoid overhead of a 2dimensional std::map
+        std::map<uint32, EventObjects> m_EventObjects;
+        // this must be filled first in BattleGroundXY::Reset().. else
+        // creatures will get added wrong
+        // door-events are automaticly added - but _ALL_ other must be in this vector
+        std::map<uint8, uint8> m_ActiveEvents;
+
+
     private:
         void LoadMapAndVMap(int gx, int gy);
         void LoadVMap(int gx, int gy);
