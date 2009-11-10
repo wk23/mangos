@@ -1641,7 +1641,7 @@ void World::Update(uint32 diff)
         uint32 maxClientsNum = GetMaxActiveSessionCount();
 
         m_timers[WUPDATE_UPTIME].Reset();
-        loginDatabase.PExecute("UPDATE uptime SET uptime = %u, maxplayers = %u WHERE realmid = %u AND starttime = " UI64FMTD, tmpDiff, maxClientsNum, realmID, uint64(m_startTime));
+        loginDatabase.PExecute("UPDATE uptime SET uptime = %u, maxplayers = %u, diff=%u WHERE realmid = %u AND starttime = " UI64FMTD, tmpDiff, maxClientsNum, diff, realmID, uint64(m_startTime));
     }
 
     /// <li> Handle all other objects
