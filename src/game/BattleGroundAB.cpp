@@ -43,10 +43,9 @@ BattleGroundAB::~BattleGroundAB()
 {
 }
 
-void BattleGroundAB::Update(uint32 diff)
+void BattleGroundAB::LocalUpdate(uint32 diff)
 {
-    BattleGround::Update(diff);
-
+    BattleGround::LocalUpdate(diff);
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
         int team_points[BG_TEAMS_COUNT] = { 0, 0 };

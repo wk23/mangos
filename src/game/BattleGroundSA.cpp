@@ -35,9 +35,8 @@ BattleGroundSA::~BattleGroundSA()
 
 }
 
-void BattleGroundSA::Update(uint32 diff)
+void BattleGroundSA::LocalUpdate(uint32 diff)
 {
-    BattleGround::Update(diff);
 }
 
 void BattleGroundSA::StartingEventCloseDoors()

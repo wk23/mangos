@@ -40,10 +40,9 @@ BattleGroundWS::~BattleGroundWS()
 {
 }
 
-void BattleGroundWS::Update(uint32 diff)
+void BattleGroundWS::LocalUpdate(uint32 diff)
 {
-    BattleGround::Update(diff);
-
+    BattleGround::LocalUpdate(diff);
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
         if (m_FlagState[BG_TEAM_ALLIANCE] == BG_WS_FLAG_STATE_WAIT_RESPAWN)

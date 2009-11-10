@@ -179,7 +179,7 @@ class BattleGroundAB : public BattleGround
         BattleGroundAB();
         ~BattleGroundAB();
 
-        void Update(uint32 diff);
+        void LocalUpdate(uint32 diff);
         void AddPlayer(Player *plr);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();

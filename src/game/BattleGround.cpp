@@ -345,65 +345,6 @@ void BattleGround::Update(uint32 diff)
     }
 
     /*********************************************************/
-    /***           BATTLEGROUND BALLANCE SYSTEM            ***/
-    /*********************************************************/
-
-    // if less then minimum players are in on one side, then start premature finish timer
-    if (GetStatus() == STATUS_IN_PROGRESS && !isArena() && sBattleGroundMgr.GetPrematureFinishTime() && (GetPlayersCountByTeam(ALLIANCE) < GetMinPlayersPerTeam() || GetPlayersCountByTeam(HORDE) < GetMinPlayersPerTeam()))
-    {
-        if (!m_PrematureCountDown)
-        {
-            m_PrematureCountDown = true;
-            m_PrematureCountDownTimer = sBattleGroundMgr.GetPrematureFinishTime();
-        }
-        else if (m_PrematureCountDownTimer < diff)
-        {
-            // time's up!
-            uint32 winner = 0;
-            if (GetPlayersCountByTeam(ALLIANCE) >= GetMinPlayersPerTeam())
-                winner = ALLIANCE;
-            else if (GetPlayersCountByTeam(HORDE) >= GetMinPlayersPerTeam())
-                winner = HORDE;
-
-            EndBattleGround(winner);
-            m_PrematureCountDown = false;
-        }
-        else
-        {
-            uint32 newtime = m_PrematureCountDownTimer - diff;
-            // announce every minute
-            if (newtime > (MINUTE * IN_MILISECONDS))
-            {
-                if (newtime / (MINUTE * IN_MILISECONDS) != m_PrematureCountDownTimer / (MINUTE * IN_MILISECONDS))
-                    PSendMessageToAll(LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING, CHAT_MSG_SYSTEM, NULL, (uint32)(m_PrematureCountDownTimer / (MINUTE * IN_MILISECONDS)));
-            }
-            else
-            {
-                //announce every 15 seconds
-                if (newtime / (15 * IN_MILISECONDS) != m_PrematureCountDownTimer / (15 * IN_MILISECONDS))
-                    PSendMessageToAll(LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING_SECS, CHAT_MSG_SYSTEM, NULL, (uint32)(m_PrematureCountDownTimer / IN_MILISECONDS));
-            }
-            m_PrematureCountDownTimer = newtime;
-        }
-
-    }
-    else if (m_PrematureCountDown)
-        m_PrematureCountDown = false;
-
-    /*********************************************************/
-    /***           ARENA BUFF OBJECT SPAWNING              ***/
-    /*********************************************************/
-    if (isArena() && !m_ArenaBuffSpawned)
-    {
-        // 60 seconds after start the buffobjects in arena should get spawned
-        if (m_StartTime > uint32(m_StartDelayTimes[BG_STARTING_EVENT_FIRST] + ARENA_SPAWN_BUFF_OBJECTS))
-        {
-            SpawnEvent(ARENA_BUFF_EVENT, 0, true);
-            m_ArenaBuffSpawned = true;
-        }
-    }
-
-    /*********************************************************/
     /***           BATTLEGROUND STARTING SYSTEM            ***/
     /*********************************************************/
 
@@ -479,6 +420,71 @@ void BattleGround::Update(uint32 diff)
         }
     }
 
+    //update start time
+    m_StartTime += diff;
+}
+
+void BattleGround::LocalUpdate(uint32 diff)
+{
+    /*********************************************************/
+    /***           BATTLEGROUND BALLANCE SYSTEM            ***/
+    /*********************************************************/
+
+    // if less then minimum players are in on one side, then start premature finish timer
+    if (GetStatus() == STATUS_IN_PROGRESS && !isArena() && sBattleGroundMgr.GetPrematureFinishTime() && (GetPlayersCountByTeam(ALLIANCE) < GetMinPlayersPerTeam() || GetPlayersCountByTeam(HORDE) < GetMinPlayersPerTeam()))
+    {
+        if (!m_PrematureCountDown)
+        {
+            m_PrematureCountDown = true;
+            m_PrematureCountDownTimer = sBattleGroundMgr.GetPrematureFinishTime();
+        }
+        else if (m_PrematureCountDownTimer < diff)
+        {
+            // time's up!
+            uint32 winner = 0;
+            if (GetPlayersCountByTeam(ALLIANCE) >= GetMinPlayersPerTeam())
+                winner = ALLIANCE;
+            else if (GetPlayersCountByTeam(HORDE) >= GetMinPlayersPerTeam())
+                winner = HORDE;
+
+            EndBattleGround(winner);
+            m_PrematureCountDown = false;
+        }
+        else
+        {
+            uint32 newtime = m_PrematureCountDownTimer - diff;
+            // announce every minute
+            if (newtime > (MINUTE * IN_MILISECONDS))
+            {
+                if (newtime / (MINUTE * IN_MILISECONDS) != m_PrematureCountDownTimer / (MINUTE * IN_MILISECONDS))
+                    PSendMessageToAll(LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING, CHAT_MSG_SYSTEM, NULL, (uint32)(m_PrematureCountDownTimer / (MINUTE * IN_MILISECONDS)));
+            }
+            else
+            {
+                //announce every 15 seconds
+                if (newtime / (15 * IN_MILISECONDS) != m_PrematureCountDownTimer / (15 * IN_MILISECONDS))
+                    PSendMessageToAll(LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING_SECS, CHAT_MSG_SYSTEM, NULL, (uint32)(m_PrematureCountDownTimer / IN_MILISECONDS));
+            }
+            m_PrematureCountDownTimer = newtime;
+        }
+
+    }
+    else if (m_PrematureCountDown)
+        m_PrematureCountDown = false;
+
+    /*********************************************************/
+    /***           ARENA BUFF OBJECT SPAWNING              ***/
+    /*********************************************************/
+    if (isArena() && !m_ArenaBuffSpawned)
+    {
+        // 60 seconds after start the buffobjects in arena should get spawned
+        if (m_StartTime > uint32(m_StartDelayTimes[BG_STARTING_EVENT_FIRST] + ARENA_SPAWN_BUFF_OBJECTS))
+        {
+            SpawnEvent(ARENA_BUFF_EVENT, 0, true);
+            m_ArenaBuffSpawned = true;
+        }
+    }
+
     /*********************************************************/
     /***           BATTLEGROUND ENDING SYSTEM              ***/
     /*********************************************************/
@@ -502,8 +508,6 @@ void BattleGround::Update(uint32 diff)
         }
     }
 
-    //update start time
-    m_StartTime += diff;
 }
 
 void BattleGround::SetTeamStartLoc(uint32 TeamID, float X, float Y, float Z, float O)

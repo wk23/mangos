@@ -48,10 +48,9 @@ BattleGroundEY::~BattleGroundEY()
 {
 }
 
-void BattleGroundEY::Update(uint32 diff)
+void BattleGroundEY::LocalUpdate(uint32 diff)
 {
-    BattleGround::Update(diff);
-
+    BattleGround::LocalUpdate(diff);
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
         m_PointAddingTimer -= diff;

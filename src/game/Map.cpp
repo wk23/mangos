@@ -2665,6 +2665,14 @@ void BattleGroundMap::InitVisibilityDistance()
     m_VisibleDistance = World::GetMaxVisibleDistanceInBGArenas();
 }
 
+void BattleGroundMap::Update(const uint32& diff)
+{
+    // Context already opened in MapInstanced::Update.
+    Map::Update(diff);
+
+    GetBG()->LocalUpdate(diff);
+}
+
 bool BattleGroundMap::CanEnter(Player * player)
 {
     if(player->GetMapRef().getTarget() == this)

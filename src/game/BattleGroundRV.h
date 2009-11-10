@@ -35,7 +35,6 @@ class BattleGroundRV : public BattleGround
     public:
         BattleGroundRV();
         ~BattleGroundRV();
-        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);

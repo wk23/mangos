@@ -35,11 +35,9 @@ class BattleGroundNA : public BattleGround
     public:
         BattleGroundNA();
         ~BattleGroundNA();
-        void Update(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
-        virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
 
         void RemovePlayer(Player *plr, uint64 guid);

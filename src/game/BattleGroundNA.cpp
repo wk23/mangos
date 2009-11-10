@@ -42,20 +42,6 @@ BattleGroundNA::~BattleGroundNA()
 
 }
 
-void BattleGroundNA::Update(uint32 diff)
-{
-    BattleGround::Update(diff);
-
-    /*if (GetStatus() == STATUS_IN_PROGRESS)
-    {
-        // update something
-    }*/
-}
-
-void BattleGroundNA::StartingEventCloseDoors()
-{
-}
-
 void BattleGroundNA::StartingEventOpenDoors()
 {
     OpenDoorEvent(BG_EVENT_DOOR);

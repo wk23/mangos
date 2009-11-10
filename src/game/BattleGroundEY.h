@@ -253,7 +253,7 @@ class BattleGroundEY : public BattleGround
     public:
         BattleGroundEY();
         ~BattleGroundEY();
-        void Update(uint32 diff);
+        void LocalUpdate(uint32 diff);
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);

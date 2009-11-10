@@ -40,11 +40,6 @@ BattleGroundRV::~BattleGroundRV()
 
 }
 
-void BattleGroundRV::Update(uint32 diff)
-{
-    BattleGround::Update(diff);
-}
-
 void BattleGroundRV::StartingEventCloseDoors()
 {
 }
