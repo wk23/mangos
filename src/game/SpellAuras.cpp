@@ -2205,7 +2205,49 @@ void Aura::TriggerSpell()
     {
         if (Unit* caster = GetCaster())
         {
-            if(target->GetTypeId() != TYPEID_UNIT || !Script->EffectDummyCreature(caster, GetId(), GetEffIndex(), (Creature*)target))
+            // avoid spam and track all known auras here
+            switch (GetId())
+            {
+                case 13810:
+                case 17368:
+                case 18347:
+                case 23410:
+                case 23425:
+                case 24018:
+                case 24210:
+                case 25152:
+                case 25371:
+                case 26615:
+                case 27819:
+                case 28522:
+                case 29519:
+                case 29768:
+                case 29946:
+                case 30598:
+                case 31326:
+                case 32216:
+                case 33401:
+                case 33563:
+                case 33711:
+                case 34821:
+                case 35460:
+                case 36056:
+                case 37589:
+                case 38672:
+                case 39105:
+                case 39140:
+                case 43381:
+                case 50416:
+                case 52437:
+                case 58886:
+                case 63510:
+                case 812:
+                    return;
+            }
+
+            if((target->GetTypeId() != TYPEID_UNIT ||
+                !Script->EffectDummyCreature(caster, GetId(), GetEffIndex(),
+                (Creature*)target)))
                 sLog.outError("Aura::TriggerSpell: Spell %u have 0 in EffectTriggered[%d], not handled custom case?",GetId(),GetEffIndex());
         }
     }
