@@ -77,7 +77,8 @@ enum WorldTimers
     WUPDATE_UPTIME      = 4,
     WUPDATE_CORPSES     = 5,
     WUPDATE_EVENTS      = 6,
-    WUPDATE_COUNT       = 7
+    WUPDATE_LAGLOG      = 7,
+    WUPDATE_COUNT       = 8
 };
 
 /// Configuration elements
@@ -222,6 +223,7 @@ enum WorldConfigs
     CONFIG_TIMERBAR_BREATH_MAX,
     CONFIG_TIMERBAR_FIRE_GMLEVEL,
     CONFIG_TIMERBAR_FIRE_MAX,
+    CONFIG_PERFORMANCE_TIMER,
     CONFIG_VALUE_COUNT
 };
 
@@ -333,6 +335,16 @@ enum RealmZone
     REALM_ZONE_QA_SERVER     = 28,                          // any language
     REALM_ZONE_CN9           = 29                           // basic-Latin at create, any at login
 };
+
+enum LagLog
+{
+    LAG_LOG_TOTAL           = 0,
+    LAG_LOG_SESSION         = 1,
+    LAG_LOG_MAP             = 2,
+    LAG_LOG_RESULTQUEUE     = 3,
+    LAG_LOG_PLAYERSAVE      = 4,
+};
+#define MAX_LAG_LOG 5
 
 // DB scripting commands
 #define SCRIPT_COMMAND_TALK                  0              // source = unit, target=any, datalong ( 0=say, 1=whisper, 2=yell, 3=emote text)
@@ -541,6 +553,23 @@ class World
         char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
 
         bool isSpecialIp(std::string ip) { return ip.compare(m_specialIp) == 0; }
+
+        inline void lagLogStart(LagLog i)
+        {
+            if (!m_timers[WUPDATE_LAGLOG].Passed())
+                return;
+            m_laglogs_tmp[i] = getMSTime();
+        }
+        inline void lagLogStop(LagLog i, bool incr = false)
+        {
+            if (!m_timers[WUPDATE_LAGLOG].Passed())
+                return;
+            if (incr)
+                m_laglogs[i] += getMSTimeDiff(m_laglogs_tmp[i], getMSTime());
+            else
+                m_laglogs[i] = getMSTimeDiff(m_laglogs_tmp[i], getMSTime());
+        }
+
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -621,6 +650,9 @@ class World
         std::string m_CreatureEventAIVersion;
         std::string m_ScriptsVersion;
         std::string m_specialIp;
+
+        uint32 m_laglogs[MAX_LAG_LOG];
+        uint32 m_laglogs_tmp[MAX_LAG_LOG];
 };
 
 extern uint32 realmID;

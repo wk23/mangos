@@ -282,6 +282,10 @@ AddonChannel = 1
 #        Default: "Ra.log"
 #                 "" - Empty name for disable
 #
+#    PerformanceTimer
+#        Will log into the database every X milliseconds how much time the server used for several tasks
+#        Default: 60000
+#
 #    LogColors
 #        Color for messages (format "normal_color details_color debug_color error_color")
 #        Colors: 0 - BLACK, 1 - RED, 2 - GREEN,  3 - BROWN, 4 - BLUE, 5 - MAGENTA, 6 -  CYAN, 7 - GREY,

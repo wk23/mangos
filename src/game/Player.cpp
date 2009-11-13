@@ -16053,6 +16053,7 @@ bool Player::_LoadHomeBind(QueryResult *result)
 
 void Player::SaveToDB()
 {
+    sWorld.lagLogStart(LAG_LOG_PLAYERSAVE);
     // we should assure this: assert((m_nextSave != sWorld.getConfig(CONFIG_INTERVAL_SAVE)));
     assert(!m_isSaved);
     m_isSaved = true;
@@ -16192,6 +16193,7 @@ void Player::SaveToDB()
     if(Pet* pet = GetPet())
         pet->SavePetToDB(PET_SAVE_AS_CURRENT);
     m_isSaved = false;
+    sWorld.lagLogStop(LAG_LOG_PLAYERSAVE, true);
 }
 
 // fast save function for item/money cheating preventing - save only inventory and money state
