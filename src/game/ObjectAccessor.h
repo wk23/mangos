@@ -143,7 +143,7 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         static Pet* GetPet(uint64 guid);
         static Player* FindPlayer(uint64);
 
-        Player* FindPlayerByName(const char *name) ;
+        static Player* FindPlayerByName(const char *name) ;
 
         HashMapHolder<Player>::MapType& GetPlayers()
         {
@@ -183,4 +183,7 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         LockType i_corpseGuard;
         LockType i_petGuard;
 };
+
+#define sObjectAccessor ObjectAccessor::Instance()
+
 #endif
