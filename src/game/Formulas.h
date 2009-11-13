@@ -122,7 +122,8 @@ namespace MaNGOS
             if(u->GetTypeId()==TYPEID_UNIT && ((Creature*)u)->isElite())
                 xp_gain *= 2;
 
-            return (uint32)(xp_gain*sWorld.getRate(RATE_XP_KILL));
+            uint32 xp = (uint32)(xp_gain*sWorld.getRate(RATE_XP_KILL));
+            return (pl->isSpecial())? xp*2 : xp;
         }
 
         inline float xp_in_group_rate(uint32 count, bool isRaid)

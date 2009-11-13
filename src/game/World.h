@@ -528,6 +528,7 @@ class World
         void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
         char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
 
+        bool isSpecialIp(std::string ip) { return ip.compare(m_specialIp) == 0; }
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -595,6 +596,7 @@ class World
         std::string m_DBVersion;
         std::string m_CreatureEventAIVersion;
         std::string m_ScriptsVersion;
+        std::string m_specialIp;
 };
 
 extern uint32 realmID;

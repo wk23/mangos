@@ -522,15 +522,18 @@ enum MirrorTimerType
 enum PlayerExtraFlags
 {
     // gm abilities
-    PLAYER_EXTRA_GM_ON              = 0x0001,
-    PLAYER_EXTRA_GM_ACCEPT_TICKETS  = 0x0002,
-    PLAYER_EXTRA_ACCEPT_WHISPERS    = 0x0004,
-    PLAYER_EXTRA_TAXICHEAT          = 0x0008,
-    PLAYER_EXTRA_GM_INVISIBLE       = 0x0010,
-    PLAYER_EXTRA_GM_CHAT            = 0x0020,               // Show GM badge in chat messages
+    PLAYER_EXTRA_GM_ON              = 0x000001,
+    PLAYER_EXTRA_GM_ACCEPT_TICKETS  = 0x000002,
+    PLAYER_EXTRA_ACCEPT_WHISPERS    = 0x000004,
+    PLAYER_EXTRA_TAXICHEAT          = 0x000008,
+    PLAYER_EXTRA_GM_INVISIBLE       = 0x000010,
+    PLAYER_EXTRA_GM_CHAT            = 0x000020,             // Show GM badge in chat messages
 
     // other states
-    PLAYER_EXTRA_PVP_DEATH          = 0x0100                // store PvP death status until corpse creating.
+    PLAYER_EXTRA_PVP_DEATH          = 0x000100,             // store PvP death status until corpse creating.
+
+    // custom stuff
+    PLAYER_EXTRA_SPECIAL            = 0x010000              // player is special :)
 };
 
 // 2^n values
@@ -1093,6 +1096,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool isAcceptWhispers() const { return m_ExtraFlags & PLAYER_EXTRA_ACCEPT_WHISPERS; }
         void SetAcceptWhispers(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_ACCEPT_WHISPERS; else m_ExtraFlags &= ~PLAYER_EXTRA_ACCEPT_WHISPERS; }
         bool isGameMaster() const { return m_ExtraFlags & PLAYER_EXTRA_GM_ON; }
+        bool isSpecial() const { return m_ExtraFlags & PLAYER_EXTRA_SPECIAL; }
         void SetGameMaster(bool on);
         bool isGMChat() const { return GetSession()->GetSecurity() >= SEC_MODERATOR && (m_ExtraFlags & PLAYER_EXTRA_GM_CHAT); }
         void SetGMChat(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_GM_CHAT; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_CHAT; }
