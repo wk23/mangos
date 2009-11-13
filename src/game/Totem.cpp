@@ -75,9 +75,19 @@ void Totem::Summon(Unit* owner)
     switch(m_type)
     {
         case TOTEM_PASSIVE:
+            if (!GetSpell())
+            {
+                sLog.outErrorDb("Totem %u has no spell which he can cast passive.", cinfo->Entry);
+                break;
+            }
             CastSpell(this, GetSpell(), true);
             break;
         case TOTEM_STATUE:
+            if (!GetSpell())
+            {
+                sLog.outErrorDb("Totem %u has no spell which he can cast as statue.", cinfo->Entry);
+                break;
+            }
             CastSpell(GetOwner(), GetSpell(), true);
             break;
         default: break;
