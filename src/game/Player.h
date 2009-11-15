@@ -2560,6 +2560,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         AchievementMgr m_achievementMgr;
         ReputationMgr  m_reputationMgr;
+
+        bool m_isSaved;
 };
 
 void AddItemsSetItem(Player*player,Item *item);
