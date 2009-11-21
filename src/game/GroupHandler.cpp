@@ -241,6 +241,9 @@ void WorldSession::HandleGroupUninviteGuidOpcode(WorldPacket & recv_data)
     if(!grp)
         return;
 
+    if (grp->isMapGroup())
+        return;
+
     if(grp->IsMember(guid))
     {
         Player::RemoveFromGroup(grp,guid);
@@ -283,6 +286,9 @@ void WorldSession::HandleGroupUninviteOpcode(WorldPacket & recv_data)
     if(!grp)
         return;
 
+    if (grp->isMapGroup())
+        return;
+
     if(uint64 guid = grp->GetMemberGUID(membername))
     {
         Player::RemoveFromGroup(grp,guid);
@@ -321,6 +327,9 @@ void WorldSession::HandleGroupSetLeaderOpcode( WorldPacket & recv_data )
 void WorldSession::HandleGroupDisbandOpcode( WorldPacket & /*recv_data*/ )
 {
     if(!GetPlayer()->GetGroup())
+        return;
+
+    if (GetPlayer()->GetGroup()->isMapGroup())
         return;
 
     if(_player->InBattleGround())

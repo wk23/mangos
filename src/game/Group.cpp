@@ -44,6 +44,7 @@ Group::Group()
     m_looterGuid        = 0;
     m_lootThreshold     = ITEM_QUALITY_UNCOMMON;
     m_subGroupsCounts   = NULL;
+    m_mapGroup          = false;
 
     for (int i = 0; i < TARGETICONCOUNT; ++i)
         m_targetIcons[i] = 0;
@@ -298,6 +299,8 @@ Player* Group::GetInvited(const std::string& name) const
 
 bool Group::AddMember(const uint64 &guid, const char* name)
 {
+    if (GetMembersCount() == 0)
+        _setLeader(guid);
     if(!_addMember(guid, name))
         return false;
     SendUpdate();
@@ -340,7 +343,12 @@ bool Group::AddMember(const uint64 &guid, const char* name)
 uint32 Group::RemoveMember(const uint64 &guid, const uint8 &method)
 {
     // remove member and change leader (if need) only if strong more 2 members _before_ member remove
-    if(GetMembersCount() > (isBGGroup() ? 1 : 2))           // in BG group case allow 1 members group
+    uint32 mincount = 2;
+    if (isBGGroup())
+        mincount = 1;
+    if (isMapGroup())
+        mincount = 0;
+    if(GetMembersCount() > mincount) // in BG group case allow 2 members group
     {
         bool leaderChanged = _removeMember(guid);
 
@@ -373,7 +381,7 @@ uint32 Group::RemoveMember(const uint64 &guid, const uint8 &method)
             _homebindIfInstance(player);
         }
 
-        if(leaderChanged)
+        if(!isMapGroup() && leaderChanged)
         {
             WorldPacket data(SMSG_GROUP_SET_LEADER, (m_memberSlots.front().name.size()+1));
             data << m_memberSlots.front().name;
@@ -384,7 +392,10 @@ uint32 Group::RemoveMember(const uint64 &guid, const uint8 &method)
     }
     // if group before remove <= 2 disband it
     else
-        Disband(true);
+    {
+        if (!isMapGroup())
+            Disband(true);
+    }
 
     return m_memberSlots.size();
 }

@@ -1898,6 +1898,7 @@ void Player::RemoveFromWorld()
     // cleanup
     if(IsInWorld())
     {
+        GetMap()->RemoveMember(GetGUID(), GetTeam());
         ///- Release charmed creatures, unsummon totems and remove pets/guardians
         UnsummonAllTotems();
         RemoveMiniPet();
@@ -6321,6 +6322,37 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
 
     if(m_zoneUpdateId != newZone)
     {
+        if (newZone == 47)
+        {
+            Group* group = GetMap()->GetMapRaid(GetTeam());
+            if (!group)                                      // first player joined
+            {
+                group = new Group;
+                group->SetMapGroup();
+                GetMap()->SetMapRaid(GetTeam(), group);
+                group->Create(GetGUID(), GetName());
+            }
+            else                                            // raid already exist
+            {
+                if (group->IsMember(GetGUID()))
+                {
+                    uint8 subgroup = group->GetMemberGroup(GetGUID());
+                    SetBattleGroundRaid(group, subgroup);
+                }
+                else
+                {
+                    group->AddMember(GetGUID(), GetName());
+                    if (Group* originalGroup = GetOriginalGroup())
+                        if (originalGroup->IsLeader(GetGUID()))
+                            group->ChangeLeader(GetGUID());
+                }
+            }
+        }
+        if (m_zoneUpdateId == 47)
+            GetMap()->RemoveMember(GetGUID(), GetTeam());
+
+
+
         SendInitWorldStates(newZone, newArea);              // only if really enters to new zone, not just area change, works strange...
 
         if (sWorld.getConfig(CONFIG_WEATHER))

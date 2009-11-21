@@ -38,6 +38,7 @@
 #include <list>
 
 class Creature;
+class Group;
 class Unit;
 class WorldPacket;
 class InstanceData;
@@ -443,6 +444,10 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         Corpse* GetCorpse(uint64 guid);
         WorldObject* GetWorldObject(uint64 guid);
 
+        Group *GetMapRaid(uint32 TeamID) const;
+        void SetMapRaid(uint32 TeamID, Group* g);
+        void RemoveMember(const uint64 &guid, uint32 TeamID);
+
         TypeUnorderedMapContainer<AllMapStoredObjectTypes>& GetObjectsStore() { return m_objectsStore; }
 
         void AddUpdateObject(Object *obj)
@@ -577,6 +582,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
             else
                 m_activeNonPlayers.erase(obj);
         }
+
+        typedef std::vector<Group*> Grouplist;
+        Grouplist m_MapRaids[2];                           // 0 - alliance, 1 - horde
 };
 
 enum InstanceResetMethod

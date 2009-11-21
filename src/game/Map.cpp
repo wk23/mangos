@@ -36,6 +36,8 @@
 #include "MapRefManager.h"
 #include "DBCEnums.h"
 
+#include "Group.h"
+
 #include "MapInstanced.h"
 #include "InstanceSaveMgr.h"
 #include "VMapFactory.h"
@@ -61,6 +63,44 @@ Map::~Map()
 
     if(!m_scriptSchedule.empty())
         sWorld.DecreaseScheduledScriptCount(m_scriptSchedule.size());
+}
+
+Group* Map::GetMapRaid(uint32 TeamID) const
+{
+    Grouplist gl = (TeamID == ALLIANCE) ? m_MapRaids[0] : m_MapRaids[1];
+    for (Grouplist::iterator itr = gl.begin();itr < gl.end(); ++itr)
+    {
+        if (!(*itr)->IsFull())
+            return *itr;
+    }
+    return NULL;
+}
+
+void Map::SetMapRaid(uint32 TeamID, Group* g)
+{
+    if (TeamID == ALLIANCE)
+        m_MapRaids[0].push_back(g);
+    else
+        m_MapRaids[1].push_back(g);
+}
+
+void Map::RemoveMember(const uint64 &guid, uint32 TeamID)
+{
+    Grouplist gl = (TeamID == ALLIANCE) ? m_MapRaids[0] : m_MapRaids[1];
+    for (Grouplist::iterator itr = gl.begin();itr < gl.end(); ++itr)
+    {
+        if (!(*itr)->IsMember(guid))
+            continue;
+        if (!(*itr)->RemoveMember(guid, 0))
+        {
+            return;
+            if (TeamID == ALLIANCE)
+                m_MapRaids[0].erase(itr);
+            else
+                m_MapRaids[1].erase(itr);
+            delete *itr;
+        }
+    }
 }
 
 bool Map::ExistMap(uint32 mapid,int gx,int gy)

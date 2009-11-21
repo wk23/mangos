@@ -176,7 +176,7 @@ class MANGOS_DLL_SPEC Group
         // properties accessories
         bool IsFull() const { return (m_groupType==GROUPTYPE_NORMAL) ? (m_memberSlots.size()>=MAXGROUPSIZE) : (m_memberSlots.size()>=MAXRAIDSIZE); }
         bool isRaidGroup() const { return m_groupType==GROUPTYPE_RAID; }
-        bool isBGGroup()   const { return m_bgGroup != NULL; }
+        bool isBGGroup()   const { return m_bgGroup != NULL || m_mapGroup; }
         bool IsCreated()   const { return GetMembersCount() > 0; }
         const uint64& GetLeaderGUID() const { return m_leaderGuid; }
         const char * GetLeaderName() const { return m_leaderName.c_str(); }
@@ -251,6 +251,9 @@ class MANGOS_DLL_SPEC Group
         void ConvertToRaid();
 
         void SetBattlegroundGroup(BattleGround *bg) { m_bgGroup = bg; }
+        bool isMapGroup() { return m_mapGroup; }
+        void SetMapGroup() { m_mapGroup = true; }
+
         uint32 CanJoinBattleGroundQueue(BattleGroundTypeId bgTypeId, BattleGroundQueueTypeId bgQueueTypeId, uint32 MinPlayerCount, uint32 MaxPlayerCount, bool isRated, uint32 arenaSlot);
 
         void ChangeMembersGroup(const uint64 &guid, const uint8 &group);
@@ -407,6 +410,7 @@ class MANGOS_DLL_SPEC Group
         Difficulty          m_dungeonDifficulty;
         Difficulty          m_raidDifficulty;
         BattleGround*       m_bgGroup;
+        bool                m_mapGroup;
         uint64              m_targetIcons[TARGETICONCOUNT];
         LootMethod          m_lootMethod;
         ItemQualities       m_lootThreshold;
