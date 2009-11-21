@@ -643,7 +643,7 @@ void WorldSession::HandleReclaimCorpseOpcode(WorldPacket &recv_data)
     recv_data >> guid;
 
     // resurrect
-    GetPlayer()->ResurrectPlayer(GetPlayer()->InBattleGround() ? 1.0f : 0.5f);
+    GetPlayer()->ResurrectPlayer(1.0f);
 
     // spawn bones
     GetPlayer()->SpawnCorpseBones();
