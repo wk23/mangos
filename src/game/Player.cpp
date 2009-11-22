@@ -4593,17 +4593,36 @@ void Player::RepopAtGraveyard()
 
     // if no grave found, stay at the current location
     // and don't show spirit healer location
-    if(ClosestGrave)
+    if (GetZoneId() == 47)
     {
-        TeleportTo(ClosestGrave->map_id, ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, GetOrientation());
+        float x = GetTeam() == ALLIANCE ? -122.31f : -580.16f;
+        float y = GetTeam() == ALLIANCE ? -4623.45f: -4539.06f;
+        float z = GetTeam() == ALLIANCE ? 12.26f : 12.57f;
+        TeleportTo(0, x, y, z, 0);
         if(isDead())                                        // not send if alive, because it used in TeleportTo()
         {
             WorldPacket data(SMSG_DEATH_RELEASE_LOC, 4*4);  // show spirit healer position on minimap
-            data << ClosestGrave->map_id;
-            data << ClosestGrave->x;
-            data << ClosestGrave->y;
-            data << ClosestGrave->z;
+            data << 0;
+            data << x;
+            data << y;
+            data << z;
             GetSession()->SendPacket(&data);
+        }
+    }
+    else
+    {
+        if(ClosestGrave)
+        {
+            TeleportTo(ClosestGrave->map_id, ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, GetOrientation());
+            if(isDead())                                        // not send if alive, because it used in TeleportTo()
+            {
+                WorldPacket data(SMSG_DEATH_RELEASE_LOC, 4*4);  // show spirit healer position on minimap
+                data << ClosestGrave->map_id;
+                data << ClosestGrave->x;
+                data << ClosestGrave->y;
+                data << ClosestGrave->z;
+                GetSession()->SendPacket(&data);
+            }
         }
     }
 }

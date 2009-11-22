@@ -6852,8 +6852,8 @@ void Spell::EffectSpiritHeal(uint32 /*i*/)
         return;
     if (!unitTarget->IsInWorld())
         return;
-    if (m_spellInfo->Id == 22012 && !unitTarget->HasAura(2584))
-        return;
+    //if (m_spellInfo->Id == 22012 && !unitTarget->HasAura(2584))
+    //    return;
 
     ((Player*)unitTarget)->ResurrectPlayer(1.0f);
     ((Player*)unitTarget)->SpawnCorpseBones();
