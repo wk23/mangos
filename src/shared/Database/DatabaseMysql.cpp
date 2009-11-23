@@ -195,7 +195,7 @@ bool DatabaseMysql::_Query(const char *sql, MYSQL_RES **pResult, MYSQL_FIELD **p
         }
         else
         {
-            if (getMSTimeDiff(_s, getMSTime()) > 1000)
+            if (getMSTimeDiff(_s, getMSTime()) > 100)
                 sLog.outError("[%u ms] SQL: %s", getMSTimeDiff(_s,getMSTime()), sql );
 
             #ifdef MANGOS_DEBUG
