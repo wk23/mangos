@@ -369,9 +369,11 @@ void WorldSession::LogoutPlayer(bool Save)
         {
             if(BattleGroundQueueTypeId bgQueueTypeId = _player->GetBattleGroundQueueTypeId(i))
             {
+                assert(bgQueueTypeId < MAX_BATTLEGROUND_QUEUE_TYPES);
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId);
                 if (BattleGroundMgr::BGTemplateId(bgQueueTypeId) == _player->GetBattleGroundTypeId())
-                    continue;
+                    sLog.outError("battleground just another strange thing..");
+                sLog.outError("battleground remove %u from %u", _player->GetGUIDLow(), bgQueueTypeId);
                 sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
             }
         }
