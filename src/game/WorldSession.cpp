@@ -370,6 +370,8 @@ void WorldSession::LogoutPlayer(bool Save)
             if(BattleGroundQueueTypeId bgQueueTypeId = _player->GetBattleGroundQueueTypeId(i))
             {
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId);
+                if (BattleGroundMgr::BGTemplateId(bgQueueTypeId) == _player->GetBattleGroundTypeId())
+                    continue;
                 sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
             }
         }

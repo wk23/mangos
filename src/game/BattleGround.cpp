@@ -756,6 +756,9 @@ void BattleGround::EndBattleGround(uint32 winner)
             sLog.outError("BattleGround:EndBattleGround Player (GUID: %u) not found!", GUID_LOPART(itr->first));
             continue;
         }
+        Player *plr = sObjectMgr.GetPlayer(itr->first);
+        if (!plr)
+            sLog.outError("BattleGround:EndBattleGround Player (GUID: %u) not found!", GUID_LOPART(itr->first));
 
         // should remove spirit of redemption
         if (plr->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
