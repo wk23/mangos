@@ -5878,7 +5878,8 @@ uint32 Player::TeamForRace(uint8 race)
     ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
     if(!rEntry)
     {
-        sLog.outError("Race %u not found in DBC: wrong DBC files?",uint32(race));
+        sLog.outError("Race1 %u not found in DBC: wrong DBC files?",uint32(race));
+        // assert(false);
         return ALLIANCE;
     }
 
@@ -5897,7 +5898,8 @@ uint32 Player::getFactionForRace(uint8 race)
     ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(race);
     if(!rEntry)
     {
-        sLog.outError("Race %u not found in DBC: wrong DBC files?",uint32(race));
+        sLog.outError("Race2 %u not found in DBC: wrong DBC files?",uint32(race));
+        assert(false);
         return 0;
     }
 

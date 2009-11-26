@@ -2973,7 +2973,19 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
     switch(form)
     {
         case FORM_CAT:
-            if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
+
+            if (!m_target->getRace())
+            {
+                if (m_target->GetEntry() != 2038)
+                    sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
+                else
+                {
+                    modelid = 892;
+                    PowerType = POWER_ENERGY;
+                    break;
+                }
+            }
+            if (Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 892;
             else
                 modelid = 8571;
@@ -2983,12 +2995,16 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             modelid = 632;
             break;
         case FORM_AQUA:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 2428;
             else
                 modelid = 2428;
             break;
         case FORM_BEAR:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 2281;
             else
@@ -2996,10 +3012,14 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             PowerType = POWER_RAGE;
             break;
         case FORM_GHOUL:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 10045;
             break;
         case FORM_DIREBEAR:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 2281;
             else
@@ -3013,18 +3033,24 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
             modelid = 4613;
             break;
         case FORM_FLIGHT:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 20857;
             else
                 modelid = 20872;
             break;
         case FORM_MOONKIN:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 15374;
             else
                 modelid = 15375;
             break;
         case FORM_FLIGHT_EPIC:
+            if (!m_target->getRace())
+                sLog.outError("creature with entry %u gets shapeshifted", m_target->GetEntry());
             if(Player::TeamForRace(m_target->getRace()) == ALLIANCE)
                 modelid = 21243;
             else
