@@ -4244,6 +4244,9 @@ void Player::KillPlayer()
 
     // update visibility
     UpdateObjectVisibility();
+
+    // to be able to remove insignia
+    SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE );
 }
 
 void Player::CreateCorpse()
@@ -4284,8 +4287,7 @@ void Player::CreateCorpse()
         flags |= CORPSE_FLAG_HIDE_HELM;
     if(HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_CLOAK))
         flags |= CORPSE_FLAG_HIDE_CLOAK;
-    if(InBattleGround() && !InArena())
-        flags |= CORPSE_FLAG_LOOTABLE;                      // to be able to remove insignia
+    flags |= CORPSE_FLAG_LOOTABLE;                      // to be able to remove insignia
     corpse->SetUInt32Value( CORPSE_FIELD_FLAGS, flags );
 
     corpse->SetUInt32Value( CORPSE_FIELD_DISPLAY_ID, GetNativeDisplayId() );
@@ -7370,8 +7372,8 @@ bool Player::CheckAmmoCompatibility(const ItemPrototype *ammo_proto) const
     Called by remove insignia spell effect    */
 void Player::RemovedInsignia(Player* looterPlr)
 {
-    if (!GetBattleGroundId())
-        return;
+//    if (!GetBattleGroundId()) because we want lootable players everywhere
+//        return;
 
     // If not released spirit, do it !
     if(m_deathTimer > 0)
@@ -7509,8 +7511,9 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
             bones->lootForBody = true;
             uint32 pLevel = bones->loot.gold;
             bones->loot.clear();
-            if (GetBattleGround()->GetTypeID() == BATTLEGROUND_AV)
-                loot->FillLoot(0, LootTemplates_Creature, this, false);
+            // player will contain the loot which is also in
+            // creature_loot_template
+            loot->FillLoot(1, LootTemplates_Creature, this, false);
             // It may need a better formula
             // Now it works like this: lvl10: ~6copper, lvl70: ~9silver
             bones->loot.gold = (uint32)( urand(50, 150) * 0.016f * pow( ((float)pLevel)/5.76f, 2.5f) * sWorld.getRate(RATE_DROP_MONEY) );
