@@ -10073,7 +10073,10 @@ uint8 Player::CanBankItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, Item *p
         return swap ? EQUIP_ERR_ITEMS_CANT_BE_SWAPPED : EQUIP_ERR_ITEM_NOT_FOUND;
 
     if (pItem->m_lootGenerated)
-        return EQUIP_ERR_ITEM_LOCKED;
+    {
+        GetSession()->DoLootRelease(GetLootGUID());
+        return EQUIP_ERR_OK;
+    }
 
     uint32 count = pItem->GetCount();
 
@@ -11493,7 +11496,7 @@ void Player::SwapItem( uint16 src, uint16 dst )
         // bag swap (with items exchange) case
         if(emptyBag && fullBag)
         {
-            ItemPrototype const* emotyProto = emptyBag->GetProto();
+            ItemPrototype const* emptyProto = emptyBag->GetProto();
 
             uint32 count = 0;
 
@@ -11504,7 +11507,7 @@ void Player::SwapItem( uint16 src, uint16 dst )
                     continue;
 
                 ItemPrototype const* bagItemProto = bagItem->GetProto();
-                if (!bagItemProto || !ItemCanGoIntoBag(bagItemProto, emotyProto))
+                if (!bagItemProto || !ItemCanGoIntoBag(bagItemProto, emptyProto))
                 {
                     // one from items not go to empty target bag
                     SendEquipError( EQUIP_ERR_NONEMPTY_BAG_OVER_OTHER_BAG, pSrcItem, pDstItem );
@@ -11558,6 +11561,38 @@ void Player::SwapItem( uint16 src, uint16 dst )
         BankItem(sDest2, pDstItem, true);
     else if (IsEquipmentPos(src))
         EquipItem(eDest2, pDstItem, true);
+
+
+    // if player is moving bags and is looting an item inside this bag
+    // release the loot
+    if (GetLootGUID())
+    {
+        bool released = false;
+        if (IsBagPos(src))
+        {
+            Bag* bag = (Bag*)pSrcItem;
+            for(int i=0; i < bag->GetBagSize(); ++i)
+                if (Item *bagItem = bag->GetItemByPos(i))
+                    if (bagItem->m_lootGenerated)
+                    {
+                        m_session->DoLootRelease(GetLootGUID());
+                        released = true;                    // so we don't need to look at dstBag
+                        break;
+                    }
+        }
+        if (!released && IsBagPos(dst) && pDstItem)
+        {
+            Bag* bag = (Bag*)pDstItem;
+            for(int i=0; i < bag->GetBagSize(); ++i)
+                if (Item *bagItem = bag->GetItemByPos(i))
+                    if (bagItem->m_lootGenerated)
+                    {
+                        m_session->DoLootRelease(GetLootGUID());
+                        released = true;                    // not realy needed here
+                        break;
+                    }
+        }
+    }
 
     AutoUnequipOffhandIfNeed();
 }
