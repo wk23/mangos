@@ -4377,6 +4377,7 @@ void Player::DurabilityLossAll(double percent, bool inventory)
 
 void Player::DurabilityLoss(Item* item, double percent)
 {
+    return;
     if(!item )
         return;
 
