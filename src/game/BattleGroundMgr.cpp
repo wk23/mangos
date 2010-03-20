@@ -324,7 +324,7 @@ void BattleGroundQueue::RemovePlayer(const uint64& guid, bool decreaseInvitedCou
                 if (bg && !bg->GetPlayersSize() && !bg->GetInvitedCount(ALLIANCE) && !bg->GetInvitedCount(HORDE))
                 {
                     // no more players on battleground, set delete it
-                    bg->SetDeleteThis();
+                    delete bg;
                 }
             }
             // update the join queue, maybe now the player's group fits in a queue!
@@ -1123,21 +1123,6 @@ void BattleGroundMgr::DeleteAlllBattleGrounds()
 // used to update running battlegrounds, and delete finished ones
 void BattleGroundMgr::Update(uint32 diff)
 {
-    BattleGroundSet::iterator itr, next;
-    for(itr = m_BattleGrounds.begin(); itr != m_BattleGrounds.end(); itr = next)
-    {
-        next = itr;
-        ++next;
-        itr->second->Update(diff);
-        // use the SetDeleteThis variable
-        // direct deletion caused crashes
-        if(itr->second->m_SetDeleteThis)
-        {
-            BattleGround * bg = itr->second;
-            m_BattleGrounds.erase(itr);
-            delete bg;
-        }
-    }
     // if rating difference counts, maybe force-update queues
     if(sWorld.getConfig(CONFIG_UINT32_ARENA_MAX_RATING_DIFFERENCE))
     {

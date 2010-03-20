@@ -53,7 +53,6 @@ BattleGround::BattleGround()
     m_LevelMin          = 0;
     m_LevelMax          = 0;
     m_InBGFreeSlotQueue = false;
-    m_SetDeleteThis     = false;
 
     m_MaxPlayersPerTeam = 0;
     m_MaxPlayers        = 0;
@@ -863,7 +862,7 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
     {
         // if no players left AND no invitees left, set this bg to delete in next update
         // direct deletion could cause crashes
-        m_SetDeleteThis = true;
+        delete this;
         // return to prevent addition to freeslotqueue
         return;
     }
@@ -998,12 +997,8 @@ void BattleGround::RemoveFromBGFreeSlotQueue()
 {
     // set to be able to re-add if needed
     m_InBGFreeSlotQueue = false;
-<<<<<<< HEAD:src/game/BattleGround.cpp
     // uncomment this code when battlegrounds will work like instances
     for (std::deque<BattleGround*>::iterator itr = sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].begin(); itr != sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].end(); ++itr)
-=======
-    for (BGFreeSlotQueueType::iterator itr = sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].begin(); itr != sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].end(); ++itr)
->>>>>>> a488e38... [9597] create battleground map at bg creation:src/game/BattleGround.cpp
     {
         if ((*itr)->GetInstanceID() == GetInstanceID())
         {
