@@ -1493,8 +1493,9 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
             break;             // placeholder for non implemented BG
     }
 
-    // generate a new instance id
-    bg->SetInstanceID(sMapMgr.GenerateInstanceId());         // set instance id
+    // will also set m_bgMap, instanceid
+    sMapMgr.CreateBgMap(bg->GetMapId(), bg);
+
 
     // reset the new bg (set status to status_wait_queue from status_none)
     bg->Reset();
@@ -1548,7 +1549,6 @@ uint32 BattleGroundMgr::CreateBattleGround(BattleGroundTypeId bgTypeId, uint32 M
     }
 
     bg->SetTypeID(bgTypeId);
-    bg->SetInstanceID(0);                               // template bg, instance id is 0
     bg->SetMinPlayersPerTeam(MinPlayersPerTeam);
     bg->SetMaxPlayersPerTeam(MaxPlayersPerTeam);
     bg->SetMinPlayers(MinPlayersPerTeam*2);

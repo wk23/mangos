@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include "SharedDefines.h"
+#include "Map.h"
 
 // magic event-numbers
 #define BG_EVENT_NONE 255
@@ -285,7 +286,9 @@ class BattleGround
         char const* GetName() const         { return m_Name; }
         BattleGroundTypeId GetTypeID() const { return m_TypeID; }
         BattleGroundBracketId GetBracketId() const { return m_BracketId; }
-        uint32 GetInstanceID() const        { return m_InstanceID; }
+        // the instanceId check is also used to determine a bg-template
+        // that's why the m_map hack is here..
+        uint32 GetInstanceID()              { return m_Map?GetBgMap()->GetInstanceId():0; }
         BattleGroundStatus GetStatus() const { return m_Status; }
         uint32 GetStartTime() const         { return m_StartTime; }
         uint32 GetEndTime() const           { return m_EndTime; }
@@ -309,7 +312,6 @@ class BattleGround
         void SetName(char const* Name)      { m_Name = Name; }
         void SetTypeID(BattleGroundTypeId TypeID) { m_TypeID = TypeID; }
         void SetBracketId(BattleGroundBracketId ID) { m_BracketId = ID; }
-        void SetInstanceID(uint32 InstanceID) { m_InstanceID = InstanceID; }
         void SetStatus(BattleGroundStatus Status) { m_Status = Status; }
         void SetStartTime(uint32 Time)      { m_StartTime = Time; }
         void SetEndTime(uint32 Time)        { m_EndTime = Time; }
@@ -539,7 +541,6 @@ class BattleGround
     private:
         /* Battleground */
         BattleGroundTypeId m_TypeID;
-        uint32 m_InstanceID;                                //BattleGround Instance's GUID!
         BattleGroundStatus m_Status;
         uint32 m_StartTime;
         bool m_ArenaBuffSpawned;                            // to cache if arenabuff event is started (cause bool is faster than checking IsActiveEvent)

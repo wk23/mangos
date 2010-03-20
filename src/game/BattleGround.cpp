@@ -37,7 +37,6 @@
 BattleGround::BattleGround()
 {
     m_TypeID            = BattleGroundTypeId(0);
-    m_InstanceID        = 0;
     m_Status            = STATUS_NONE;
     m_EndTime           = 0;
     m_BracketId         = MAX_BATTLEGROUND_BRACKETS;        // use as mark bg template
@@ -999,10 +998,14 @@ void BattleGround::RemoveFromBGFreeSlotQueue()
 {
     // set to be able to re-add if needed
     m_InBGFreeSlotQueue = false;
+<<<<<<< HEAD:src/game/BattleGround.cpp
     // uncomment this code when battlegrounds will work like instances
     for (std::deque<BattleGround*>::iterator itr = sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].begin(); itr != sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].end(); ++itr)
+=======
+    for (BGFreeSlotQueueType::iterator itr = sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].begin(); itr != sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].end(); ++itr)
+>>>>>>> a488e38... [9597] create battleground map at bg creation:src/game/BattleGround.cpp
     {
-        if ((*itr)->GetInstanceID() == m_InstanceID)
+        if ((*itr)->GetInstanceID() == GetInstanceID())
         {
             sBattleGroundMgr.BGFreeSlotQueue[m_TypeID].erase(itr);
             return;
