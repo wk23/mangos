@@ -139,14 +139,14 @@ class MANGOS_DLL_DECL MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::
             CreatureMapEventIndexMap::const_iterator itr = m_CreatureMapEventIndexMap.find(dbTableGuidLow);
             if(itr != m_CreatureMapEventIndexMap.end())
                 return itr->second;
-            return m_CreatureMapEventIndexMap.find(65535)->second;
+            return m_CreatureMapEventIndexMap.find(MAP_EVENT_NONE)->second;
         }
         const MapEventIdx GetGameObjectEventIndex(uint32 dbTableGuidLow) const
         {
             GameObjectMapEventIndexMap::const_iterator itr = m_GameObjectMapEventIndexMap.find(dbTableGuidLow);
             if(itr != m_GameObjectMapEventIndexMap.end())
                 return itr->second;
-            return m_GameObjectMapEventIndexMap.find(65535)->second;
+            return m_GameObjectMapEventIndexMap.find(MAP_EVENT_NONE)->second;
         }
 
     private:

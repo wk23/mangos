@@ -361,9 +361,9 @@ void MapManager::LoadMapEventIndexes()
     events.event1 = MAP_EVENT_NONE;
     events.event2 = MAP_EVENT_NONE;
     m_GameObjectMapEventIndexMap.clear();             // need for reload case
-    m_GameObjectMapEventIndexMap[65535] = events;
+    m_GameObjectMapEventIndexMap[MAP_EVENT_NONE] = events;
     m_CreatureMapEventIndexMap.clear();               // need for reload case
-    m_CreatureMapEventIndexMap[65535] = events;
+    m_CreatureMapEventIndexMap[MAP_EVENT_NONE] = events;
 
     uint32 count = 0;
 
